@@ -19,6 +19,21 @@
     <ProjectReference Include="..\AthloTrack\AthloTrack.csproj" />
   </ItemGroup>
 
+  <!-- Release builds trim unused code. These are reached through reflection (Newtonsoft /
+       Postgrest (de)serialize the auth and row models; ViewLocator finds views by name), so
+       trimming broke sign-in ("Unable to find a constructor ... Supabase.Gotrue.User"). -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="AthloTrack" />
+    <TrimmerRootAssembly Include="AthloTrack.Core" />
+    <TrimmerRootAssembly Include="Supabase" />
+    <TrimmerRootAssembly Include="Supabase.Core" />
+    <TrimmerRootAssembly Include="Supabase.Gotrue" />
+    <TrimmerRootAssembly Include="Supabase.Postgrest" />
+    <TrimmerRootAssembly Include="Supabase.Storage" />
+    <TrimmerRootAssembly Include="Supabase.Functions" />
+    <TrimmerRootAssembly Include="Newtonsoft.Json" />
+  </ItemGroup>
+
   <!-- Supabase config comes from the embedded AthloTrack/Assets/supabase.config.json
        (avares://), parsed with a source-generated JSON context; see AppBootstrap. -->
 </Project>

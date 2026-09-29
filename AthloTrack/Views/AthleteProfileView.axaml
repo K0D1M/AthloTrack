@@ -82,7 +82,7 @@
                                          BorderBrush="White" BorderThickness="3"
                                          HorizontalAlignment="Left" VerticalAlignment="Top"
                                          Photo="{Binding Photo}" Initial="{Binding Initial}" />
-                        <Button Classes="badge" IsVisible="{Binding CanEditSelf}"
+                        <Button Classes="badge" IsVisible="{Binding CanChangePhoto}"
                                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                 Click="OnChangePhoto" ToolTip.Tip="Αλλαγή φωτογραφίας">
                             <PathIcon Data="{StaticResource CameraIcon}" Foreground="{StaticResource BrandPrimaryDarkBrush}" />

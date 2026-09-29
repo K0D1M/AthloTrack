@@ -56,6 +56,9 @@ public partial class AthleteProfileViewModel : ViewModelBase
 
     private bool IsOwnProfile => !_session.IsCoach && _session.ProfileId == _athleteId;
 
+    /// <summary>Only the athlete changes their own photo — never the coach.</summary>
+    public bool CanChangePhoto => IsOwnProfile;
+
     // Progress chart (weight + fat metrics over time)
     [ObservableProperty]
     public partial ISeries[] ChartSeries { get; set; } = Array.Empty<ISeries>();
@@ -196,7 +199,7 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>Stores a new profile photo (already resized by the view) and replaces the old one.</summary>
     public async Task UploadPhotoAsync(byte[] image, string contentType)
     {
-        if (_athlete is null) return;
+        if (_athlete is null || !CanChangePhoto) return;
         IsUploadingPhoto = true;
         ErrorMessage = null;
         try
