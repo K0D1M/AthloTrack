@@ -400,3 +400,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 *.sql
+
+# Database schema and migrations are part of the app (no secrets in them).
+!supabase/*.sql
