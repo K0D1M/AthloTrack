@@ -81,6 +81,22 @@ public sealed class AuthService : IAuthService
         }
     }
 
+    public async Task<AuthResult> UpdatePasswordAsync(string newPassword)
+    {
+        var client = await _clientFactory.GetClientAsync();
+        try
+        {
+            var user = await client.Auth.Update(new global::Supabase.Gotrue.UserAttributes { Password = newPassword });
+            return user?.Id is null
+                ? AuthResult.Fail("Ο κωδικός δεν άλλαξε.")
+                : new AuthResult(true, null, Guid.Parse(user.Id), null, null);
+        }
+        catch (Exception ex)
+        {
+            return AuthResult.Fail(ex.Message);
+        }
+    }
+
     public async Task SignOutAsync()
     {
         var client = await _clientFactory.GetClientAsync();

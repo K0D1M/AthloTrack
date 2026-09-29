@@ -17,6 +17,9 @@ public sealed class SessionState
     /// <summary>For athletes: their coach's coaches.id.</summary>
     public Guid? CoachId { get; set; }
 
+    /// <summary>Coach signed in with an admin-issued password and must choose their own.</summary>
+    public bool MustSetPassword { get; set; }
+
     public bool IsCoach => Role == UserRole.Coach;
 
     public void Clear()
@@ -27,5 +30,6 @@ public sealed class SessionState
         DisplayName = null;
         ProfileImagePath = null;
         CoachId = null;
+        MustSetPassword = false;
     }
 }

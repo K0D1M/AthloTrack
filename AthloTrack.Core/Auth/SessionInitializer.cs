@@ -31,6 +31,7 @@ public sealed class SessionInitializer : ISessionInitializer
             _session.DisplayName = coach.FullName;
             _session.ProfileImagePath = coach.ProfileImagePath;
             _session.CoachId = null;
+            _session.MustSetPassword = coach.MustSetPassword;
             return true;
         }
 
@@ -46,6 +47,7 @@ public sealed class SessionInitializer : ISessionInitializer
         _session.DisplayName = athlete.FullName;
         _session.ProfileImagePath = athlete.ProfileImagePath;
         _session.CoachId = athlete.CoachId;
+        _session.MustSetPassword = false;
         return true;
     }
 }

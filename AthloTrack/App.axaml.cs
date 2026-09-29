@@ -140,11 +140,49 @@ public partial class App : Application
         services.AddSingleton<AddWorkoutViewModelFactory>();
         services.AddTransient<AddAthleteViewModel>();
         services.AddSingleton<CurrentUserViewModel>();
+        services.AddTransient<SetPasswordViewModel>();
 
         Services = services.BuildServiceProvider();
     }
 
     private void OnLoginSucceeded(UserRole role)
+    {
+        // A coach still on the password the admin issued chooses their own first.
+        if (Services.GetRequiredService<SessionState>().MustSetPassword)
+        {
+            ShowSetPassword();
+            return;
+        }
+
+        ShowMain();
+    }
+
+    private void ShowSetPassword()
+    {
+        var vm = Services.GetRequiredService<SetPasswordViewModel>();
+        vm.Completed += ShowMain;
+        vm.LoggedOut += NavigateToLogin;
+        SetRoot(new SetPasswordView { DataContext = vm });
+    }
+
+    /// <summary>Replaces the app root (login / set-password screens) on every head.</summary>
+    private void SetRoot(Control view)
+    {
+        switch (ApplicationLifetime)
+        {
+            case IClassicDesktopStyleApplicationLifetime desktop when desktop.MainWindow is not null:
+                desktop.MainWindow.Content = view;
+                break;
+            case IActivityApplicationLifetime activity:
+                activity.MainViewFactory = () => view;
+                break;
+            case ISingleViewApplicationLifetime singleView:
+                singleView.MainView = view;
+                break;
+        }
+    }
+
+    private void ShowMain()
     {
         // Name + photo for the drawer header and Ρυθμίσεις.
         _ = Services.GetRequiredService<CurrentUserViewModel>().LoadAsync();

@@ -13,5 +13,8 @@ public interface IAuthService
     /// </summary>
     Task<AuthResult> SignUpAsync(string email, string password);
 
+    /// <summary>Changes the signed-in user's password.</summary>
+    Task<AuthResult> UpdatePasswordAsync(string newPassword);
+
     Task SignOutAsync();
 }

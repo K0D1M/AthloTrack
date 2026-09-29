@@ -40,6 +40,15 @@ public sealed class CoachRepository : ICoachRepository
             .Update();
     }
 
+    public async Task ClearMustSetPasswordAsync(Guid coachId)
+    {
+        var client = await _factory.GetClientAsync();
+        await client.From<CoachRow>()
+            .Where(x => x.Id == coachId)
+            .Set(x => x.MustSetPassword, false)
+            .Update();
+    }
+
     private static Coach Map(CoachRow row) => new()
     {
         Id = row.Id,
@@ -47,6 +56,7 @@ public sealed class CoachRepository : ICoachRepository
         FullName = row.FullName,
         Email = row.Email,
         ProfileImagePath = row.ProfileImagePath,
+        MustSetPassword = row.MustSetPassword,
         CreatedAt = row.CreatedAt,
     };
 }

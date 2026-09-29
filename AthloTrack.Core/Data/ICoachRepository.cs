@@ -11,4 +11,7 @@ public interface ICoachRepository
 
     /// <summary>Sets only coaches.profile_image_path.</summary>
     Task SetProfileImagePathAsync(Guid coachId, string? path);
+
+    /// <summary>The coach has chosen their own password.</summary>
+    Task ClearMustSetPasswordAsync(Guid coachId);
 }

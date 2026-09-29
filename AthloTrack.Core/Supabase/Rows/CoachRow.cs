@@ -21,6 +21,9 @@ public sealed class CoachRow : BaseModel
     [Column("profile_image_path")]
     public string? ProfileImagePath { get; set; }
 
+    [Column("must_set_password")]
+    public bool MustSetPassword { get; set; }
+
     [Column("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
 }
