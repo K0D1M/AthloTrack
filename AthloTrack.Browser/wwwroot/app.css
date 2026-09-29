@@ -1,54 +1,42 @@
-﻿/* HTML styles for the splash screen */
+/* Loading screen (shown until the app starts), in AthloTrack's brand gradient */
 .avalonia-splash {
     position: absolute;
     height: 100%;
     width: 100%;
-    background: white;
-    font-family: 'Outfit', sans-serif;
+    background: linear-gradient(135deg, #0D47A1 0%, #1565C0 45%, #1E88E5 100%);
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     justify-content: center;
     align-items: center;
     display: flex;
     pointer-events: none;
 }
 
-/* Light theme styles */
-@media (prefers-color-scheme: light) {
-    .avalonia-splash {
-        background: white;
-    }
-
-    .avalonia-splash h2 {
-        color: #1b2a4e;
-    }
-
-    .avalonia-splash a {
-        color: #0D6EFD;
-    }
+.athlo-splash {
+    text-align: center;
+    color: #FFFFFF;
 }
 
-@media (prefers-color-scheme: dark) {
-    .avalonia-splash {
-        background: #1b2a4e;
-    }
-
-    .avalonia-splash h2 {
-        color: white;
-    }
-
-    .avalonia-splash a {
-        color: white;
-    }
+.athlo-splash img {
+    border-radius: 28px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-.avalonia-splash h2 {
-    font-weight: 400;
-    font-size: 1.5rem;
+.athlo-splash h1 {
+    margin: 18px 0 4px;
+    font-size: 34px;
+    font-weight: 700;
 }
 
-.avalonia-splash a {
-    text-decoration: none;
-    font-size: 2.5rem;
-    display: block;   
+.athlo-splash p {
+    margin: 0;
+    font-size: 15px;
+    color: #CFE3FF;
+    animation: athlo-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes athlo-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
 }
 
 .avalonia-splash.splash-close {
