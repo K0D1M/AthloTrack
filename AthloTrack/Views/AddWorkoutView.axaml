@@ -21,7 +21,7 @@
             <StackPanel Spacing="14">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
-                    <DatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
+                    <controls:GreekDatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
                 </StackPanel>
 
                 <StackPanel Spacing="4">

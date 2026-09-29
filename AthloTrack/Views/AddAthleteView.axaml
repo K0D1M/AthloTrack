@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:controls="using:AthloTrack.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
              x:Class="AthloTrack.Views.AddAthleteView"
              x:DataType="vm:AddAthleteViewModel">
@@ -20,7 +21,7 @@
 
                 <StackPanel Spacing="4">
                     <TextBlock Text="Ημερομηνία γέννησης" FontWeight="SemiBold" />
-                    <DatePicker SelectedDate="{Binding DateOfBirth, Mode=TwoWay}" />
+                    <controls:GreekDatePicker SelectedDate="{Binding DateOfBirth, Mode=TwoWay}" />
                 </StackPanel>
 
                 <StackPanel Spacing="4">

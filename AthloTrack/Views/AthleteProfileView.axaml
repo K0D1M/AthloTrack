@@ -52,6 +52,17 @@
         <Style Selector="Button.badge:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BrandAccentHoverBrush}" />
         </Style>
+        <Style Selector="Button.menuitem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinWidth" Value="210" />
+        </Style>
+        <Style Selector="Button.menuitem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EEF3FB" />
+        </Style>
         <Style Selector="Button.dialog">
             <Setter Property="Height" Value="40" />
             <Setter Property="Padding" Value="18,0" />
@@ -116,11 +127,9 @@
                 <!-- Progress graph -->
                 <TextBlock Text="Πρόοδος" FontSize="18" FontWeight="SemiBold"
                            IsVisible="{Binding HasChartData}" />
-                <Border Height="240" IsVisible="{Binding HasChartData}">
-                    <lvc:CartesianChart Series="{Binding ChartSeries}"
-                                        XAxes="{Binding ChartXAxes}"
-                                        LegendPosition="Bottom" />
-                </Border>
+                <!-- The chart is created in code once its data is loaded (see AthleteProfileView.axaml.cs):
+                     on Android, a chart created empty and filled later sometimes never painted. -->
+                <Border x:Name="ChartHost" Height="240" IsVisible="{Binding HasChartData}" />
 
                 <!-- Measurements -->
                 <TextBlock Text="Μετρήσεις" FontSize="18" FontWeight="SemiBold" />
@@ -138,8 +147,8 @@
                                     <WrapPanel Grid.Column="1" Orientation="Horizontal" ItemSpacing="16" LineSpacing="2"
                                                VerticalAlignment="Center">
                                         <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}" />
-                                        <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}'}" />
-                                        <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}'}" />
+                                        <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}', TargetNullValue='Fat Mass/WT: —'}" />
+                                        <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}', TargetNullValue='fat/hgt: —'}" />
                                     </WrapPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                                 IsVisible="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
@@ -192,25 +201,33 @@
         </ScrollViewer>
 
         <!-- Floating "+" button (coach only) -->
+        <!-- "+" opens an in-page menu. A MenuFlyout (popup) left the next profile's chart blank on
+             Android after leaving the page, so the menu is drawn inside the page instead. -->
+        <Border x:Name="AddMenuDismiss" IsVisible="False" Background="#01000000"
+                PointerPressed="OnAddMenuDismiss" />
+        <Border x:Name="AddMenu" IsVisible="False"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,86"
+                Background="White" CornerRadius="14" Padding="6" BoxShadow="0 8 24 0 #33000000">
+            <StackPanel>
+                <Button Classes="menuitem" Click="OnAddMeasurement">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <PathIcon Data="{StaticResource ChartLineIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
+                        <TextBlock Text="Νέα μέτρηση" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="menuitem" Click="OnAddWorkout">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <PathIcon Data="{StaticResource DumbbellIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
+                        <TextBlock Text="Νέο ασκησιολόγιο" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
         <Button Classes="fab"
                 IsVisible="{Binding CanEdit}"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,20,20">
+                Margin="0,0,20,20" Click="OnToggleAddMenu">
             <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
-            <Button.Flyout>
-                <MenuFlyout>
-                    <MenuItem Header="Νέα μέτρηση" Command="{Binding AddMeasurementCommand}">
-                        <MenuItem.Icon>
-                            <PathIcon Data="{StaticResource ChartLineIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="Νέο ασκησιολόγιο" Command="{Binding AddWorkoutCommand}">
-                        <MenuItem.Icon>
-                            <PathIcon Data="{StaticResource DumbbellIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </MenuFlyout>
-            </Button.Flyout>
         </Button>
 
         <!-- In-app confirmation (browser/Android have no native message box) -->

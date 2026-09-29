@@ -121,9 +121,5 @@
             <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
         </Style>
 
-        <!-- Quiet top-to-bottom tint behind page content -->
-        <Style Selector="DrawerPage /template/ DockPanel#PART_ContentDock">
-            <Setter Property="Background" Value="{StaticResource PageBackdropGradient}" />
-        </Style>
     </Application.Styles>
 </Application>

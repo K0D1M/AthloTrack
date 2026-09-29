@@ -33,6 +33,9 @@ public partial class App : Application
         BuildServices();
         ConfigureCharts();
 
+        // One permanent root on every head; screens change by swapping its content. Android
+        // reads MainViewFactory only when the activity is created, so replacing the factory
+        // after sign-in never showed the next screen there.
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new Window
@@ -40,17 +43,19 @@ public partial class App : Application
                 Title = "AthloTrack",
                 Width = 420,
                 Height = 720,
-                Content = CreateLoginView(),
+                Content = _root,
             };
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
-            activity.MainViewFactory = CreateLoginView;
+            activity.MainViewFactory = () => _root;
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
-            singleView.MainView = CreateLoginView();
+            singleView.MainView = _root;
         }
+
+        SetRoot(CreateLoginView());
 
         base.OnFrameworkInitializationCompleted();
     }
@@ -104,21 +109,7 @@ public partial class App : Application
     }
 
     /// <summary>Called on logout — resets the app root back to the login screen.</summary>
-    public void NavigateToLogin()
-    {
-        switch (ApplicationLifetime)
-        {
-            case IClassicDesktopStyleApplicationLifetime desktop when desktop.MainWindow is not null:
-                desktop.MainWindow.Content = CreateLoginView();
-                break;
-            case IActivityApplicationLifetime activity:
-                activity.MainViewFactory = CreateLoginView;
-                break;
-            case ISingleViewApplicationLifetime singleView:
-                singleView.MainView = CreateLoginView();
-                break;
-        }
-    }
+    public void NavigateToLogin() => SetRoot(CreateLoginView());
 
     private void BuildServices()
     {
@@ -165,21 +156,19 @@ public partial class App : Application
         SetRoot(new SetPasswordView { DataContext = vm });
     }
 
-    /// <summary>Replaces the app root (login / set-password screens) on every head.</summary>
+    /// <summary>The single root control of every head; <see cref="SetRoot"/> swaps what it shows.</summary>
+    private readonly ContentControl _root = new();
+
+    /// <summary>Shows a screen (login, set-password, main shell) on every head.</summary>
     private void SetRoot(Control view)
     {
-        switch (ApplicationLifetime)
+        // On phones the shell is inset below the status bar; the root's colour fills that gap,
+        // so it reads as part of the blue top bar instead of an empty strip.
+        if (_root.Background is null && TryGetResource("BrandPrimaryDarkBrush", ActualThemeVariant, out var brush) && brush is Avalonia.Media.IBrush b)
         {
-            case IClassicDesktopStyleApplicationLifetime desktop when desktop.MainWindow is not null:
-                desktop.MainWindow.Content = view;
-                break;
-            case IActivityApplicationLifetime activity:
-                activity.MainViewFactory = () => view;
-                break;
-            case ISingleViewApplicationLifetime singleView:
-                singleView.MainView = view;
-                break;
+            _root.Background = b;
         }
+        _root.Content = view;
     }
 
     private void ShowMain()
@@ -188,18 +177,6 @@ public partial class App : Application
         _ = Services.GetRequiredService<CurrentUserViewModel>().LoadAsync();
 
         var mainView = new MainView { DataContext = new MainViewModel() };
-
-        switch (ApplicationLifetime)
-        {
-            case IClassicDesktopStyleApplicationLifetime desktop when desktop.MainWindow is not null:
-                desktop.MainWindow.Content = mainView;
-                break;
-            case IActivityApplicationLifetime activity:
-                activity.MainViewFactory = () => new PageNavigationHost { Page = mainView };
-                break;
-            case ISingleViewApplicationLifetime singleView:
-                singleView.MainView = new PageNavigationHost { Page = mainView };
-                break;
-        }
+        SetRoot(new PageNavigationHost { Page = mainView });
     }
 }
