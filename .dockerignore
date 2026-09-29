@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.git/
+.vs/
+**/*.user
+FitTrack/
+FitTrack.Core/
+FitTrack.Desktop/

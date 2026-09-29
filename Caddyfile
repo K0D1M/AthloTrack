@@ -1,0 +1,20 @@
+# Serves the published AthloTrack web app. Railway provides $PORT and terminates HTTPS.
+:{$PORT:8080} {
+	root * /srv
+
+	# The publish step already writes .br/.gz next to each file; send those to browsers
+	# that accept them (~8 MB instead of ~28 MB).
+	file_server {
+		precompressed br gzip
+	}
+
+	# Fingerprinted framework files never change under the same name: cache for a year.
+	@framework path /_framework/*
+	header @framework Cache-Control "public, max-age=31536000, immutable"
+
+	# Entry points must be revalidated so a new deploy is picked up.
+	@entry path / /index.html /main.js
+	header @entry Cache-Control "no-cache"
+
+	encode zstd gzip
+}
