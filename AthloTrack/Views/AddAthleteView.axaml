@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
+             x:Class="AthloTrack.Views.AddAthleteView"
+             x:DataType="vm:AddAthleteViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Title ("Νέος αθλητής" / "Επεξεργασία αθλητή") is shown in the shell's top bar. -->
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ονοματεπώνυμο *" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding FullName, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ημερομηνία γέννησης" FontWeight="SemiBold" />
+                    <DatePicker SelectedDate="{Binding DateOfBirth, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ύψος (cm)" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding HeightCm, Mode=TwoWay}" PlaceholderText="π.χ. 178" />
+                </StackPanel>
+
+                <StackPanel Spacing="4" IsVisible="{Binding ShowCoachFields}">
+                    <TextBlock Text="Email αθλητή (για σύνδεση)" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding Email, Mode=TwoWay}" PlaceholderText="athlete@mail.com" />
+                    <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
+                               Text="Όταν ο αθλητής δημιουργήσει λογαριασμό με αυτό το email, συνδέεται αυτόματα με το προφίλ του." />
+                </StackPanel>
+
+                <StackPanel Spacing="4" IsVisible="{Binding ShowCoachFields}">
+                    <TextBlock Text="Σημειώσεις" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding Notes, Mode=TwoWay}" AcceptsReturn="True" Height="90"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+            <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
+            <Button Classes="primary" Content="Αποθήκευση" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

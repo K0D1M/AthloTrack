@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="640"
+             x:Class="AthloTrack.Views.AddMeasurementView"
+             x:DataType="vm:AddMeasurementViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Title ("Νέα μέτρηση" / "Επεξεργασία μέτρησης") is shown in the shell's top bar. -->
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ημερομηνία" FontWeight="SemiBold" />
+                    <DatePicker SelectedDate="{Binding MeasuredAt, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Βάρος (kg) *" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding WeightKg, Mode=TwoWay}" PlaceholderText="π.χ. 72.5" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Fat Mass/WT" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding FatMassWt, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="fat/hgt" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding FatHgt, Mode=TwoWay}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+            <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
+            <Button Classes="primary" Content="Αποθήκευση" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

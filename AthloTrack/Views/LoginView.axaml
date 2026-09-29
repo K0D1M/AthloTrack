@@ -1,0 +1,141 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
+             x:Class="AthloTrack.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.login">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="CornerRadius" Value="23" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*,Auto" Background="{StaticResource BrandHeroGradient}">
+
+        <!-- Soft glows for depth -->
+        <Ellipse Grid.RowSpan="2" Width="520" Height="520" Opacity="0.18"
+                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-220,-240,0,0"
+                 IsHitTestVisible="False">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#FFFFFFFF" Offset="0" />
+                    <GradientStop Color="#00FFFFFF" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Grid.RowSpan="2" Width="440" Height="440" Opacity="0.22"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-180,-200"
+                 IsHitTestVisible="False">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#FFFFD700" Offset="0" />
+                    <GradientStop Color="#00FFD700" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Stretch + MaxWidth: fixed-width form on desktop, 16px gutters on a phone. -->
+        <StackPanel Grid.Row="0"
+                    MaxWidth="380"
+                    Margin="16,24"
+                    Spacing="18"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center">
+
+            <Border Width="88" Height="88" CornerRadius="26"
+                    Background="{StaticResource BrandLogoGradient}"
+                    BoxShadow="0 8 24 0 #40000000"
+                    HorizontalAlignment="Center">
+                <PathIcon Data="{StaticResource LogoIcon}" Width="44" Height="44"
+                          Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+            </Border>
+
+            <StackPanel Spacing="2" HorizontalAlignment="Center">
+                <TextBlock Text="AthloTrack" FontSize="32" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center" />
+                <TextBlock Text="Παρακολούθηση προόδου αθλητών" FontSize="14"
+                           Foreground="#CFE3FF" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Form card -->
+            <Border Background="White" CornerRadius="18" Padding="20"
+                    BoxShadow="0 12 32 0 #33000000">
+                <StackPanel Spacing="14">
+                    <TextBox PlaceholderText="Email"
+                             Text="{Binding Email, Mode=TwoWay}"
+                             UseFloatingPlaceholder="True" />
+
+                    <TextBox PlaceholderText="Κωδικός"
+                             PasswordChar="●"
+                             Text="{Binding Password, Mode=TwoWay}"
+                             UseFloatingPlaceholder="True" />
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#C62828"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <TextBlock Text="{Binding InfoMessage}"
+                               Foreground="{StaticResource BrandPrimaryBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <!-- Sign in -->
+                    <StackPanel Spacing="14" IsVisible="{Binding !IsSignUpMode}">
+                        <Button Classes="primary login"
+                                Content="Είσοδος προπονητή"
+                                Command="{Binding LoginAsCoachCommand}"
+                                IsEnabled="{Binding !IsBusy}" />
+
+                        <Button Classes="gold login"
+                                Content="Είσοδος αθλητή"
+                                Command="{Binding LoginAsAthleteCommand}"
+                                IsEnabled="{Binding !IsBusy}" />
+
+                        <Button Classes="link" Command="{Binding ToggleSignUpCommand}"
+                                Content="Νέος αθλητής; Δημιουργία λογαριασμού" />
+                    </StackPanel>
+
+                    <!-- Athlete sign-up -->
+                    <StackPanel Spacing="14" IsVisible="{Binding IsSignUpMode}">
+                        <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
+                                   Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου, ώστε ο λογαριασμός να συνδεθεί με το προφίλ σου." />
+                        <Button Classes="gold login"
+                                Content="Δημιουργία λογαριασμού"
+                                Command="{Binding SignUpCommand}"
+                                IsEnabled="{Binding !IsBusy}" />
+                        <Button Classes="link" Command="{Binding ToggleSignUpCommand}"
+                                Content="Έχω ήδη λογαριασμό" />
+                    </StackPanel>
+
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Bottom-center Greek motto -->
+        <TextBlock Grid.Row="1"
+                   Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ"
+                   FontFamily="{StaticResource GreekAccentFont}"
+                   FontStyle="Italic"
+                   FontSize="20"
+                   Foreground="White"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,24" />
+    </Grid>
+</UserControl>

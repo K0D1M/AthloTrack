@@ -1,0 +1,155 @@
+<DrawerPage xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:vm="using:FitTrack.ViewModels"
+            mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+            Header="FitTrack"
+            x:Class="FitTrack.Views.MainView"
+            x:DataType="vm:MainViewModel">
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <DrawerPage.DrawerHeader>
+        <DockPanel Margin="10" LastChildFill="True" Background="{StaticResource BrandPrimaryBrush}">
+            <Label DockPanel.Dock="Bottom"
+                   Foreground="{StaticResource BrandSecondaryBrush}"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="0,4">FitTrack</Label>
+            <Image Source="/Assets/Icon.png"
+                   Width="90"
+                   Margin="10"
+                   Stretch="Uniform" />
+        </DockPanel>
+    </DrawerPage.DrawerHeader>
+
+    <DrawerPage.DrawerFooter>
+        <Grid Margin="10">
+            <Label HorizontalAlignment="Center"
+                   FontSize="11"
+                   Foreground="{StaticResource BrandSupportBrush}">Vibe-coded with ❤️ by K0D1M</Label>
+        </Grid>
+    </DrawerPage.DrawerFooter>
+
+    <DrawerPage.Drawer>
+        <ListBox Name="DrawerList"
+                 SelectionMode="AlwaysSelected"
+                 SelectionChanged="DrawerList_SelectionChanged">
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource ClockIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Πρόσφατα</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource PersonIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Αθλητές</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource DumbbellIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Προπονήσεις</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource CalendarIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ημερολόγιο</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource InfoIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Σχετικά</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource GearIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ρυθμίσεις</Label>
+                </StackPanel>
+            </ListBoxItem>
+        </ListBox>
+    </DrawerPage.Drawer>
+
+    <ContentPage Name="ContentPage">
+        <ContentPage.DataTemplates>
+            <DataTemplate x:DataType="vm:RecentViewModel">
+                <ContentPage Header="Πρόσφατα">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource ClockIcon}" />
+                    </ContentPage.Icon>
+                    <StackPanel Margin="24" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding WelcomeMessage}" FontSize="26" FontWeight="Bold"
+                                   Foreground="{StaticResource BrandPrimaryDarkBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding RecentAthleteName}" FontSize="18" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding RecentAthleteSummary}" FontSize="14" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:AthletesViewModel">
+                <ContentPage Header="Αθλητές">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource PersonIcon}" />
+                    </ContentPage.Icon>
+                    <ListBox ItemsSource="{Binding Athletes}" />
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:WorkoutsViewModel">
+                <ContentPage Header="Προπονήσεις">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource DumbbellIcon}" />
+                    </ContentPage.Icon>
+                    <ListBox ItemsSource="{Binding WorkoutPrograms}" />
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:CalendarViewModel">
+                <ContentPage Header="Ημερολόγιο">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource CalendarIcon}" />
+                    </ContentPage.Icon>
+                    <Calendar SelectedDate="{Binding SelectedDate}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:AboutViewModel">
+                <ContentPage Header="Σχετικά">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource InfoIcon}" />
+                    </ContentPage.Icon>
+                    <StackPanel Margin="24" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding AppName}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding Version}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:SettingsViewModel">
+                <ContentPage Header="Ρυθμίσεις">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource GearIcon}" />
+                    </ContentPage.Icon>
+                    <StackPanel Margin="24" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Γλώσσα / Language" FontWeight="Bold" />
+                        <ComboBox SelectedItem="{Binding SelectedLanguage}">
+                            <ComboBoxItem>el</ComboBoxItem>
+                            <ComboBoxItem>en</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </ContentPage>
+            </DataTemplate>
+        </ContentPage.DataTemplates>
+    </ContentPage>
+</DrawerPage>

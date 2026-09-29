@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0-browser</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <!-- Required: links SkiaSharp/HarfBuzz native .a libs into the WASM module.
+         Without this Avalonia boots but has no renderer and stalls on the splash. -->
+    <WasmBuildNative>true</WasmBuildNative>
+    <!-- Greek ICU data: wwwroot/main.js pins the application culture to el-GR so the runtime
+         loads a shard containing Greek (the browser-language default is usually EFIGS). -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AthloTrack\AthloTrack.csproj" />
+  </ItemGroup>
+
+  <!-- Supabase config comes from the embedded AthloTrack/Assets/supabase.config.json
+       (avares://), parsed with a source-generated JSON context; see AppBootstrap. -->
+</Project>

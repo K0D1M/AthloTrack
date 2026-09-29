@@ -1,0 +1,60 @@
+<Page
+    x:Class="AthloTrack.WinUI.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
+
+    <Grid>
+        <muxc:NavigationView
+            x:Name="Nav"
+            PaneDisplayMode="Left"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            OpenPaneLength="228"
+            SelectionChanged="OnSelectionChanged">
+
+            <muxc:NavigationView.PaneHeader>
+                <StackPanel Orientation="Horizontal" Spacing="12" Margin="4,10,0,14">
+                    <Border Width="40" Height="40" CornerRadius="13"
+                            Background="{StaticResource BrandAccentGradient}">
+                        <FontIcon Glyph="&#xE95E;" FontSize="19" Foreground="#2A1A00" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="AthloTrack" FontWeight="Bold" FontSize="16" />
+                        <TextBlock x:Name="UserLabel" Style="{StaticResource CaptionText}" />
+                    </StackPanel>
+                </StackPanel>
+            </muxc:NavigationView.PaneHeader>
+
+            <muxc:NavigationView.MenuItems>
+                <muxc:NavigationViewItem Content="Πρόσφατα" Tag="recent" IsSelected="True">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE823;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="Αθλητές" Tag="athletes">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE716;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="Προπονήσεις" Tag="workouts">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE95E;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="Ημερολόγιο" Tag="calendar">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE787;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemSeparator />
+                <muxc:NavigationViewItem Content="Σχετικά" Tag="about">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE946;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="Ρυθμίσεις" Tag="settings">
+                    <muxc:NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+            </muxc:NavigationView.MenuItems>
+
+            <muxc:NavigationView.PaneFooter>
+                <TextBlock Text="Vibe-coded with ❤️ by K0D1M"
+                           Style="{StaticResource CaptionText}"
+                           HorizontalAlignment="Center" Margin="0,0,0,12" />
+            </muxc:NavigationView.PaneFooter>
+
+            <Frame x:Name="ContentFrame" />
+        </muxc:NavigationView>
+    </Grid>
+</Page>

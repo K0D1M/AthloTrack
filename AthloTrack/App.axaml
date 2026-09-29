@@ -1,0 +1,129 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AthloTrack"
+             x:Class="AthloTrack.App"
+             RequestedThemeVariant="Light">
+             <!-- Locked to Light: the brand palette (white secondary, light cards) is designed for it.
+                  "Default" followed the OS dark mode and left dark text on black in the browser. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://AthloTrack/Styles/Theme.axaml" />
+                <ResourceInclude Source="avares://AthloTrack/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- Floating "+" action button. Fluent's pointer-over/pressed template states replace a
+             local Background, which turned the FAB grey; restate them in brand blue. -->
+        <Style Selector="Button.fab">
+            <Setter Property="Width" Value="56" />
+            <Setter Property="Height" Value="56" />
+            <Setter Property="CornerRadius" Value="28" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{StaticResource BrandButtonGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.fab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandButtonHoverGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.dark">
+            <Setter Property="Background" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.dark:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#4A4A4A" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.dark:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1F1F1F" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.fab:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandButtonPressedGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+
+        <!-- Gold camera badge on a photo -->
+        <Style Selector="Button.photobadge">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Background" Value="{StaticResource BrandAccentGradient}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.photobadge:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandAccentHoverGradient}" />
+        </Style>
+
+        <!-- Gradient pill buttons used across the app -->
+        <Style Selector="Button.primary, Button.gold">
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Padding" Value="20,0" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource BrandButtonGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandButtonHoverGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandButtonPressedGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.gold">
+            <Setter Property="Background" Value="{StaticResource BrandAccentGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="Button.gold:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandAccentHoverGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="Button.gold:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandAccentPressedGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter, Button.gold:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Opacity" Value="0.6" />
+        </Style>
+
+        <!-- Top bar of the shell: gradient with white title and menu icon -->
+        <Style Selector="DrawerPage /template/ ContentPresenter#PART_TitlePresenter">
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="DrawerPage /template/ ToggleButton#PART_PaneButton">
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="DrawerPage /template/ ToggleButton#PART_PaneButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26FFFFFF" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+
+        <!-- Quiet top-to-bottom tint behind page content -->
+        <Style Selector="DrawerPage /template/ DockPanel#PART_ContentDock">
+            <Setter Property="Background" Value="{StaticResource PageBackdropGradient}" />
+        </Style>
+    </Application.Styles>
+</Application>

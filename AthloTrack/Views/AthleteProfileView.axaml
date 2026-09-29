@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:models="using:AthloTrack.Core.Models"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
+             x:Class="AthloTrack.Views.AthleteProfileView"
+             x:DataType="vm:AthleteProfileViewModel">
+
+    <UserControl.Styles>
+        <!-- Small round icon buttons (edit / delete / change photo) -->
+        <Style Selector="Button.icon">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="9" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.icon PathIcon">
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="Button.icon.danger PathIcon">
+            <Setter Property="Foreground" Value="#C62828" />
+        </Style>
+        <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EEF3FB" />
+        </Style>
+        <!-- icon buttons sitting on the gradient header -->
+        <Style Selector="Button.icon.onhero PathIcon">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.icon.onhero:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26FFFFFF" />
+        </Style>
+        <!-- camera badge on the photo -->
+        <Style Selector="Button.badge">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Background" Value="{StaticResource BrandAccentBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.badge:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandAccentHoverBrush}" />
+        </Style>
+        <Style Selector="Button.dialog">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.dialog.danger">
+            <Setter Property="Background" Value="#C62828" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.dialog.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#B71C1C" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16" Spacing="16">
+
+                <!-- Header: gradient card with photo, name, coach actions -->
+                <Border Background="{StaticResource BrandHeroGradient}" CornerRadius="16" Padding="18"
+                        BoxShadow="0 6 18 0 #2A0D47A1">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <Panel Grid.Column="0" Width="76" Height="76" VerticalAlignment="Top">
+                        <controls:Avatar Width="72" Height="72"
+                                         BorderBrush="White" BorderThickness="3"
+                                         HorizontalAlignment="Left" VerticalAlignment="Top"
+                                         Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                        <Button Classes="badge" IsVisible="{Binding CanEditSelf}"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Click="OnChangePhoto" ToolTip.Tip="Αλλαγή φωτογραφίας">
+                            <PathIcon Data="{StaticResource CameraIcon}" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                        </Button>
+                    </Panel>
+
+                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
+                                   Foreground="White" />
+                        <TextBlock Text="{Binding Subtitle}" Foreground="#CFE3FF" TextWrapping="Wrap"
+                                   IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsUploadingPhoto}" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                        <Button Classes="icon onhero" Command="{Binding EditAthleteCommand}" ToolTip.Tip="Επεξεργασία στοιχείων"
+                                IsVisible="{Binding CanEditSelf}">
+                            <PathIcon Data="{StaticResource PencilIcon}" />
+                        </Button>
+                        <Button Classes="icon onhero" Command="{Binding DeleteAthleteCommand}" ToolTip.Tip="Διαγραφή αθλητή"
+                                IsVisible="{Binding CanEdit}">
+                            <PathIcon Data="{StaticResource DeleteIcon}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                </Border>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                <!-- Progress graph -->
+                <TextBlock Text="Πρόοδος" FontSize="18" FontWeight="SemiBold"
+                           IsVisible="{Binding HasChartData}" />
+                <Border Height="240" IsVisible="{Binding HasChartData}">
+                    <lvc:CartesianChart Series="{Binding ChartSeries}"
+                                        XAxes="{Binding ChartXAxes}"
+                                        LegendPosition="Bottom" />
+                </Border>
+
+                <!-- Measurements -->
+                <TextBlock Text="Μετρήσεις" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="Το γράφημα προόδου εμφανίζεται από τη δεύτερη μέτρηση."
+                           FontSize="12" Foreground="{StaticResource BrandSupportBrush}"
+                           IsVisible="{Binding ShowChartHint}" />
+                <ItemsControl ItemsSource="{Binding Measurements}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:Measurement">
+                            <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,6">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding MeasuredAt, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                               FontWeight="SemiBold" Width="100" VerticalAlignment="Center" />
+                                    <!-- WrapPanel: on a phone the three values don't fit one line. -->
+                                    <WrapPanel Grid.Column="1" Orientation="Horizontal" ItemSpacing="16" LineSpacing="2"
+                                               VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}" />
+                                        <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}'}" />
+                                        <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}'}" />
+                                    </WrapPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                                IsVisible="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
+                                        <Button Classes="icon" ToolTip.Tip="Επεξεργασία μέτρησης"
+                                                Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).EditMeasurementCommand}"
+                                                CommandParameter="{Binding}">
+                                            <PathIcon Data="{StaticResource PencilIcon}" />
+                                        </Button>
+                                        <Button Classes="icon danger" ToolTip.Tip="Διαγραφή μέτρησης"
+                                                Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).DeleteMeasurementCommand}"
+                                                CommandParameter="{Binding}">
+                                            <PathIcon Data="{StaticResource DeleteIcon}" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Spacing="2" IsVisible="{Binding HasNoMeasurements}">
+                    <TextBlock Text="Καμία μέτρηση ακόμη." Foreground="{StaticResource BrandSupportBrush}" />
+                    <TextBlock Text="Πάτησε το + για να προσθέσεις την πρώτη." FontSize="12"
+                               Foreground="{StaticResource BrandSupportBrush}" IsVisible="{Binding CanEdit}" />
+                </StackPanel>
+
+                <!-- Workout programs -->
+                <TextBlock Text="Ασκησιολόγια" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" />
+                <ItemsControl ItemsSource="{Binding Workouts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:WorkoutProgram">
+                            <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Spacing="2" IsVisible="{Binding HasNoWorkouts}">
+                    <TextBlock Text="Κανένα ασκησιολόγιο ακόμη." Foreground="{StaticResource BrandSupportBrush}" />
+                    <TextBlock Text="Πάτησε το + για να προσθέσεις το πρώτο." FontSize="12"
+                               Foreground="{StaticResource BrandSupportBrush}" IsVisible="{Binding CanEdit}" />
+                </StackPanel>
+
+                <!-- spacer so FAB doesn't cover last item -->
+                <Border Height="72" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Floating "+" button (coach only) -->
+        <Button Classes="fab"
+                IsVisible="{Binding CanEdit}"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,20,20">
+            <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
+            <Button.Flyout>
+                <MenuFlyout>
+                    <MenuItem Header="Νέα μέτρηση" Command="{Binding AddMeasurementCommand}">
+                        <MenuItem.Icon>
+                            <PathIcon Data="{StaticResource ChartLineIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Νέο ασκησιολόγιο" Command="{Binding AddWorkoutCommand}">
+                        <MenuItem.Icon>
+                            <PathIcon Data="{StaticResource DumbbellIcon}" Foreground="{StaticResource BrandPrimaryBrush}" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
+
+        <!-- In-app confirmation (browser/Android have no native message box) -->
+        <Grid IsVisible="{Binding IsConfirming}" Background="#66000000">
+            <Border Background="White" CornerRadius="14" Padding="20" Margin="16"
+                    MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <StackPanel Spacing="18">
+                    <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" FontSize="15" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="dialog" Content="Άκυρο" Command="{Binding CancelConfirmCommand}" />
+                        <Button Classes="dialog danger" Content="Διαγραφή" Command="{Binding ConfirmCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

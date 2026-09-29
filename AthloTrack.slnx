@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="FitTrack.Android/FitTrack.Android.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="FitTrack.Browser/FitTrack.Browser.csproj" />
+  <Project Path="FitTrack.Core/FitTrack.Core.csproj" />
+  <Project Path="FitTrack.Desktop/FitTrack.Desktop.csproj" />
+  <Project Path="FitTrack/FitTrack.csproj" />
+</Solution>

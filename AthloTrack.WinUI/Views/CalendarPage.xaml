@@ -1,0 +1,54 @@
+<Page x:Class="AthloTrack.WinUI.Views.CalendarPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Ημερολόγιο" Style="{StaticResource PageTitle}" Margin="0,0,0,18" />
+
+        <Grid Grid.Row="1" ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource BrandCard}" VerticalAlignment="Top">
+                <CalendarView x:Name="Cal" />
+            </Border>
+
+            <ScrollViewer Grid.Column="1">
+                <StackPanel Spacing="10" Margin="0,0,0,26">
+                    <TextBlock Text="Προγραμματισμένες προπονήσεις" Style="{StaticResource SectionTitle}" />
+                    <ItemsRepeater x:Name="List">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource BrandCard}" Margin="0,0,0,8">
+                                    <Grid ColumnSpacing="14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                                                Background="{StaticResource BrandHeroGradient}">
+                                            <TextBlock Text="{Binding Initial}" Foreground="#FFFFFF"
+                                                       FontWeight="Bold" FontSize="17"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding DateText}" Style="{StaticResource CaptionText}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                    <TextBlock x:Name="EmptyLabel" Text="Δεν υπάρχουν προγραμματισμένες προπονήσεις."
+                               Style="{StaticResource CaptionText}" Visibility="Collapsed" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

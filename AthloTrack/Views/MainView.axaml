@@ -1,0 +1,456 @@
+<DrawerPage xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:vm="using:AthloTrack.ViewModels"
+            xmlns:controls="using:AthloTrack.Views.Controls"
+            mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+            Header="AthloTrack"
+            x:Class="AthloTrack.Views.MainView"
+            x:DataType="vm:MainViewModel">
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <DrawerPage.DrawerHeader>
+        <!-- Signed-in user; DataContext is the shared CurrentUserViewModel (set in code-behind). -->
+        <StackPanel x:Name="DrawerHeaderRoot" x:DataType="vm:CurrentUserViewModel"
+                    Margin="10" Spacing="4" Background="{StaticResource BrandHeroGradient}">
+            <controls:Avatar Width="68" Height="68" Margin="0,16,0,6" HorizontalAlignment="Center"
+                             BorderBrush="White" BorderThickness="3"
+                             Photo="{Binding Photo}" Initial="{Binding Initial}" />
+            <TextBlock Text="{Binding DisplayName}" Foreground="White" FontSize="16" FontWeight="Bold"
+                       HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="8,0" />
+            <TextBlock Text="{Binding RoleText}" Foreground="#CFE3FF" FontSize="12"
+                       HorizontalAlignment="Center" Margin="0,0,0,14" />
+        </StackPanel>
+    </DrawerPage.DrawerHeader>
+
+    <DrawerPage.DrawerFooter>
+        <Grid Margin="10">
+            <Label HorizontalAlignment="Center"
+                   FontSize="11"
+                   Foreground="{StaticResource BrandSupportBrush}">Vibe-coded with ❤️ by K0D1M</Label>
+        </Grid>
+    </DrawerPage.DrawerFooter>
+
+    <DrawerPage.Drawer>
+        <ListBox Name="DrawerList"
+                 SelectionMode="AlwaysSelected"
+                 SelectionChanged="DrawerList_SelectionChanged"
+                 Tapped="DrawerList_Tapped">
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource ClockIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Πρόσφατα</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource PersonIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Αθλητές</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource DumbbellIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Προπονήσεις</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource CalendarIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ημερολόγιο</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource InfoIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Σχετικά</Label>
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel Spacing="15" Orientation="Horizontal">
+                    <PathIcon Data="{StaticResource GearIcon}" />
+                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ρυθμίσεις</Label>
+                </StackPanel>
+            </ListBoxItem>
+        </ListBox>
+    </DrawerPage.Drawer>
+
+    <ContentPage Name="ContentPage">
+        <ContentPage.DataTemplates>
+            <DataTemplate x:DataType="vm:RecentViewModel">
+                <ContentPage Header="Πρόσφατα">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource ClockIcon}" />
+                    </ContentPage.Icon>
+                    <ScrollViewer>
+                        <StackPanel Margin="16,20" Spacing="16">
+                            <!-- Gradient welcome banner -->
+                            <Border Background="{StaticResource BrandHeroGradient}" CornerRadius="16"
+                                    Padding="24,22" BoxShadow="0 6 18 0 #2A0D47A1">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding WelcomeMessage}" FontSize="26" FontWeight="Bold"
+                                               Foreground="White" TextWrapping="Wrap" />
+                                    <TextBlock Text="Καλή προπόνηση!" FontSize="14" Foreground="#CFE3FF" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Coach: most recent athlete card -->
+                            <Border IsVisible="{Binding IsCoach}"
+                                    Background="{StaticResource CardTintGradient}" CornerRadius="14" Padding="16"
+                                    BorderBrush="#E3ECF8" BorderThickness="1">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center"
+                                                     IsVisible="{Binding HasRecentAthlete}"
+                                                     Photo="{Binding RecentAthletePhoto}"
+                                                     Initial="{Binding RecentAthleteInitial}" />
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Πιο πρόσφατος αθλητής" FontSize="12"
+                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                        <TextBlock Text="{Binding RecentAthleteName}" FontSize="18" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding RecentAthleteSummary}" FontSize="13"
+                                                   Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Athlete: their coach -->
+                            <Border IsVisible="{Binding HasCoach}"
+                                    Background="{StaticResource CardTintGradient}" CornerRadius="14" Padding="16"
+                                    BorderBrush="#E3ECF8" BorderThickness="1">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center"
+                                                     Photo="{Binding CoachPhoto}" Initial="{Binding CoachInitial}" />
+                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="Ο προπονητής σου" FontSize="12"
+                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                        <TextBlock Text="{Binding CoachName}" FontSize="18" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Athlete: unread notifications -->
+                            <StackPanel IsVisible="{Binding IsAthlete}" Spacing="8">
+                                <TextBlock Text="Ειδοποιήσεις" FontSize="16" FontWeight="SemiBold" />
+                                <ItemsControl ItemsSource="{Binding Notifications}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FFF8E1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap"
+                                                               VerticalAlignment="Center" />
+                                                    <Button Grid.Column="1" Content="✓"
+                                                            Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).MarkReadCommand}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="Καμία νέα ειδοποίηση."
+                                           Foreground="{StaticResource BrandSupportBrush}"
+                                           IsVisible="{Binding !Notifications.Count}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:AthletesViewModel">
+                <ContentPage Header="Αθλητές">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource PersonIcon}" />
+                    </ContentPage.Icon>
+                    <Grid>
+                        <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Athletes}" Margin="8,8,8,88">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:AthleteListItemViewModel">
+                                    <Button HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Background="Transparent"
+                                            Padding="12"
+                                            Command="{Binding $parent[ItemsControl].((vm:AthletesViewModel)DataContext).OpenAthleteCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                            <controls:Avatar Grid.Column="0" Width="44" Height="44"
+                                                             Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Subtitle}" FontSize="12"
+                                                           Foreground="{StaticResource BrandSupportBrush}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Text="Δεν υπάρχουν αθλητές ακόμη."
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource BrandSupportBrush}"
+                                   IsVisible="{Binding !Athletes.Count}" />
+
+                        <Button Classes="fab"
+                                IsVisible="{Binding CanEdit}"
+                                Command="{Binding AddAthleteCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="0,0,20,20">
+                            <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
+                        </Button>
+                    </Grid>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:WorkoutsViewModel">
+                <ContentPage Header="Προπονήσεις">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource DumbbellIcon}" />
+                    </ContentPage.Icon>
+                    <Grid>
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding WorkoutPrograms}" Margin="12">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
+                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,10">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15" />
+                                                <TextBlock Text="{Binding TargetDateText}" FontSize="12"
+                                                           Foreground="{StaticResource BrandSupportBrush}" />
+                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Text="Δεν υπάρχουν ασκησιολόγια ακόμη."
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource BrandSupportBrush}"
+                                   IsVisible="{Binding !WorkoutPrograms.Count}" />
+                    </Grid>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:CalendarViewModel">
+                <ContentPage Header="Ημερολόγιο">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource CalendarIcon}" />
+                    </ContentPage.Icon>
+                    <ContentPage.Styles>
+                        <Style Selector="Button.calday">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="CornerRadius" Value="10" />
+                            <Setter Property="Padding" Value="2,4" />
+                            <Setter Property="Margin" Value="1" />
+                            <Setter Property="Height" Value="60" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="VerticalContentAlignment" Value="Top" />
+                        </Style>
+                        <Style Selector="Button.calday.othermonth">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Style>
+                        <Style Selector="Button.calday:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="#EEF3FB" />
+                        </Style>
+                        <Style Selector="Button.calday.today /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryBrush}" />
+                            <Setter Property="BorderThickness" Value="1.5" />
+                        </Style>
+                        <Style Selector="Button.calday.selected /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{StaticResource BrandButtonGradient}" />
+                            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+                        </Style>
+                        <Style Selector="Button.calnav">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Width" Value="40" />
+                            <Setter Property="Height" Value="40" />
+                            <Setter Property="CornerRadius" Value="20" />
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                        </Style>
+                        <Style Selector="Button.agenda">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="4,10" />
+                            <Setter Property="CornerRadius" Value="8" />
+                        </Style>
+                    </ContentPage.Styles>
+
+                    <ScrollViewer>
+                        <StackPanel Margin="12" Spacing="10" MaxWidth="560" HorizontalAlignment="Stretch">
+
+                            <!-- month header -->
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Button Grid.Column="0" Classes="calnav" Command="{Binding PreviousMonthCommand}">
+                                    <TextBlock Text="‹" FontSize="22" />
+                                </Button>
+                                <TextBlock Grid.Column="1" Text="{Binding MonthTitle}" FontSize="18" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                                <Button Grid.Column="2" Classes="calnav" Command="{Binding NextMonthCommand}">
+                                    <TextBlock Text="›" FontSize="22" />
+                                </Button>
+                            </Grid>
+
+                            <!-- weekday names, Monday first -->
+                            <ItemsControl ItemsSource="{Binding WeekdayNames}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding}" FontSize="12" HorizontalAlignment="Center"
+                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- month grid: photos of the athletes with a workout that day -->
+                            <ItemsControl ItemsSource="{Binding Days}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CalendarDayViewModel">
+                                        <Button Classes="calday"
+                                                Classes.selected="{Binding IsSelected}"
+                                                Classes.today="{Binding IsToday}"
+                                                Classes.othermonth="{Binding !IsCurrentMonth}"
+                                                Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).SelectDayCommand}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Spacing="3" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding DayNumber}" FontSize="13" HorizontalAlignment="Center" />
+                                                <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center"
+                                                            IsVisible="{Binding HasWorkouts}">
+                                                    <ItemsControl ItemsSource="{Binding Avatars}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:CalendarEntryViewModel">
+                                                                <controls:Avatar Width="20" Height="20"
+                                                                                 BorderBrush="White" BorderThickness="1"
+                                                                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <TextBlock Text="{Binding MoreText}" IsVisible="{Binding HasMore}"
+                                                               FontSize="10" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- agenda: the selected day, or the whole month -->
+                            <TextBlock Text="{Binding AgendaTitle}" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+
+                            <ItemsControl ItemsSource="{Binding AgendaEntries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CalendarEntryViewModel">
+                                        <Button Classes="agenda"
+                                                Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).OpenEntryCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                                <controls:Avatar Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top"
+                                                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding DateText}" FontSize="12"
+                                                               Foreground="{StaticResource BrandSupportBrush}" />
+                                                    <TextBlock Text="{Binding Content}" FontSize="13" TextWrapping="Wrap"
+                                                               MaxLines="2" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Καμία προπόνηση για αυτό το διάστημα."
+                                       Foreground="{StaticResource BrandSupportBrush}"
+                                       IsVisible="{Binding HasNoAgendaEntries}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:AboutViewModel">
+                <ContentPage Header="Σχετικά">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource InfoIcon}" />
+                    </ContentPage.Icon>
+                    <StackPanel Margin="24" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="360">
+                        <Border Width="72" Height="72" CornerRadius="22" HorizontalAlignment="Center"
+                                Background="{StaticResource BrandLogoGradient}">
+                            <PathIcon Data="{StaticResource LogoIcon}" Width="36" Height="36"
+                                      Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                        </Border>
+                        <TextBlock Text="{Binding AppName}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding Version, StringFormat='Έκδοση {0}'}" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource BrandSupportBrush}" />
+                        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0"
+                                   Text="Παρακολούθηση προόδου αθλητών: μετρήσεις, ασκησιολόγια και γραφήματα προόδου, για προπονητές και αθλητές." />
+                        <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontStyle="Italic" HorizontalAlignment="Center"
+                                   FontFamily="{StaticResource GreekAccentFont}"
+                                   Margin="0,8,0,0" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                    </StackPanel>
+                </ContentPage>
+            </DataTemplate>
+
+            <DataTemplate x:DataType="vm:SettingsViewModel">
+                <ContentPage Header="Ρυθμίσεις">
+                    <ContentPage.Icon>
+                        <PathIcon Data="{StaticResource GearIcon}" />
+                    </ContentPage.Icon>
+                    <StackPanel Margin="16,24" Spacing="16" MaxWidth="360" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Panel Grid.Column="0" Width="68" Height="68">
+                                <controls:Avatar Width="64" Height="64" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                                 Photo="{Binding User.Photo}" Initial="{Binding User.Initial}" />
+                                <Button Classes="photobadge" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Click="OnChangeOwnPhoto" ToolTip.Tip="Αλλαγή φωτογραφίας">
+                                    <PathIcon Data="{StaticResource CameraIcon}" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                                </Button>
+                            </Panel>
+                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="Συνδεδεμένος ως" FontSize="12" Foreground="{StaticResource BrandSupportBrush}" />
+                                <TextBlock Text="{Binding User.DisplayName}" FontSize="16" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding User.RoleText}" FontSize="12" Foreground="{StaticResource BrandSupportBrush}" />
+                            </StackPanel>
+                        </Grid>
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding User.IsUploading}" />
+                        <TextBlock Text="{Binding User.ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                                   IsVisible="{Binding User.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                        <!-- Greek only until translations (.resx) exist; a live toggle would change nothing. -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Γλώσσα / Language" FontWeight="SemiBold" />
+                            <ComboBox SelectedIndex="0" IsEnabled="False" HorizontalAlignment="Stretch">
+                                <ComboBoxItem>Ελληνικά</ComboBoxItem>
+                                <ComboBoxItem>English</ComboBoxItem>
+                            </ComboBox>
+                            <TextBlock Text="Η αγγλική έκδοση έρχεται σύντομα." FontSize="12"
+                                       Foreground="{StaticResource BrandSupportBrush}" />
+                        </StackPanel>
+
+                        <Button Classes="dark" Content="Αποσύνδεση" Command="{Binding LogoutCommand}"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="44" Margin="0,12,0,0" CornerRadius="22" FontWeight="SemiBold" />
+                    </StackPanel>
+                </ContentPage>
+            </DataTemplate>
+        </ContentPage.DataTemplates>
+    </ContentPage>
+</DrawerPage>

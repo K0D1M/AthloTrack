@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="640"
+             x:Class="AthloTrack.Views.AddWorkoutView"
+             x:DataType="vm:AddWorkoutViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Header: athlete photo + title -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+            <controls:Avatar Width="52" Height="52" Photo="{Binding Photo}" Initial="{Binding Initial}" />
+            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
+                       VerticalAlignment="Center" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
+                    <DatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ασκησιολόγιο" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding Content, Mode=TwoWay}"
+                             AcceptsReturn="True" TextWrapping="Wrap" Height="240"
+                             PlaceholderText="Γράψε εδώ το πρόγραμμα προπόνησης..." />
+                </StackPanel>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+            <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
+            <Button Classes="primary" Content="Αποθήκευση" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

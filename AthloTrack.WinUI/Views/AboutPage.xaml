@@ -1,0 +1,25 @@
+<Page x:Class="AthloTrack.WinUI.Views.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32,26,32,26">
+        <Border CornerRadius="{StaticResource CardCornerRadius}"
+                Background="{StaticResource BrandHeroGradient}"
+                MaxWidth="560" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Padding="40,36">
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <Border Width="82" Height="82" CornerRadius="26"
+                        Background="{StaticResource BrandAccentGradient}"
+                        HorizontalAlignment="Center">
+                    <FontIcon Glyph="&#xE95E;" FontSize="36" Foreground="#2A1A00" />
+                </Border>
+                <TextBlock x:Name="AppNameText" FontSize="28" FontWeight="Bold"
+                           Foreground="#FFFFFF" HorizontalAlignment="Center" />
+                <TextBlock x:Name="VersionText" Foreground="#CFE3FF" HorizontalAlignment="Center" />
+                <TextBlock Text="Παρακολούθηση προόδου αθλητών: μετρήσεις, ασκησιολόγια και γραφήματα προόδου, για προπονητές και αθλητές."
+                           Foreground="#EAF2FF" TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0" />
+                <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontStyle="Italic" FontSize="17"
+                           Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,10,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

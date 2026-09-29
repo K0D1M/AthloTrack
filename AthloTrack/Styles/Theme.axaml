@@ -1,0 +1,89 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="BrandPrimaryColor">#1565C0</Color>
+    <Color x:Key="BrandPrimaryDarkColor">#003366</Color>
+    <Color x:Key="BrandAccentColor">#FFD700</Color>
+    <Color x:Key="BrandSecondaryColor">#FFFFFF</Color>
+    <Color x:Key="BrandSupportColor">#333333</Color>
+
+    <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />
+    <SolidColorBrush x:Key="BrandPrimaryDarkBrush" Color="{StaticResource BrandPrimaryDarkColor}" />
+    <SolidColorBrush x:Key="BrandAccentBrush" Color="{StaticResource BrandAccentColor}" />
+    <SolidColorBrush x:Key="BrandSecondaryBrush" Color="{StaticResource BrandSecondaryColor}" />
+    <SolidColorBrush x:Key="BrandSupportBrush" Color="{StaticResource BrandSupportColor}" />
+
+    <!-- Hover/pressed shades for the brand buttons -->
+    <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#1976D2" />
+    <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#0D47A1" />
+    <SolidColorBrush x:Key="BrandAccentHoverBrush" Color="#FFE033" />
+    <SolidColorBrush x:Key="BrandAccentPressedBrush" Color="#F5C400" />
+
+    <LinearGradientBrush x:Key="BrandLogoGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#FFD700" Offset="0" />
+        <GradientStop Color="#FFA000" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- ============ Gradients ============ -->
+
+    <!-- Hero surfaces: login background, headers, banners -->
+    <LinearGradientBrush x:Key="BrandHeroGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#0D47A1" Offset="0" />
+        <GradientStop Color="#1565C0" Offset="0.45" />
+        <GradientStop Color="#1E88E5" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Top bar and drawer header: left-to-right, darker at the menu button -->
+    <LinearGradientBrush x:Key="BrandBarGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="#003366" Offset="0" />
+        <GradientStop Color="#0D47A1" Offset="0.5" />
+        <GradientStop Color="#1565C0" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Primary buttons: blue pill -->
+    <LinearGradientBrush x:Key="BrandButtonGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#0D47A1" Offset="0" />
+        <GradientStop Color="#1E88E5" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BrandButtonHoverGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#1565C0" Offset="0" />
+        <GradientStop Color="#42A5F5" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BrandButtonPressedGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#003366" Offset="0" />
+        <GradientStop Color="#1565C0" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Accent buttons: gold pill -->
+    <LinearGradientBrush x:Key="BrandAccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#FFD700" Offset="0" />
+        <GradientStop Color="#FFA000" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BrandAccentHoverGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#FFE44D" Offset="0" />
+        <GradientStop Color="#FFB300" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BrandAccentPressedGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#F5C400" Offset="0" />
+        <GradientStop Color="#FF8F00" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Quiet page backdrop and card tint -->
+    <LinearGradientBrush x:Key="PageBackdropGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#F4F8FE" Offset="0" />
+        <GradientStop Color="#FFFFFF" Offset="0.35" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#EEF4FD" Offset="0" />
+        <GradientStop Color="#F8FAFD" Offset="1" />
+    </LinearGradientBrush>
+
+    <!--
+      GFS Didot (OFL, bundled in Assets/Fonts) covers polytonic Greek (ῦ ὑ ἐ ῖ). The browser
+      head has no system fonts and the default Inter lacks those glyphs, so the motto rendered
+      as boxes. To use Gabriola instead, drop Gabriola.ttf into Assets/Fonts and point this at
+      avares://AthloTrack/Assets/Fonts#Gabriola
+    -->
+    <FontFamily x:Key="GreekAccentFont">avares://AthloTrack/Assets/Fonts#GFS Didot</FontFamily>
+
+</ResourceDictionary>

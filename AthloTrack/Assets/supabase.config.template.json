@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this file to supabase.config.json (same folder) and fill in your values. Supabase dashboard > Project Settings > API: 'Project URL' and the 'anon public' key.",
+  "Url": "https://tahsfrptizcdqhvghzqs.supabase.co",
+  "AnonKey": "sb_publishable_pbzglqOajL8Kntnk2gPRpA_3KRfjL-X"
+}
