@@ -4,7 +4,7 @@
     <TargetFramework>net10.0-android</TargetFramework>
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
-    <ApplicationId>com.CompanyName.AthloTrack</ApplicationId>
+    <ApplicationId>com.k0d1m.athlotrack</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
@@ -20,6 +20,12 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+    <PackageReference Include="Xamarin.Firebase.Messaging" />
+  </ItemGroup>
+
+  <!-- Firebase config for push (download from the Firebase console; kept out of git). -->
+  <ItemGroup Condition="Exists('google-services.json')">
+    <GoogleServicesJson Include="google-services.json" />
   </ItemGroup>
 
   <ItemGroup>

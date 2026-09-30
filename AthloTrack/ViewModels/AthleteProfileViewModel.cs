@@ -59,6 +59,24 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>Only the athlete changes their own photo — never the coach.</summary>
     public bool CanChangePhoto => IsOwnProfile;
 
+    /// <summary>Only the athlete marks their own workouts done (the coach is then notified).</summary>
+    public bool CanCompleteWorkouts => IsOwnProfile;
+
+    [RelayCommand]
+    private async Task CompleteWorkoutAsync(WorkoutProgram? workout)
+    {
+        if (workout is null || workout.IsCompleted || !CanCompleteWorkouts) return;
+        try
+        {
+            await _workouts.MarkCompletedAsync(workout.Id);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
     // Progress chart (weight + fat metrics over time)
     [ObservableProperty]
     public partial ISeries[] ChartSeries { get; set; } = Array.Empty<ISeries>();

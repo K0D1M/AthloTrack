@@ -12,8 +12,11 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IAuthService _authService;
     private readonly SessionState _session;
 
-    public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user)
+    private readonly AthloTrack.Core.Push.PushRegistrationService _push;
+
+    public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user, AthloTrack.Core.Push.PushRegistrationService push)
     {
+        _push = push;
         _authService = authService;
         _session = session;
         User = user;
@@ -33,6 +36,7 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        await _push.UnregisterAsync();
         await _authService.SignOutAsync();
         _session.Clear();
         LoggedOut?.Invoke();

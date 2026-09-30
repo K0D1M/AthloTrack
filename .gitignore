@@ -403,3 +403,6 @@ FodyWeavers.xsd
 
 # Database schema and migrations are part of the app (no secrets in them).
 !supabase/*.sql
+
+# Firebase client config (per-developer; download from the Firebase console)
+AthloTrack.Android/google-services.json

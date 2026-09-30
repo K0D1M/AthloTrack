@@ -18,7 +18,11 @@ namespace AthloTrack.Android
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
             AthloTrack.AppBootstrap.RegisterPlatformServices = services =>
+            {
                 services.AddSingleton<ICredentialStore, AndroidCredentialStore>();
+                services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, FirebaseTokenProvider>();
+            };
+            PushNotifications.EnsureChannel(this);
 
             return base.CustomizeAppBuilder(builder)
             .WithInterFont();

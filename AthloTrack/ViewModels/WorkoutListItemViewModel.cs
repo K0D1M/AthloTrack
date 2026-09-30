@@ -9,9 +9,13 @@ public sealed class WorkoutListItemViewModel
         AthleteName = athleteName;
         TargetDateText = $"Ημ. στόχος: {program.TargetDate:dd/MM/yyyy}";
         Content = program.Content;
+        IsCompleted = program.IsCompleted;
+        CompletedText = program.CompletedAt is { } done ? $"✓ Ολοκληρώθηκε {done.ToLocalTime():dd/MM/yyyy}" : string.Empty;
     }
 
     public string AthleteName { get; }
     public string TargetDateText { get; }
     public string Content { get; }
+    public bool IsCompleted { get; }
+    public string CompletedText { get; }
 }

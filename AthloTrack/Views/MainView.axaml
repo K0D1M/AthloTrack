@@ -133,8 +133,8 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Athlete: unread notifications -->
-                            <StackPanel IsVisible="{Binding IsAthlete}" Spacing="8">
+                            <!-- Unread notifications: athletes (new workout) and coaches (workout completed) -->
+                            <StackPanel Spacing="8">
                                 <TextBlock Text="Ειδοποιήσεις" FontSize="16" FontWeight="SemiBold" />
                                 <ItemsControl ItemsSource="{Binding Notifications}">
                                     <ItemsControl.ItemTemplate>
@@ -223,6 +223,8 @@
                                                 <TextBlock Text="{Binding TargetDateText}" FontSize="12"
                                                            Foreground="{StaticResource BrandSupportBrush}" />
                                                 <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                                <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
+                                                           Foreground="#2E7D32" FontWeight="SemiBold" Margin="0,2,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

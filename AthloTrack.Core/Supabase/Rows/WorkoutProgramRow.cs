@@ -24,6 +24,9 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("created_by")]
     public Guid? CreatedBy { get; set; }
 
+    [Column("completed_at")]
+    public DateTimeOffset? CompletedAt { get; set; }
+
     [Column("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
 }

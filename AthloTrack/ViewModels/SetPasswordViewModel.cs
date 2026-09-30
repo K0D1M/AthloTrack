@@ -18,8 +18,11 @@ public partial class SetPasswordViewModel : ObservableValidator
     private readonly ICoachRepository _coaches;
     private readonly SessionState _session;
 
-    public SetPasswordViewModel(IAuthService auth, ICoachRepository coaches, SessionState session)
+    private readonly AthloTrack.Core.Push.PushRegistrationService _push;
+
+    public SetPasswordViewModel(IAuthService auth, ICoachRepository coaches, SessionState session, AthloTrack.Core.Push.PushRegistrationService push)
     {
+        _push = push;
         _auth = auth;
         _coaches = coaches;
         _session = session;
@@ -94,6 +97,7 @@ public partial class SetPasswordViewModel : ObservableValidator
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        await _push.UnregisterAsync();
         await _auth.SignOutAsync();
         _session.Clear();
         LoggedOut?.Invoke();

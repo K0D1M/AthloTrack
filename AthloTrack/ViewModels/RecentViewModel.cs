@@ -110,6 +110,11 @@ public partial class RecentViewModel : ViewModelBase
                 return;
             }
 
+            // Coach: e.g. "Ο/Η ... ολοκλήρωσε το ασκησιολόγιο".
+            Notifications.Clear();
+            foreach (var n in await _notifications.GetUnreadForCoachAsync())
+                Notifications.Add(n);
+
             var athlete = await _athletes.GetMostRecentAsync();
             if (athlete is not null)
             {

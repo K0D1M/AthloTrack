@@ -40,6 +40,16 @@ public sealed class WorkoutRepository : IWorkoutRepository
         return Map(response.Models.First());
     }
 
+    public async Task MarkCompletedAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        // Only completed_at: the athlete's permissions (and a DB trigger) allow nothing else.
+        await client.From<WorkoutProgramRow>()
+            .Where(x => x.Id == id)
+            .Set(x => x.CompletedAt!, DateTimeOffset.UtcNow)
+            .Update();
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var client = await _factory.GetClientAsync();
@@ -55,6 +65,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         TargetDate = DateOnly.FromDateTime(r.TargetDate),
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
+        CompletedAt = r.CompletedAt,
     };
 
     private static WorkoutProgramRow MapBack(WorkoutProgram w) => new()

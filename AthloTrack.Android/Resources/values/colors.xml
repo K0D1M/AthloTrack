@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="splash_background">#FFFFFF</color>
+  <color name="splash_background">#0D47A1</color>
+  <color name="athlo_blue">#1565C0</color>
 </resources>

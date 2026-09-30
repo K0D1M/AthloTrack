@@ -9,4 +9,9 @@ public sealed class WorkoutProgram
     public DateOnly TargetDate { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>When the athlete marked it done; null while open.</summary>
+    public DateTimeOffset? CompletedAt { get; set; }
+
+    public bool IsCompleted => CompletedAt is not null;
 }

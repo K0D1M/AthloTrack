@@ -175,6 +175,8 @@ public partial class App : Application
     {
         // Name + photo for the drawer header and Ρυθμίσεις.
         _ = Services.GetRequiredService<CurrentUserViewModel>().LoadAsync();
+        // Phone push (Android): link this device to the signed-in user.
+        _ = Services.GetRequiredService<AthloTrack.Core.Push.PushRegistrationService>().RegisterAsync();
 
         var mainView = new MainView { DataContext = new MainViewModel() };
         SetRoot(new PageNavigationHost { Page = mainView });

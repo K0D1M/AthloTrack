@@ -18,7 +18,18 @@ public sealed class NotificationRepository : INotificationRepository
     {
         var client = await _factory.GetClientAsync();
         var response = await client.From<NotificationRow>()
-            .Where(x => x.AthleteId == athleteId && x.IsRead == false)
+            .Where(x => x.AthleteId == athleteId && x.Recipient == "athlete" && x.IsRead == false)
+            .Order(x => x.CreatedAt, Constants.Ordering.Descending)
+            .Get();
+        return response.Models.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<AppNotification>> GetUnreadForCoachAsync()
+    {
+        // RLS limits the rows to the signed-in coach's own athletes.
+        var client = await _factory.GetClientAsync();
+        var response = await client.From<NotificationRow>()
+            .Where(x => x.Recipient == "coach" && x.IsRead == false)
             .Order(x => x.CreatedAt, Constants.Ordering.Descending)
             .Get();
         return response.Models.Select(Map).ToList();
@@ -37,6 +48,7 @@ public sealed class NotificationRepository : INotificationRepository
     {
         Id = r.Id,
         AthleteId = r.AthleteId,
+        Recipient = r.Recipient,
         Type = r.Type,
         Message = r.Message,
         RelatedWorkoutId = r.RelatedWorkoutId,

@@ -15,6 +15,9 @@ public sealed class NotificationRow : BaseModel
     [Column("type")]
     public string Type { get; set; } = "new_workout";
 
+    [Column("recipient")]
+    public string Recipient { get; set; } = "athlete";
+
     [Column("message")]
     public string Message { get; set; } = string.Empty;
 

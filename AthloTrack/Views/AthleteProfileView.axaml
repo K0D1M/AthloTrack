@@ -180,10 +180,24 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:WorkoutProgram">
                             <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8">
-                                <StackPanel Spacing="2">
+                                <StackPanel Spacing="4">
                                     <TextBlock Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
                                                FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+                                    <!-- done marker (everyone) -->
+                                    <TextBlock IsVisible="{Binding IsCompleted}" Foreground="#2E7D32" FontWeight="SemiBold"
+                                               Text="{Binding CompletedAt, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
+                                    <!-- the athlete marks their own open workout done -->
+                                    <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
+                                            Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CompleteWorkoutCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Button.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <Binding Path="!IsCompleted" />
+                                                <Binding Path="$parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CanCompleteWorkouts" />
+                                            </MultiBinding>
+                                        </Button.IsVisible>
+                                    </Button>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

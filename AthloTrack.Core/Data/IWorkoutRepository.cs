@@ -8,5 +8,7 @@ public interface IWorkoutRepository
     Task<IReadOnlyList<WorkoutProgram>> GetAllAsync();
     Task<IReadOnlyList<WorkoutProgram>> GetForAthleteAsync(Guid athleteId);
     Task<WorkoutProgram> AddAsync(WorkoutProgram program);
+    /// <summary>The athlete marks the program done; the DB then notifies the coach.</summary>
+    Task MarkCompletedAsync(Guid id);
     Task DeleteAsync(Guid id);
 }

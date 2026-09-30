@@ -25,6 +25,7 @@ public static class CoreServiceRegistration
         services.AddSingleton<IWorkoutRepository, WorkoutRepository>();
         services.AddSingleton<INotificationRepository, NotificationRepository>();
         services.AddSingleton<IAvatarService, AvatarService>();
+        services.AddSingleton<AthloTrack.Core.Push.PushRegistrationService>();
 
         return services;
     }
