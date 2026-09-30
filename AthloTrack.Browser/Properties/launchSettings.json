@@ -1,6 +1,6 @@
 {
     "profiles": {
-    "FitTrack.Browser": {
+    "AthloTrack.Browser": {
         "commandName": "Project",
         "launchBrowser": true,
         "environmentVariables": {

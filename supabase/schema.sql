@@ -1,4 +1,4 @@
--- FitTrack Supabase schema: run this once in the Supabase SQL editor
+-- AthloTrack Supabase schema: run this once in the Supabase SQL editor
 -- (Project > SQL Editor > New query) after creating the project.
 
 create table coaches (

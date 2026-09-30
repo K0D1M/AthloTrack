@@ -1,9 +1,9 @@
 <Solution>
-  <Project Path="FitTrack.Android/FitTrack.Android.csproj">
+  <Project Path="AthloTrack.Android/AthloTrack.Android.csproj">
     <Deploy />
   </Project>
-  <Project Path="FitTrack.Browser/FitTrack.Browser.csproj" />
-  <Project Path="FitTrack.Core/FitTrack.Core.csproj" />
-  <Project Path="FitTrack.Desktop/FitTrack.Desktop.csproj" />
-  <Project Path="FitTrack/FitTrack.csproj" />
+  <Project Path="AthloTrack.Browser/AthloTrack.Browser.csproj" />
+  <Project Path="AthloTrack.Core/AthloTrack.Core.csproj" />
+  <Project Path="AthloTrack.Desktop/AthloTrack.Desktop.csproj" />
+  <Project Path="AthloTrack/AthloTrack.csproj" />
 </Solution>
