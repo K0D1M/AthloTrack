@@ -48,7 +48,17 @@ public partial class App : Application
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
-            activity.MainViewFactory = () => _root;
+            activity.MainViewFactory = () =>
+            {
+                // Back closes the activity but not the app; the next activity re-hosts _root. The
+                // detached shell (PageNavigationHost / DrawerPage) doesn't put its pages back, which
+                // left a blank screen, so the main shell is rebuilt for the new activity.
+                if (_root.Content is PageNavigationHost)
+                {
+                    _root.Content = CreateMainShell();
+                }
+                return _root;
+            };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
@@ -178,7 +188,9 @@ public partial class App : Application
         // Phone push (Android): link this device to the signed-in user.
         _ = Services.GetRequiredService<AthloTrack.Core.Push.PushRegistrationService>().RegisterAsync();
 
-        var mainView = new MainView { DataContext = new MainViewModel() };
-        SetRoot(new PageNavigationHost { Page = mainView });
+        SetRoot(CreateMainShell());
     }
+
+    private static Control CreateMainShell() =>
+        new PageNavigationHost { Page = new MainView { DataContext = new MainViewModel() } };
 }

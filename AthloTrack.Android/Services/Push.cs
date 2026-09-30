@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
@@ -26,11 +27,20 @@ public static class PushNotifications
     }
 
     /// <summary>Shows a notification while the app is open (in the background FCM shows it itself).</summary>
-    public static void Show(Context context, string title, string body)
+    public static void Show(Context context, string title, string body, IDictionary<string, string>? data = null)
     {
         EnsureChannel(context);
+        var id = System.Environment.TickCount;
         var launch = context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!);
-        var pending = launch is null ? null : PendingIntent.GetActivity(context, 0, launch,
+        if (launch is not null)
+        {
+            // Same extras FCM puts on a background notification, so MainActivity opens the section.
+            launch.AddFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+            if (data is not null)
+                foreach (var (key, value) in data) launch.PutExtra(key, value);
+        }
+        // Unique request code: otherwise one notification's extras would replace another's.
+        var pending = launch is null ? null : PendingIntent.GetActivity(context, id, launch,
             PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
 
 #pragma warning disable CA1422 // pre-26 fallback constructor
@@ -46,7 +56,7 @@ public static class PushNotifications
         if (pending is not null) builder.SetContentIntent(pending);
 
         var manager = (NotificationManager?)context.GetSystemService(Context.NotificationService);
-        manager?.Notify(System.Environment.TickCount, builder.Build());
+        manager?.Notify(id, builder.Build());
     }
 }
 
@@ -104,6 +114,6 @@ public class AthloTrackMessagingService : FirebaseMessagingService
     {
         base.OnMessageReceived(message);
         var n = message.GetNotification();
-        PushNotifications.Show(this, n?.Title ?? "AthloTrack", n?.Body ?? string.Empty);
+        PushNotifications.Show(this, n?.Title ?? "AthloTrack", n?.Body ?? string.Empty, message.Data);
     }
 }

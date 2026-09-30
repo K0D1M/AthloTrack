@@ -55,6 +55,29 @@ public partial class MainView : DrawerPage
         base.OnAttachedToVisualTree(e);
 
         UpdatePage(DrawerList.SelectedIndex);
+
+        // A tapped phone notification opens its section (see MainActivity).
+        AthloTrack.Services.NotificationNavigation.Requested += ApplyPendingSection;
+        ApplyPendingSection();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        AthloTrack.Services.NotificationNavigation.Requested -= ApplyPendingSection;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void ApplyPendingSection()
+    {
+        if (AthloTrack.Services.NotificationNavigation.TakePending() is not { } index) return;
+        if (DrawerList.SelectedIndex != index)
+        {
+            DrawerList.SelectedIndex = index; // SelectionChanged shows the page
+        }
+        else
+        {
+            UpdatePage(index); // reload it, and leave any sub-page
+        }
     }
 
     private void DrawerList_SelectionChanged(object? sender, SelectionChangedEventArgs e)

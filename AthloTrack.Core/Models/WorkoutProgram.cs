@@ -14,4 +14,12 @@ public sealed class WorkoutProgram
     public DateTimeOffset? CompletedAt { get; set; }
 
     public bool IsCompleted => CompletedAt is not null;
+
+    /// <summary>When the athlete first saw it (read receipt for the coach); null while unseen.</summary>
+    public DateTimeOffset? ReadAt { get; set; }
+
+    public bool IsRead => ReadAt is not null;
+
+    /// <summary>ReadAt in the device's time zone, for display.</summary>
+    public DateTimeOffset? ReadAtLocal => ReadAt?.ToLocalTime();
 }

@@ -225,6 +225,13 @@
                                                 <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0" />
                                                 <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
                                                            Foreground="#2E7D32" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
+                                                            IsVisible="{Binding ShowReadReceipt}">
+                                                    <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
+                                                              Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
+                                                               Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                </StackPanel>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

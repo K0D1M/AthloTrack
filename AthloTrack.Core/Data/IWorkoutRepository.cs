@@ -10,5 +10,7 @@ public interface IWorkoutRepository
     Task<WorkoutProgram> AddAsync(WorkoutProgram program);
     /// <summary>The athlete marks the program done; the DB then notifies the coach.</summary>
     Task MarkCompletedAsync(Guid id);
+    /// <summary>The athlete has seen their workouts: stamps read_at on the unread ones (coach's read receipt).</summary>
+    Task MarkAllReadAsync();
     Task DeleteAsync(Guid id);
 }

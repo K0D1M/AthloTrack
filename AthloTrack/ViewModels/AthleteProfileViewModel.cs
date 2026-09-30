@@ -268,6 +268,8 @@ public partial class AthleteProfileViewModel : ViewModelBase
             Workouts.Clear();
             foreach (var w in await _workouts.GetForAthleteAsync(_athleteId))
                 Workouts.Add(w);
+
+            if (IsOwnProfile) await MarkWorkoutsReadAsync(Workouts);
         }
         catch (Exception ex)
         {
@@ -281,6 +283,24 @@ public partial class AthleteProfileViewModel : ViewModelBase
         // Photo last, so the page is usable while it downloads.
         Photo = await _avatars.GetAsync(ProfileImagePath);
     }
+
+    /// <summary>The athlete has now seen these workouts: the coach gets the read receipt.</summary>
+    internal static async Task MarkWorkoutsReadAsync(IWorkoutRepository repository, System.Collections.Generic.IEnumerable<WorkoutProgram> shown)
+    {
+        if (!shown.Any(w => !w.IsRead)) return;
+        try
+        {
+            await repository.MarkAllReadAsync();
+        }
+        catch (Exception ex)
+        {
+            // A missing receipt must never break the screen.
+            Console.WriteLine($"[AthloTrack] mark_workouts_read failed: {ex.Message}");
+        }
+    }
+
+    private Task MarkWorkoutsReadAsync(System.Collections.Generic.IEnumerable<WorkoutProgram> shown) =>
+        MarkWorkoutsReadAsync(_workouts, shown);
 
     private void BuildChart()
     {

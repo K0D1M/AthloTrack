@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using AthloTrack.Core.Auth;
 using AthloTrack.Core.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -12,11 +13,13 @@ public partial class WorkoutsViewModel : ViewModelBase
 {
     private readonly IWorkoutRepository _workouts;
     private readonly IAthleteRepository _athletes;
+    private readonly SessionState _session;
 
-    public WorkoutsViewModel(IWorkoutRepository workouts, IAthleteRepository athletes)
+    public WorkoutsViewModel(IWorkoutRepository workouts, IAthleteRepository athletes, SessionState session)
     {
         _workouts = workouts;
         _athletes = athletes;
+        _session = session;
         _ = LoadAsync();
     }
 
@@ -43,8 +46,11 @@ public partial class WorkoutsViewModel : ViewModelBase
             foreach (var p in programs)
             {
                 var name = names.TryGetValue(p.AthleteId, out var n) ? n : "—";
-                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name));
+                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name, showReadReceipt: _session.IsCoach));
             }
+
+            // The athlete has now seen their workouts: the coach gets the read receipt.
+            if (!_session.IsCoach) await AthleteProfileViewModel.MarkWorkoutsReadAsync(_workouts, programs);
         }
         catch (Exception ex)
         {

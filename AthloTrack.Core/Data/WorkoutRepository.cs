@@ -50,6 +50,13 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
+    public async Task MarkAllReadAsync()
+    {
+        var client = await _factory.GetClientAsync();
+        // Server-side: stamps only the caller's own unread workouts, once.
+        await client.Rpc("mark_workouts_read", null);
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var client = await _factory.GetClientAsync();
@@ -66,6 +73,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
         CompletedAt = r.CompletedAt,
+        ReadAt = r.ReadAt,
     };
 
     private static WorkoutProgramRow MapBack(WorkoutProgram w) => new()

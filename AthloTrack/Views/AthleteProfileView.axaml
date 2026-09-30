@@ -187,6 +187,20 @@
                                     <!-- done marker (everyone) -->
                                     <TextBlock IsVisible="{Binding IsCompleted}" Foreground="#2E7D32" FontWeight="SemiBold"
                                                Text="{Binding CompletedAt, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
+                                    <!-- read receipt (coach only) -->
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <StackPanel.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <Binding Path="IsRead" />
+                                                <Binding Path="$parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
+                                            </MultiBinding>
+                                        </StackPanel.IsVisible>
+                                        <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
+                                                  Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding ReadAtLocal, StringFormat='Διαβάστηκε από τον αθλητή στις {0:dd/MM/yyyy HH:mm}'}"
+                                                   FontSize="12" Foreground="{StaticResource BrandSupportBrush}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    </StackPanel>
                                     <!-- the athlete marks their own open workout done -->
                                     <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
                                             Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CompleteWorkoutCommand}"
