@@ -408,6 +408,9 @@ FodyWeavers.xsd
 # the app to Firebase), not a secret. The service-account key must never be committed.
 *firebase-adminsdk*.json
 
+# The nightly backup job (the Visual Studio "Backup*/" rule above would hide it on Windows).
+!ops/backup/
+
 # Android signing keys
 *.keystore
 *.jks
