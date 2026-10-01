@@ -60,7 +60,7 @@ The progress chart works in two steps. `AthleteProfileViewModel` produces plain 
 ## Tests
 `AthloTrack.Tests` (xUnit v3) has two kinds of tests:
 - **Unit tests** for the view models and helpers, using in-memory fakes of the repositories (`Fakes.cs`).
-- **Integration tests** that run the real queries against Supabase as the test accounts. They catch filters PostgREST rejects. They are skipped unless `ATHLOTRACK_TEST_ATHLETE_EMAIL`/`_PASSWORD` and `ATHLOTRACK_TEST_COACH_EMAIL`/`_PASSWORD` are set. Use test accounts only.
+- **Integration tests** that run the real queries against Supabase as the test accounts. They catch filters PostgREST rejects. They are skipped unless `ATHLOTRACK_TEST_ATHLETE_EMAIL`/`_PASSWORD` and `ATHLOTRACK_TEST_COACH_EMAIL`/`_PASSWORD` are set. Use throwaway test accounts only: the live project keeps none, so create them for the run and delete them afterwards (see [administration.md](administration.md#testing)).
 
 ```powershell
 dotnet test --project AthloTrack.Tests

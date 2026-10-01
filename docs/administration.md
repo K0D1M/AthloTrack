@@ -57,4 +57,12 @@ For a coach, also run the `must_set_password = true` update above, so they repla
 
 ## Testing
 
-Use a dedicated test coach and throwaway athletes for testing, never real accounts. Delete the test athletes afterwards. Their data is removed with them.
+The live project has **no test accounts** (they were removed on 2026-10-02). For a test, create throwaway accounts, never use real ones, and delete them afterwards:
+1. Create a test coach as in [Creating a coach](#creating-a-coach) (e.g. `coach.test@example.com`), and a test athlete under it with a throwaway email.
+2. When you're done:
+   ```sql
+   delete from auth.users where email in ('coach.test@example.com', '<test athlete email>');
+   ```
+   This also removes the test coach's profile, athletes, workouts, notifications and push tokens (cascade).
+
+The integration tests in `AthloTrack.Tests` use such accounts through environment variables; see [architecture.md](architecture.md#tests).
