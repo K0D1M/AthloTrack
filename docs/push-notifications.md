@@ -14,6 +14,14 @@ The notification row stays in the database either way, so the in-app **Ειδο�
 ### Why Firebase?
 On Android, only Google's push service (FCM) can wake a closed app. Supabase has no push service of its own. Firebase is used **only** to deliver the message. All the data and logic stay in Supabase, and the FCM free tier covers this use.
 
+## Web and iPhone
+
+The web app gets the same pushes through **Firebase web push**, using the same Firebase project and the same `push` function. On iPhone, this works only from the web app added to the Home Screen (iOS 16.4+); there is no native iOS app.
+- `AthloTrack.Browser/wwwroot/firebase-config.js` holds the web app's Firebase config and the Web Push (VAPID) key. Both are public. While that file is empty, the web app shows no notification options.
+- `push.js` wraps the Firebase SDK, and `firebase-messaging-sw.js` is the service worker that shows notifications while the app is closed. `Services/BrowserPush.cs` connects them to `IPushTokenProvider` (platform `web`) and `IPushPermission`.
+- Browsers only show the permission prompt after a tap, so web push is turned on with **«Ενεργοποίηση ειδοποιήσεων»**. It sits in a banner on **Πρόσφατα** until notifications are on, and always in **Ρυθμίσεις**. On an iPhone that isn't running from the Home Screen, the banner explains how to add the app first.
+- The function adds `webpush.fcm_options.link = <app>/?type=…&notification=…` (base URL from the optional `APP_URL` secret). Tapping the notification opens that link, and the app opens Προπονήσεις and marks the notification read.
+
 ## Device tokens
 
 - After every sign-in or restored session, `App.ShowMain` calls `PushRegistrationService.RegisterAsync()`. It gets the Firebase token from `FirebaseTokenProvider` and calls the RPC `claim_device_token`, which assigns the token to the current user. When someone else signs in on the same phone, the token moves to them.
@@ -23,7 +31,7 @@ On Android, only Google's push service (FCM) can wake a closed app. Supabase has
 
 ## One-time setup (already done for the live project)
 
-1. **Firebase:** go to [console.firebase.google.com](https://console.firebase.google.com), create a project and add an Android app with package **`com.k0d1m.athlotrack`**. Download `google-services.json` into `AthloTrack.Android/`. The file is git-ignored; keep a backup. Without it the app still builds, but it gets no push token.
+1. **Firebase:** go to [console.firebase.google.com](https://console.firebase.google.com), create a project and add an Android app with package **`com.k0d1m.athlotrack`**. Download `google-services.json` into `AthloTrack.Android/` (it's in git). For the web, also add a **Web app**, copy its config, and under **Cloud Messaging → Web Push certificates** generate a key pair. Both go into `wwwroot/firebase-config.js`.
 2. **Service account:** in Firebase, open **Project settings → Service accounts → Generate new private key**. In Supabase, open **Edge Functions → Secrets** and add `FIREBASE_SERVICE_ACCOUNT` with the whole JSON file as its value. Don't commit this file.
 3. **Database:** run `supabase/005_workout_completion_push.sql`.
 4. **Function:** in Supabase, open **Edge Functions → Deploy a new function** and name it `push`, with the contents of `supabase/functions/push/index.ts`. Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` automatically.
@@ -37,8 +45,10 @@ On Android, only Google's push service (FCM) can wake a closed app. Supabase has
 | Token exists, still nothing | Look at **Edge Functions → push → Logs**, and at **Database → Webhooks** to confirm the webhook exists and fires on Insert. |
 | Function error about credentials | `FIREBASE_SERVICE_ACCOUNT` is missing or isn't the full JSON. |
 | Notification arrives but is silent or hidden | Android settings → Apps → AthloTrack → Notifications: are they allowed, and is the "AthloTrack" channel on? |
-| Works on the phone, not in the browser | This is expected. The web app shows the in-app list only. |
+| Nothing in the browser | Ρυθμίσεις → Ειδοποιήσεις: is it «ενεργές»? If it says blocked, allow notifications for the site in the browser's settings. Is there a `platform = 'web'` token for the user? |
+| Nothing on iPhone | Is the app opened from the Home Screen icon (not Safari), with iOS 16.4+, and notifications enabled in Ρυθμίσεις? |
 
 ## Limits
-- Android only. Web browsers and iPhone get the in-app list only.
-- A phone receives pushes only for the account currently signed in on it.
+- iPhone works only through the Home Screen web app. There is no native iOS app, which would need a Mac and an Apple developer account.
+- A device receives pushes only for the account currently signed in on it.
+- When 4 or more AthloTrack notifications pile up on Android, they're grouped. Tapping the group opens the app normally; tapping a single notification opens Προπονήσεις.
