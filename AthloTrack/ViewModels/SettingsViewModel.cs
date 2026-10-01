@@ -14,13 +14,18 @@ public partial class SettingsViewModel : ViewModelBase
 
     private readonly AthloTrack.Core.Push.PushRegistrationService _push;
 
-    public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user, AthloTrack.Core.Push.PushRegistrationService push)
+    public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user,
+        AthloTrack.Core.Push.PushRegistrationService push, PushPromptViewModel pushPrompt)
     {
         _push = push;
         _authService = authService;
         _session = session;
         User = user;
+        Push = pushPrompt;
     }
+
+    /// <summary>Web: turning phone/browser notifications on for this device.</summary>
+    public PushPromptViewModel Push { get; }
 
     /// <summary>Raised after logout so the shell returns to the login screen.</summary>
     public event Action? LoggedOut;

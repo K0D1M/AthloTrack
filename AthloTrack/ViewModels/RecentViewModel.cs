@@ -18,8 +18,10 @@ public partial class RecentViewModel : ViewModelBase
     private readonly IAvatarService _avatars;
     private readonly ICoachRepository _coaches;
 
-    public RecentViewModel(SessionState session, IAthleteRepository athletes, INotificationRepository notifications, IAvatarService avatars, ICoachRepository coaches)
+    public RecentViewModel(SessionState session, IAthleteRepository athletes, INotificationRepository notifications, IAvatarService avatars, ICoachRepository coaches,
+        PushPromptViewModel pushPrompt)
     {
+        Push = pushPrompt;
         _avatars = avatars;
         _coaches = coaches;
         _session = session;
@@ -30,6 +32,9 @@ public partial class RecentViewModel : ViewModelBase
     }
 
     public ObservableCollection<AppNotification> Notifications { get; } = new();
+
+    /// <summary>Web: a banner offering to turn on notifications, until they're on.</summary>
+    public PushPromptViewModel Push { get; }
 
     public bool IsCoach => _session.IsCoach;
     public bool IsAthlete => _session.Role == UserRole.Athlete;

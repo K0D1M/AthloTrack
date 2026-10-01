@@ -99,6 +99,17 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Web: offer notifications until they're on (iPhone: after adding to the Home Screen) -->
+                            <Border IsVisible="{Binding Push.ShowBanner}" Background="#FFF8E1" CornerRadius="14" Padding="16"
+                                    BorderBrush="#FFD700" BorderThickness="1">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Ειδοποιήσεις στο κινητό" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Push.StatusText}" FontSize="13" TextWrapping="Wrap" />
+                                    <Button Classes="primary" Content="Ενεργοποίηση" HorizontalAlignment="Left" Height="38"
+                                            Command="{Binding Push.EnableCommand}" IsVisible="{Binding Push.CanEnable}" />
+                                </StackPanel>
+                            </Border>
+
                             <!-- Coach: most recent athlete card -->
                             <Border IsVisible="{Binding IsCoach}"
                                     Background="{StaticResource CardTintGradient}" CornerRadius="14" Padding="16"
@@ -449,6 +460,15 @@
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding User.IsUploading}" />
                         <TextBlock Text="{Binding User.ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
                                    IsVisible="{Binding User.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                        <!-- Web (and iPhone from the Home Screen): notifications need a tap to allow. -->
+                        <StackPanel Spacing="6" IsVisible="{Binding Push.IsAvailable}">
+                            <TextBlock Text="Ειδοποιήσεις" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Push.StatusText}" FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{StaticResource BrandSupportBrush}" />
+                            <Button Classes="primary" Content="Ενεργοποίηση ειδοποιήσεων" HorizontalAlignment="Left"
+                                    Height="40" Command="{Binding Push.EnableCommand}" IsVisible="{Binding Push.CanEnable}" />
+                        </StackPanel>
 
                         <!-- Greek only until translations (.resx) exist; a live toggle would change nothing. -->
                         <StackPanel Spacing="4">

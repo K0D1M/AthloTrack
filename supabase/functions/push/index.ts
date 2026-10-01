@@ -22,6 +22,8 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 const serviceAccount = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT") ?? "{}");
+// The web app, for web push links (optional secret APP_URL overrides it).
+const APP_URL = Deno.env.get("APP_URL") ?? "https://athlotrack.up.railway.app";
 
 // ---- Google OAuth access token from the service account (JWT bearer flow, RS256) ----
 let cachedToken: { value: string; expires: number } | null = null;
@@ -106,6 +108,11 @@ Deno.serve(async (req) => {
             notification: { title: "AthloTrack", body: n.message },
             data: { notificationId: n.id, type: n.type },
             android: { priority: "high", notification: { channel_id: "athlotrack" } },
+            // Web tokens (browser, iPhone Home Screen app): icon, and the page a tap opens.
+            webpush: {
+              notification: { icon: `${APP_URL}/icon-192.png` },
+              fcm_options: { link: `${APP_URL}/?type=${encodeURIComponent(n.type)}&notification=${n.id}` },
+            },
           },
         }),
       });

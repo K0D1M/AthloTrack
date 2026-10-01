@@ -1,4 +1,4 @@
-﻿using System.Runtime.Versioning;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
@@ -9,12 +9,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 internal sealed partial class Program
 {
-    private static Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        AppBootstrap.RegisterPlatformServices = services =>
-            services.AddSingleton<ICredentialStore, BrowserCredentialStore>();
+        await PushInterop.LoadAsync();
+        // Opened by tapping a notification (?type=…&notification=…): open Προπονήσεις once signed in.
+        if (PushInterop.Loaded && PushInterop.LaunchRequest() is { Length: > 0 } request)
+        {
+            var parts = request.Split('|');
+            AthloTrack.Services.NotificationNavigation.RequestFor(parts[0], parts.Length > 1 ? parts[1] : null);
+        }
 
-        return BuildAvaloniaApp()
+        AppBootstrap.RegisterPlatformServices = services =>
+        {
+            services.AddSingleton<ICredentialStore, BrowserCredentialStore>();
+            // Only once Firebase is configured; otherwise the app shows no notification options at all.
+            if (PushInterop.Configured)
+                services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, BrowserPushTokenProvider>();
+        };
+
+        await BuildAvaloniaApp()
             .WithInterFont()
             .StartBrowserAppAsync("out");
     }

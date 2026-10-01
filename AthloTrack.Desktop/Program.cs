@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AthloTrack.Desktop;
 
+// The desktop head is Windows-only (its session store uses DPAPI).
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 sealed class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any

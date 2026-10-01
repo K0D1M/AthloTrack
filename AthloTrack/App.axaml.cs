@@ -127,6 +127,7 @@ public partial class App : Application
         services.AddTransient<AddAthleteViewModel>();
         services.AddSingleton<CurrentUserViewModel>();
         services.AddTransient<SetPasswordViewModel>();
+        services.AddTransient<PushPromptViewModel>();
 
         Services = services.BuildServiceProvider();
     }
