@@ -18,7 +18,8 @@ public static class PushNotifications
 
     public static void EnsureChannel(Context context)
     {
-        if (Build.VERSION.SdkInt < BuildVersionCodes.O) return;
+        // Channels exist from Android 8 (API 26); this form of the check is what the analyzer understands.
+        if (!OperatingSystem.IsAndroidVersionAtLeast(26)) return;
         var manager = (NotificationManager?)context.GetSystemService(Context.NotificationService);
         manager?.CreateNotificationChannel(new NotificationChannel(ChannelId, "AthloTrack", NotificationImportance.High)
         {
@@ -44,7 +45,7 @@ public static class PushNotifications
             PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
 
 #pragma warning disable CA1422 // pre-26 fallback constructor
-        var builder = Build.VERSION.SdkInt >= BuildVersionCodes.O
+        var builder = OperatingSystem.IsAndroidVersionAtLeast(26)
             ? new Notification.Builder(context, ChannelId)
             : new Notification.Builder(context);
 #pragma warning restore CA1422
@@ -70,7 +71,10 @@ public sealed class FirebaseTokenProvider : IPushTokenProvider
         var tcs = new TaskCompletionSource<string?>();
         try
         {
+            // GetToken is Firebase's current API; the .NET binding marks it [Obsolete("deprecated")] by mistake.
+#pragma warning disable CS0618
             FirebaseMessaging.Instance.GetToken()
+#pragma warning restore CS0618
                 .AddOnSuccessListener(new Listener(r => tcs.TrySetResult(r?.ToString())))
                 .AddOnFailureListener(new Listener(_ => tcs.TrySetResult(null)));
         }
@@ -96,9 +100,12 @@ public sealed class FirebaseTokenProvider : IPushTokenProvider
 [IntentFilter(new[] { "com.google.firebase.MESSAGING_EVENT" })]
 public class AthloTrackMessagingService : FirebaseMessagingService
 {
+    // OnNewToken is Firebase's current callback; the .NET binding marks it [Obsolete("deprecated")] by mistake.
+#pragma warning disable CS0618, CS0672
     public override void OnNewToken(string token)
     {
         base.OnNewToken(token);
+#pragma warning restore CS0618, CS0672
         try
         {
             // Only relevant while signed in; otherwise the next sign-in registers the token.

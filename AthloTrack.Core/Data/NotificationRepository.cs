@@ -18,7 +18,11 @@ public sealed class NotificationRepository : INotificationRepository
     {
         var client = await _factory.GetClientAsync();
         var response = await client.From<NotificationRow>()
-            .Where(x => x.AthleteId == athleteId && x.Recipient == "athlete" && x.IsRead == false)
+            // One filter per Where: Postgrest-csharp turns a three-term && into a nested
+            // and-tree PostgREST can't parse (PGRST100), which failed the whole athlete home.
+            .Where(x => x.AthleteId == athleteId)
+            .Where(x => x.Recipient == "athlete")
+            .Where(x => x.IsRead == false)
             .Order(x => x.CreatedAt, Constants.Ordering.Descending)
             .Get();
         return response.Models.Select(Map).ToList();

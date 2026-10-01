@@ -217,7 +217,10 @@
                             <ItemsControl ItemsSource="{Binding WorkoutPrograms}" Margin="12">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
-                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,10">
+                                        <!-- SeenTracker: an athlete's workout counts as read once on screen -->
+                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,10"
+                                                controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
+                                                controls:SeenTracker.CommandParameter="{Binding}">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15" />
                                                 <TextBlock Text="{Binding TargetDateText}" FontSize="12"
@@ -232,6 +235,11 @@
                                                     <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
                                                                Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
                                                 </StackPanel>
+                                                <!-- the athlete marks an open workout done (the coach is notified) -->
+                                                <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
+                                                        Margin="0,6,0,0" IsVisible="{Binding CanComplete}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}"
+                                                        CommandParameter="{Binding}" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

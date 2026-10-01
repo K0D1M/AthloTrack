@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Integration tests talk to the same Supabase project as the app. -->
+    <None Include="..\AthloTrack\Assets\supabase.config.json" Link="supabase.config.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AthloTrack.Core\AthloTrack.Core.csproj" />
+    <!-- View models are framework-neutral, so they're tested without starting Avalonia. -->
+    <ProjectReference Include="..\AthloTrack\AthloTrack.csproj" />
+  </ItemGroup>
+</Project>

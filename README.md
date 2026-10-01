@@ -16,9 +16,9 @@ AthloTrack is a Greek-language app that coaches and their athletes use to follow
 - **Two roles.** Coaches manage their own athletes. Athletes see only their own data.
 - **Athlete profiles:** photo, date of birth, height and notes.
 - **Measurements:** weight, Fat Mass/WT and fat/hgt, with a progress chart once there are two or more.
-- **Workout programs:** free-text programs with a target date. The athlete marks each one as **Ολοκληρώθηκε** (done).
+- **Workout programs:** free-text programs with a target date, which the coach can edit or delete. The athlete marks each one as **Ολοκληρώθηκε** (done), and the coach sees when the athlete has seen it (👁 read receipt).
 - **Calendar** of workouts and measurements, plus a **Πρόσφατα** screen with the most recently active athletes and unread notifications.
-- **Notifications.** A new workout notifies the athlete, and a completed workout notifies the coach. Each one is kept in the app and also sent as an Android push through Firebase Cloud Messaging.
+- **Notifications.** A new or changed workout notifies the athlete, and a completed workout notifies the coach. Each one is kept in the app and also sent as an Android push through Firebase Cloud Messaging. Tapping a push opens Προπονήσεις.
 - **Accounts.** An athlete's login links to their profile automatically when its email matches the one the coach entered. Coaches choose their own password the first time they sign in.
 
 ## Repository layout
@@ -30,7 +30,8 @@ AthloTrack is a Greek-language app that coaches and their athletes use to follow
 | `AthloTrack.Browser/` | Web head (WebAssembly), deployed to Railway |
 | `AthloTrack.Android/` | Android head, including Firebase push |
 | `AthloTrack.Desktop/` | Windows desktop head, used for local development |
-| `AthloTrack.WinUI/` | WinUI 3 head. *Paused.* |
+| `AthloTrack.WinUI/` | WinUI 3 head. *Paused; doesn't build against the current view models.* |
+| `AthloTrack.Tests/` | Unit tests for the view models, plus integration tests against Supabase (test accounts) |
 | `supabase/` | Database schema, migrations and the `push` Edge Function |
 | `Dockerfile`, `Caddyfile` | Web build and static hosting on Railway |
 
@@ -47,6 +48,9 @@ dotnet run --project AthloTrack.Browser
 
 # Android: build and install on a connected device or emulator
 dotnet build AthloTrack.Android -c Debug -t:Install
+
+# Tests (integration tests run only with the test-account variables, see docs/architecture.md)
+dotnet test --project AthloTrack.Tests
 ```
 
 The Supabase project URL and public (anon) key are read from `AthloTrack/Assets/supabase.config.json`. See [docs/deployment.md](docs/deployment.md) to point the app at a different Supabase project.

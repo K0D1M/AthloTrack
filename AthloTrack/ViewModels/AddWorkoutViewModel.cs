@@ -27,8 +27,23 @@ public partial class AddWorkoutViewModel : ObservableValidator
     public event Action? Saved;
     public event Action? Cancelled;
 
+    /// <summary>Set by <see cref="BeginEdit"/>: the workout being changed instead of a new one.</summary>
+    private Guid? _editingId;
+
     /// <summary>Header shown at the top of the form.</summary>
-    public string Title { get; }
+    public string Title { get; private set; }
+
+    /// <summary>Top-bar title of the page.</summary>
+    public string PageTitle => _editingId is null ? "Νέο ασκησιολόγιο" : "Επεξεργασία ασκησιολογίου";
+
+    /// <summary>Pre-fills the form with an existing workout (coach edit).</summary>
+    public void BeginEdit(WorkoutProgram workout, string athleteName)
+    {
+        _editingId = workout.Id;
+        Content = workout.Content;
+        TargetDate = new DateTimeOffset(workout.TargetDate.ToDateTime(TimeOnly.MinValue));
+        Title = $"Επεξεργασία ασκησιολογίου για τον αθλητή {athleteName}";
+    }
 
     /// <summary>The athlete's photo for the header; null shows <see cref="Initial"/>.</summary>
     [ObservableProperty]
@@ -68,6 +83,14 @@ public partial class AddWorkoutViewModel : ObservableValidator
         IsBusy = true;
         try
         {
+            if (_editingId is { } id)
+            {
+                // The DB clears the read receipt and sends the athlete "ενημέρωσε το ασκησιολόγιο".
+                await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime));
+                Saved?.Invoke();
+                return;
+            }
+
             var program = new WorkoutProgram
             {
                 AthleteId = _athleteId,

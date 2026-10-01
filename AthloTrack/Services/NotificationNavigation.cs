@@ -11,23 +11,26 @@ public static class NotificationNavigation
     /// <summary>Προπονήσεις, in MainView's drawer order.</summary>
     public const int WorkoutsSection = 2;
 
-    private static int? _pending;
+    /// <summary>The section to open, and the tapped notification (marked read: it has been seen).</summary>
+    public sealed record Request(int Section, Guid? NotificationId);
+
+    private static Request? _pending;
 
     /// <summary>Raised when a request arrives; the main view then calls <see cref="TakePending"/>.</summary>
     public static event Action? Requested;
 
-    /// <summary>Called with the push's <c>type</c> (the notifications.type column).</summary>
-    public static void RequestFor(string? type)
+    /// <summary>Called with the push's data: <c>type</c> (notifications.type) and <c>notificationId</c>.</summary>
+    public static void RequestFor(string? type, string? notificationId = null)
     {
-        if (type is not ("new_workout" or "workout_completed")) return;
-        _pending = WorkoutsSection;
+        if (type is not ("new_workout" or "workout_updated" or "workout_completed")) return;
+        _pending = new Request(WorkoutsSection, Guid.TryParse(notificationId, out var id) ? id : null);
         Requested?.Invoke();
     }
 
-    public static int? TakePending()
+    public static Request? TakePending()
     {
-        var section = _pending;
+        var request = _pending;
         _pending = null;
-        return section;
+        return request;
     }
 }

@@ -5,7 +5,6 @@
              xmlns:vm="using:AthloTrack.ViewModels"
              xmlns:models="using:AthloTrack.Core.Models"
              xmlns:controls="using:AthloTrack.Views.Controls"
-             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
              x:Class="AthloTrack.Views.AthleteProfileView"
              x:DataType="vm:AthleteProfileViewModel">
@@ -127,8 +126,7 @@
                 <!-- Progress graph -->
                 <TextBlock Text="Πρόοδος" FontSize="18" FontWeight="SemiBold"
                            IsVisible="{Binding HasChartData}" />
-                <!-- The chart is created in code once its data is loaded (see AthleteProfileView.axaml.cs):
-                     on Android, a chart created empty and filled later sometimes never painted. -->
+                <!-- The chart (ScottPlot) is drawn in code from the view model's data (see AthleteProfileView.axaml.cs). -->
                 <Border x:Name="ChartHost" Height="240" IsVisible="{Binding HasChartData}" />
 
                 <!-- Measurements -->
@@ -179,10 +177,28 @@
                 <ItemsControl ItemsSource="{Binding Workouts}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:WorkoutProgram">
-                            <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8">
+                            <!-- SeenTracker: on the athlete's own profile, counts as read once on screen -->
+                            <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8"
+                                    controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).WorkoutSeenCommand}"
+                                    controls:SeenTracker.CommandParameter="{Binding}">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
-                                               FontWeight="SemiBold" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
+                                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                                    IsVisible="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
+                                            <Button Classes="icon" ToolTip.Tip="Επεξεργασία ασκησιολογίου"
+                                                    Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).EditWorkoutCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="{StaticResource PencilIcon}" />
+                                            </Button>
+                                            <Button Classes="icon danger" ToolTip.Tip="Διαγραφή ασκησιολογίου"
+                                                    Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).DeleteWorkoutCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="{StaticResource DeleteIcon}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
                                     <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
                                     <!-- done marker (everyone) -->
                                     <TextBlock IsVisible="{Binding IsCompleted}" Foreground="#2E7D32" FontWeight="SemiBold"

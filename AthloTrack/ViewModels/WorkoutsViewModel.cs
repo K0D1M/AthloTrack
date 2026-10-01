@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AthloTrack.Core.Auth;
 using AthloTrack.Core.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AthloTrack.ViewModels;
 
@@ -31,6 +32,32 @@ public partial class WorkoutsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
+    /// <summary>The athlete marks an open workout done; the DB then notifies the coach.</summary>
+    [RelayCommand]
+    private async Task CompleteWorkoutAsync(WorkoutListItemViewModel? item)
+    {
+        if (item is null || !item.CanComplete) return;
+        try
+        {
+            await _workouts.MarkCompletedAsync(item.Program.Id);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    /// <summary>The athlete has had this workout on screen: the coach gets the read receipt.</summary>
+    // Concurrent: several workouts come into view at once; otherwise CanExecute is false while one is saving.
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task WorkoutSeenAsync(WorkoutListItemViewModel? item)
+    {
+        if (item is null || _session.IsCoach || item.Program.IsRead) return;
+        item.Program.ReadAt = DateTimeOffset.UtcNow; // don't send it twice
+        await AthleteProfileViewModel.MarkWorkoutReadAsync(_workouts, item.Program.Id);
+    }
+
     public async Task LoadAsync()
     {
         IsLoading = true;
@@ -46,11 +73,8 @@ public partial class WorkoutsViewModel : ViewModelBase
             foreach (var p in programs)
             {
                 var name = names.TryGetValue(p.AthleteId, out var n) ? n : "—";
-                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name, showReadReceipt: _session.IsCoach));
+                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name, isCoach: _session.IsCoach));
             }
-
-            // The athlete has now seen their workouts: the coach gets the read receipt.
-            if (!_session.IsCoach) await AthleteProfileViewModel.MarkWorkoutsReadAsync(_workouts, programs);
         }
         catch (Exception ex)
         {

@@ -6,4 +6,5 @@
   <Project Path="AthloTrack.Core/AthloTrack.Core.csproj" />
   <Project Path="AthloTrack.Desktop/AthloTrack.Desktop.csproj" />
   <Project Path="AthloTrack/AthloTrack.csproj" />
+  <Project Path="AthloTrack.Tests/AthloTrack.Tests.csproj" />
 </Solution>

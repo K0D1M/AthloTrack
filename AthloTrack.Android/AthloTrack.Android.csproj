@@ -5,10 +5,18 @@
     <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.k0d1m.athlotrack</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <!-- Raise ApplicationVersion for every APK you hand out, or phones refuse it as an update. -->
+    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationDisplayVersion>1.1</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+  </PropertyGroup>
+
+  <!-- Release APK for phones: arm64 only (practically every phone), half the download of the
+       default arm64+x64. For the x86_64 emulator: dotnet publish -c Release -p:ForEmulator=true -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifiers Condition="'$(ForEmulator)' != 'true'">android-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(ForEmulator)' == 'true'">android-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +29,7 @@
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
     <PackageReference Include="Xamarin.Firebase.Messaging" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" />
   </ItemGroup>
 
   <!-- Firebase config for push (download from the Firebase console; kept out of git). -->
@@ -31,4 +40,10 @@
   <ItemGroup>
     <ProjectReference Include="..\AthloTrack\AthloTrack.csproj" />
   </ItemGroup>
+
+  <!-- Release signing: the keystore and its passwords live outside the repo
+       (%USERPROFILE%\.athlotrack\signing.props, see docs/deployment.md). -->
+  <Import Project="$(USERPROFILE)\.athlotrack\signing.props"
+          Condition="'$(Configuration)' == 'Release' And Exists('$(USERPROFILE)\.athlotrack\signing.props')" />
+
 </Project>

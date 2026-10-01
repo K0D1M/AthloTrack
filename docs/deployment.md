@@ -28,33 +28,38 @@ Supabase pauses free projects after a week without activity. A second Railway se
 
 ## Android app
 
-Requirements: the .NET 10 SDK with `dotnet workload install android`, and the Android SDK. For push, you also need `AthloTrack.Android/google-services.json`, see [push-notifications.md](push-notifications.md).
+Requirements: the .NET 10 SDK with `dotnet workload install android`, and the Android SDK. `AthloTrack.Android/google-services.json` (Firebase client config) is in the repo, so push works from a fresh clone. See [push-notifications.md](push-notifications.md).
 
 | | |
 |---|---|
 | Package ID | `com.k0d1m.athlotrack` |
 | Minimum Android | 6.0 (API 23). Push notifications need Google Play services |
-| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj`. **Increase `ApplicationVersion` for every release**, or Android refuses to install the new APK over the old one |
+| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj` (now 2 / 1.1). **Increase `ApplicationVersion` for every APK you hand out**, or Android refuses to install it over the old one |
 
 ```powershell
 # Debug build, installed on the connected device/emulator
 dotnet build AthloTrack.Android -c Debug -t:Install
 
-# Release APK (the *-Signed.apk in bin/Release/net10.0-android/publish/)
+# Release APK for phones (arm64): bin/Release/net10.0-android/publish/com.k0d1m.athlotrack-Signed.apk
 dotnet publish AthloTrack.Android -c Release
+
+# Release APK for the x86_64 emulator
+dotnet publish AthloTrack.Android -c Release -p:ForEmulator=true
 ```
+
+### Signing key
+Release builds are signed with the AthloTrack key in **`%USERPROFILE%\.athlotrack\`**, outside the repo:
+- `athlotrack-release.keystore`: the key (alias `athlotrack`)
+- `signing.props`: the keystore path and its password, imported by `AthloTrack.Android.csproj` for Release builds
+
+**Back up both files somewhere safe and private** (for example an encrypted USB stick or a password manager). Every future update must be signed with this key. If it's lost, phones can't update the app: everyone would have to uninstall it and install it fresh. Never commit them (`*.keystore` / `*.jks` are git-ignored).
+
+To build releases on another PC, copy the `.athlotrack` folder to that user's profile and adjust the keystore path in `signing.props`.
 
 ### Distributing to phones
-The app isn't on the Play Store. Install the APK directly (sideloading): send the file, open it on the phone and allow *Install unknown apps* for the app you opened it from.
-
-For real users, sign the release with **your own keystore**:
-```powershell
-keytool -genkeypair -v -keystore athlotrack.keystore -alias athlotrack -keyalg RSA -keysize 2048 -validity 10000
-dotnet publish AthloTrack.Android -c Release `
-  -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=athlotrack.keystore `
-  -p:AndroidSigningKeyAlias=athlotrack -p:AndroidSigningKeyPass=<pass> -p:AndroidSigningStorePass=<pass>
-```
-Keep the keystore and its password safe and **out of git** (`*.keystore` / `*.jks`). Every future update must be signed with the same key, or phones won't accept it.
+The app isn't on the Play Store. Install the APK directly (sideloading): send the `-Signed.apk` file, open it on the phone and allow *Install unknown apps* for the app you opened it from.
+- **First install of the signed release:** if the phone has a debug build from development, uninstall that first. Android won't replace an app signed with a different key.
+- **Updates:** raise `ApplicationVersion`, publish, and send the new APK. It installs over the old one and keeps the user signed in.
 
 ### Emulator notes
 - Use a system image with **Google Play services** (a "Google Play" image). A plain AOSP image can't receive FCM pushes.

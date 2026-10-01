@@ -69,7 +69,10 @@ public partial class MainView : DrawerPage
 
     private void ApplyPendingSection()
     {
-        if (AthloTrack.Services.NotificationNavigation.TakePending() is not { } index) return;
+        if (AthloTrack.Services.NotificationNavigation.TakePending() is not { } request) return;
+        if (request.NotificationId is { } notificationId) _ = MarkNotificationReadAsync(notificationId);
+
+        var index = request.Section;
         if (DrawerList.SelectedIndex != index)
         {
             DrawerList.SelectedIndex = index; // SelectionChanged shows the page
@@ -114,6 +117,19 @@ public partial class MainView : DrawerPage
         else
         {
             IsOpen = false;
+        }
+    }
+
+    /// <summary>The push was tapped, so its in-app copy on Πρόσφατα has been seen too.</summary>
+    private async System.Threading.Tasks.Task MarkNotificationReadAsync(Guid notificationId)
+    {
+        try
+        {
+            await Resolve<AthloTrack.Core.Data.INotificationRepository>().MarkReadAsync(notificationId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] Marking the tapped notification read failed: {ex.Message}");
         }
     }
 
@@ -179,6 +195,7 @@ public partial class MainView : DrawerPage
         profile.AddWorkoutRequested += OnAddWorkout;
         profile.EditMeasurementRequested += OnEditMeasurement;
         profile.EditAthleteRequested += OnEditAthlete;
+        profile.EditWorkoutRequested += OnEditWorkout;
         profile.AthleteDeleted += ShowAthletesList;
         Show(profile, "Προφίλ αθλητή");
     }
@@ -204,7 +221,15 @@ public partial class MainView : DrawerPage
         var vm = Resolve<AddWorkoutViewModelFactory>().Create(athleteId, athleteName);
         vm.Saved += () => ShowAthleteProfile(athleteId);
         vm.Cancelled += () => ShowAthleteProfile(athleteId);
-        Show(vm, "Νέο ασκησιολόγιο");
+        Show(vm, vm.PageTitle);
+    }
+
+    private void OnEditWorkout(WorkoutProgram workout, string athleteName)
+    {
+        var vm = Resolve<AddWorkoutViewModelFactory>().CreateForEdit(workout, athleteName);
+        vm.Saved += () => ShowAthleteProfile(workout.AthleteId);
+        vm.Cancelled += () => ShowAthleteProfile(workout.AthleteId);
+        Show(vm, vm.PageTitle);
     }
 
     private void OnAddAthlete()

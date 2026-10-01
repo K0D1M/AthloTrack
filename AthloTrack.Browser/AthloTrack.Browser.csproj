@@ -32,6 +32,8 @@
     <TrimmerRootAssembly Include="Supabase.Storage" />
     <TrimmerRootAssembly Include="Supabase.Functions" />
     <TrimmerRootAssembly Include="Newtonsoft.Json" />
+    <!-- Progress chart: kept whole rather than risk trimmed-away renderers in the Release build. -->
+    <TrimmerRootAssembly Include="ScottPlot" />
   </ItemGroup>
 
   <!-- Supabase config comes from the embedded AthloTrack/Assets/supabase.config.json

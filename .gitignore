@@ -404,8 +404,9 @@ FodyWeavers.xsd
 # Database schema and migrations are part of the app (no secrets in them).
 !supabase/*.sql
 
-# Firebase client config (per-developer; download from the Firebase console)
-AthloTrack.Android/google-services.json
+# AthloTrack.Android/google-services.json IS tracked: it's Firebase client config (identifies
+# the app to Firebase), not a secret. The service-account key must never be committed.
+*firebase-adminsdk*.json
 
 # Android signing keys
 *.keystore

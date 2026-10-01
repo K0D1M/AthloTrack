@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using AthloTrack.Services;
 using AthloTrack.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using LiveChartsCore.SkiaSharpView.Avalonia;
 
 namespace AthloTrack.Views;
 
@@ -13,38 +14,72 @@ public partial class AthleteProfileView : UserControl
     {
         InitializeComponent();
 
-        // The chart is built only once its data exists. On Android a chart created empty and
-        // filled in later intermittently never painted (data and size were fine).
+        // The chart is (re)built from the view model's plain data whenever it changes.
         DataContextChanged += (_, _) =>
         {
             if (DataContext is AthleteProfileViewModel vm)
             {
                 vm.PropertyChanged += (_, e) =>
                 {
-                    if (e.PropertyName is nameof(AthleteProfileViewModel.ChartSeries))
+                    if (e.PropertyName is nameof(AthleteProfileViewModel.Chart))
                     {
-                        BuildChart(vm);
+                        BuildChart(vm.Chart);
                     }
                 };
-                BuildChart(vm);
+                BuildChart(vm.Chart);
             }
         };
     }
 
-    private void BuildChart(AthleteProfileViewModel vm)
+    private void BuildChart(ProgressChart? chart)
     {
-        if (vm.ChartSeries.Length == 0)
+        if (chart is null)
         {
             ChartHost.Child = null;
             return;
         }
 
-        ChartHost.Child = new CartesianChart
+        var plot = new ScottPlot.Plot();
+        plot.Font.Set(ChartFonts.Family);
+
+        foreach (var line in chart.Lines)
         {
-            Series = vm.ChartSeries,
-            XAxes = vm.ChartXAxes,
-            LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-        };
+            // Measurements without this metric are left out of its line.
+            var xs = new List<double>();
+            var ys = new List<double>();
+            for (var i = 0; i < line.Values.Length; i++)
+            {
+                if (line.Values[i] is { } v) { xs.Add(i); ys.Add(v); }
+            }
+            if (xs.Count == 0) continue;
+
+            var color = ScottPlot.Color.FromHex(line.ColorHex);
+            var scatter = plot.Add.Scatter(xs.ToArray(), ys.ToArray());
+            scatter.Color = color;
+            scatter.LineWidth = (float)line.Width;
+            scatter.MarkerSize = 7;
+            scatter.LegendText = line.Name;
+            if (line.Fill)
+            {
+                scatter.FillY = true;
+                scatter.FillYColor = color.WithAlpha(0.15);
+            }
+        }
+
+        // Dates as x labels, light grid, no frame on top/right, legend underneath.
+        plot.Axes.Bottom.SetTicks(Enumerable.Range(0, chart.Labels.Length).Select(i => (double)i).ToArray(), chart.Labels);
+        plot.Axes.Bottom.TickLabelStyle.FontSize = 11;
+        plot.Axes.Left.TickLabelStyle.FontSize = 11;
+        plot.Axes.Top.FrameLineStyle.Width = 0;
+        plot.Axes.Right.FrameLineStyle.Width = 0;
+        plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#E8EEF6");
+        plot.FigureBackground.Color = ScottPlot.Colors.Transparent;
+        plot.ShowLegend(ScottPlot.Edge.Bottom);
+        plot.Legend.FontSize = 12;
+        plot.Axes.Margins(horizontal: 0.05, vertical: 0.15);
+
+        // A static image: nothing to pan or zoom, so dragging scrolls the page as usual.
+        ChartHost.Child = new Views.Controls.PlotView { Plot = plot };
     }
 
     // ---- "+" in-page menu ----

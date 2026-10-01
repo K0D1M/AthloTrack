@@ -135,6 +135,8 @@ public partial class RecentViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            // The athlete home has no visible error slot; keep the cause in the console.
+            Console.WriteLine($"[AthloTrack] Πρόσφατα failed to load: {ex.Message}");
             RecentAthleteSummary = ex.Message;
         }
         finally

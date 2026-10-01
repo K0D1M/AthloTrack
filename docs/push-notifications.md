@@ -2,12 +2,12 @@
 
 ## What happens
 
-1. **A coach creates a workout.** Trigger `notify_new_workout` inserts a notification row with `recipient = 'athlete'`.
-2. **The athlete taps «Ολοκληρώθηκε».** `completed_at` is set, and trigger `notify_workout_completed` inserts a row with `recipient = 'coach'`.
+1. **A coach creates a workout** (`notify_new_workout`, type `new_workout`) **or changes one** (`notify_workout_updated`, type `workout_updated`). A notification row with `recipient = 'athlete'` is inserted.
+2. **The athlete taps «Ολοκληρώθηκε».** `completed_at` is set, and trigger `notify_workout_completed` inserts a row with `recipient = 'coach'` (type `workout_completed`).
 3. Every insert into `notifications` fires a **Database Webhook** that calls the Edge Function **`push`** (`supabase/functions/push/index.ts`).
 4. The function looks up the recipient's login (the athlete, or their coach through `athletes.coach_id`), reads that user's rows in `device_tokens`, and sends each one a message through **Firebase Cloud Messaging (HTTP v1)**.
 5. Android shows the notification, even when the app is closed. When the app is open, `AthloTrackMessagingService.OnMessageReceived` shows it itself.
-6. **Tapping it opens Προπονήσεις.** The push carries `data.type`, and Android hands it to `MainActivity` as an intent extra. `MainActivity` is `SingleTop`, so a running app gets `OnNewIntent` instead of being recreated. `NotificationNavigation.RequestFor(type)` stores the request, and `MainView` applies it when it is showing. After a cold start, that happens once the session has been restored.
+6. **Tapping it opens Προπονήσεις** and marks the matching in-app notification as read. The push carries `data.type` and `data.notificationId`, and Android hands them to `MainActivity` as intent extras. `MainActivity` is `SingleTop`, so a running app gets `OnNewIntent` instead of being recreated. `NotificationNavigation.RequestFor(type, notificationId)` stores the request, and `MainView` applies it when it is showing. After a cold start, that happens once the session has been restored.
 
 The notification row stays in the database either way, so the in-app **Ειδοποιήσεις** list on **Πρόσφατα** is still complete if a push is missed, and on the web.
 

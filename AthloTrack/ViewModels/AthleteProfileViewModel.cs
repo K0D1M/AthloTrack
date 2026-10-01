@@ -7,12 +7,14 @@ using AthloTrack.Core.Data;
 using AthloTrack.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
-using SkiaSharp;
 
 namespace AthloTrack.ViewModels;
+
+/// <summary>Progress chart data: one x label per measurement date, one line per metric.</summary>
+public sealed record ProgressChart(string[] Labels, System.Collections.Generic.IReadOnlyList<ChartLine> Lines);
+
+/// <summary>A metric over time; null values are measurements without that metric.</summary>
+public sealed record ChartLine(string Name, string ColorHex, double?[] Values, double Width = 2, bool Fill = false);
 
 public partial class AthleteProfileViewModel : ViewModelBase
 {
@@ -77,12 +79,9 @@ public partial class AthleteProfileViewModel : ViewModelBase
         }
     }
 
-    // Progress chart (weight + fat metrics over time)
+    // Progress chart (weight + fat metrics over time). Plain data; the view draws it.
     [ObservableProperty]
-    public partial ISeries[] ChartSeries { get; set; } = Array.Empty<ISeries>();
-
-    [ObservableProperty]
-    public partial Axis[] ChartXAxes { get; set; } = Array.Empty<Axis>();
+    public partial ProgressChart? Chart { get; set; }
 
     public bool HasChartData => Measurements.Count >= 2;
 
@@ -137,6 +136,9 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>The shell opens the athlete form pre-filled for editing.</summary>
     public event Action<Athlete>? EditAthleteRequested;
 
+    /// <summary>The shell opens the workout form pre-filled for editing (workout, athlete name).</summary>
+    public event Action<WorkoutProgram, string>? EditWorkoutRequested;
+
     /// <summary>The athlete no longer exists; the shell returns to the list.</summary>
     public event Action? AthleteDeleted;
 
@@ -182,6 +184,47 @@ public partial class AthleteProfileViewModel : ViewModelBase
                 await _measurements.DeleteAsync(measurement.Id);
                 await LoadAsync();
             });
+    }
+
+    [RelayCommand]
+    private void EditWorkout(WorkoutProgram? workout)
+    {
+        if (workout is not null && CanEdit) EditWorkoutRequested?.Invoke(workout, FullName);
+    }
+
+    [RelayCommand]
+    private void DeleteWorkout(WorkoutProgram? workout)
+    {
+        if (workout is null || !CanEdit) return;
+        Ask($"Διαγραφή του ασκησιολογίου της {workout.TargetDate:dd/MM/yyyy};",
+            async () =>
+            {
+                await _workouts.DeleteAsync(workout.Id);
+                await LoadAsync();
+            });
+    }
+
+    /// <summary>The athlete has had this workout on screen: the coach gets the read receipt.</summary>
+    // Concurrent: several workouts come into view at once; otherwise CanExecute is false while one is saving.
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task WorkoutSeenAsync(WorkoutProgram? workout)
+    {
+        if (workout is null || workout.IsRead || !IsOwnProfile) return;
+        workout.ReadAt = DateTimeOffset.UtcNow; // don't send it twice
+        await MarkWorkoutReadAsync(_workouts, workout.Id);
+    }
+
+    /// <summary>Records the read receipt; a failure must never break the screen.</summary>
+    internal static async Task MarkWorkoutReadAsync(IWorkoutRepository repository, Guid workoutId)
+    {
+        try
+        {
+            await repository.MarkReadAsync(workoutId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] mark_workout_read failed: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -268,8 +311,6 @@ public partial class AthleteProfileViewModel : ViewModelBase
             Workouts.Clear();
             foreach (var w in await _workouts.GetForAthleteAsync(_athleteId))
                 Workouts.Add(w);
-
-            if (IsOwnProfile) await MarkWorkoutsReadAsync(Workouts);
         }
         catch (Exception ex)
         {
@@ -284,78 +325,27 @@ public partial class AthleteProfileViewModel : ViewModelBase
         Photo = await _avatars.GetAsync(ProfileImagePath);
     }
 
-    /// <summary>The athlete has now seen these workouts: the coach gets the read receipt.</summary>
-    internal static async Task MarkWorkoutsReadAsync(IWorkoutRepository repository, System.Collections.Generic.IEnumerable<WorkoutProgram> shown)
-    {
-        if (!shown.Any(w => !w.IsRead)) return;
-        try
-        {
-            await repository.MarkAllReadAsync();
-        }
-        catch (Exception ex)
-        {
-            // A missing receipt must never break the screen.
-            Console.WriteLine($"[AthloTrack] mark_workouts_read failed: {ex.Message}");
-        }
-    }
-
-    private Task MarkWorkoutsReadAsync(System.Collections.Generic.IEnumerable<WorkoutProgram> shown) =>
-        MarkWorkoutsReadAsync(_workouts, shown);
-
     private void BuildChart()
     {
         var ordered = Measurements.OrderBy(m => m.MeasuredAt).ToList();
-
-        ChartXAxes = new[]
+        if (ordered.Count < 2)
         {
-            new Axis
-            {
-                Labels = ordered.Select(m => m.MeasuredAt.ToString("dd/MM")).ToArray(),
-                LabelsRotation = 0,
-                TextSize = 11,
-            }
-        };
+            Chart = null;
+            OnPropertyChanged(nameof(HasChartData));
+            return;
+        }
 
-        var series = new System.Collections.Generic.List<ISeries>
+        // Brand blue for weight (with a soft fill), green and amber for the fat metrics.
+        var lines = new System.Collections.Generic.List<ChartLine>
         {
-            new LineSeries<double?>
-            {
-                Name = "Βάρος (kg)",
-                Values = ordered.Select(m => (double?)m.WeightKg).ToArray(),
-                Stroke = new SolidColorPaint(new SKColor(0x15, 0x65, 0xC0)) { StrokeThickness = 3 },
-                GeometryStroke = new SolidColorPaint(new SKColor(0x15, 0x65, 0xC0)) { StrokeThickness = 3 },
-                // Soft brand-blue fade under the weight line.
-                Fill = new LinearGradientPaint(
-                    new[] { new SKColor(0x15, 0x65, 0xC0, 0x55), new SKColor(0x15, 0x65, 0xC0, 0x00) },
-                    new SKPoint(0.5f, 0), new SKPoint(0.5f, 1)),
-            },
+            new("Βάρος (kg)", "#1565C0", ordered.Select(m => (double?)m.WeightKg).ToArray(), Width: 3, Fill: true),
         };
-
         if (ordered.Any(m => m.FatMassWt is not null))
-        {
-            series.Add(new LineSeries<double?>
-            {
-                Name = "Fat Mass/WT",
-                Values = ordered.Select(m => (double?)m.FatMassWt).ToArray(),
-                Stroke = new SolidColorPaint(new SKColor(0x00, 0x99, 0x41)) { StrokeThickness = 2 },
-                GeometryStroke = new SolidColorPaint(new SKColor(0x00, 0x99, 0x41)) { StrokeThickness = 2 },
-                Fill = null,
-            });
-        }
-
+            lines.Add(new("Fat Mass/WT", "#009941", ordered.Select(m => (double?)m.FatMassWt).ToArray()));
         if (ordered.Any(m => m.FatHgt is not null))
-        {
-            series.Add(new LineSeries<double?>
-            {
-                Name = "fat/hgt",
-                Values = ordered.Select(m => (double?)m.FatHgt).ToArray(),
-                Stroke = new SolidColorPaint(new SKColor(0xFF, 0xB3, 0x00)) { StrokeThickness = 2 },
-                GeometryStroke = new SolidColorPaint(new SKColor(0xFF, 0xB3, 0x00)) { StrokeThickness = 2 },
-                Fill = null,
-            });
-        }
+            lines.Add(new("fat/hgt", "#FFB300", ordered.Select(m => (double?)m.FatHgt).ToArray()));
 
-        ChartSeries = series.ToArray();
+        Chart = new ProgressChart(ordered.Select(m => m.MeasuredAt.ToString("dd/MM")).ToArray(), lines);
         OnPropertyChanged(nameof(HasChartData));
     }
 }

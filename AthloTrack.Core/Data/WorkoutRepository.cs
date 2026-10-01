@@ -50,11 +50,23 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
-    public async Task MarkAllReadAsync()
+    public async Task UpdateAsync(Guid id, string content, DateOnly targetDate)
     {
         var client = await _factory.GetClientAsync();
-        // Server-side: stamps only the caller's own unread workouts, once.
-        await client.Rpc("mark_workouts_read", null);
+        // Update the whole row model, like AddAsync. Set(x => x.TargetDate, date) serialized the
+        // local midnight as UTC, so in Greece (UTC+3) the workout moved to the previous day.
+        var row = await client.From<WorkoutProgramRow>().Where(x => x.Id == id).Single()
+                  ?? throw new InvalidOperationException("Το ασκησιολόγιο δεν βρέθηκε.");
+        row.Content = content;
+        row.TargetDate = targetDate.ToDateTime(TimeOnly.MinValue);
+        await row.Update<WorkoutProgramRow>();
+    }
+
+    public async Task MarkReadAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        // Server-side: only the caller's own workout, and only the first time.
+        await client.Rpc("mark_workout_read", new Dictionary<string, object> { ["p_workout"] = id });
     }
 
     public async Task DeleteAsync(Guid id)

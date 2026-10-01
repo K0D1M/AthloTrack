@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1084531867027",
+    "project_id": "athlotrack",
+    "storage_bucket": "athlotrack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1084531867027:android:f0365b3b87d43ac292fc66",
+        "android_client_info": {
+          "package_name": "com.k0d1m.athlotrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAD75cQJeQW_S8OlnsNc_jcmrVE0_2IVG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

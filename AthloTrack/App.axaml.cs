@@ -6,7 +6,6 @@ using AthloTrack.Core.Auth;
 using AthloTrack.Core.DependencyInjection;
 using AthloTrack.ViewModels;
 using AthloTrack.Views;
-using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -29,6 +28,9 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         Instance = this;
+        // Surface layout/render failures (browser devtools console, Android logcat) instead of a frozen screen.
+        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+            Console.WriteLine($"[AthloTrack] Unhandled UI exception: {e.Exception}");
         UseGreekCulture();
         BuildServices();
         ConfigureCharts();
@@ -84,29 +86,12 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Gives LiveCharts the bundled Inter typeface. The browser head has no system fonts,
-    /// so chart legends and axis labels otherwise fell back to a monospace face.
+    /// Gives the progress chart the bundled Inter typeface. The browser head has no system fonts,
+    /// so chart legends and axis labels otherwise had nothing to render with.
     /// </summary>
     private static void ConfigureCharts()
     {
-        try
-        {
-            using var stream = Avalonia.Platform.AssetLoader.Open(
-                new Uri("avares://Avalonia.Fonts.Inter/Assets/Inter-Regular.ttf"));
-            var buffer = new System.IO.MemoryStream();
-            stream.CopyTo(buffer);
-            buffer.Position = 0;
-            var typeface = SkiaSharp.SKTypeface.FromStream(buffer);
-            // Obsolete in favour of SKFontManager lookup, but under WASM the font manager is
-            // empty, so the typeface has to be supplied explicitly.
-#pragma warning disable CS0618
-            LiveChartsCore.LiveCharts.Configure(config => config.HasGlobalSKTypeface(typeface));
-#pragma warning restore CS0618
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[AthloTrack] Chart typeface setup failed: {ex.GetType().Name}: {ex.Message}");
-        }
+        AthloTrack.Services.ChartFonts.Register();
     }
 
     private Control CreateLoginView()
@@ -118,7 +103,7 @@ public partial class App : Application
         return new LoginView { DataContext = loginVm };
     }
 
-    /// <summary>Called on logout — resets the app root back to the login screen.</summary>
+    /// <summary>Called on logout â€” resets the app root back to the login screen.</summary>
     public void NavigateToLogin() => SetRoot(CreateLoginView());
 
     private void BuildServices()
@@ -183,7 +168,7 @@ public partial class App : Application
 
     private void ShowMain()
     {
-        // Name + photo for the drawer header and Ρυθμίσεις.
+        // Name + photo for the drawer header and Î¡Ï…Î¸Î¼Î¯ÏƒÎµÎ¹Ï‚.
         _ = Services.GetRequiredService<CurrentUserViewModel>().LoadAsync();
         // Phone push (Android): link this device to the signed-in user.
         _ = Services.GetRequiredService<AthloTrack.Core.Push.PushRegistrationService>().RegisterAsync();

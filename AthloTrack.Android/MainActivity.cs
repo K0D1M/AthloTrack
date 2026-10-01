@@ -1,3 +1,4 @@
+using System;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -24,7 +25,7 @@ public class MainActivity : AvaloniaMainActivity
         base.OnCreate(savedInstanceState);
 
         // Android 13+: phone notifications need the user's permission.
-        if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.Tiramisu &&
+        if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
             CheckSelfPermission(global::Android.Manifest.Permission.PostNotifications) != Permission.Granted)
         {
             RequestPermissions(new[] { global::Android.Manifest.Permission.PostNotifications }, 1001);
@@ -45,7 +46,8 @@ public class MainActivity : AvaloniaMainActivity
     {
         var type = intent?.GetStringExtra("type");
         if (type is null) return;
-        intent!.RemoveExtra("type"); // don't replay on recreate
-        Dispatcher.UIThread.Post(() => NotificationNavigation.RequestFor(type));
+        var notificationId = intent!.GetStringExtra("notificationId");
+        intent.RemoveExtra("type"); // don't replay on recreate
+        Dispatcher.UIThread.Post(() => NotificationNavigation.RequestFor(type, notificationId));
     }
 }

@@ -31,6 +31,14 @@ public sealed class AddWorkoutViewModelFactory
         return vm;
     }
 
+    public AddWorkoutViewModel CreateForEdit(AthloTrack.Core.Models.WorkoutProgram workout, string athleteName)
+    {
+        var vm = new AddWorkoutViewModel(workout.AthleteId, athleteName, _workouts, _session);
+        vm.BeginEdit(workout, athleteName);
+        _ = LoadPhotoAsync(vm, workout.AthleteId);
+        return vm;
+    }
+
     private async Task LoadPhotoAsync(AddWorkoutViewModel vm, Guid athleteId)
     {
         try
