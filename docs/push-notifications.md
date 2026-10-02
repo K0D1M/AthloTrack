@@ -51,4 +51,8 @@ The web app gets the same pushes through **Firebase web push**, using the same F
 ## Limits
 - iPhone works only through the Home Screen web app. There is no native iOS app, which would need a Mac and an Apple developer account.
 - A device receives pushes only for the account currently signed in on it.
-- When 4 or more AthloTrack notifications pile up on Android, they're grouped. Tapping the group opens the app normally; tapping a single notification opens Προπονήσεις.
+- The Android app 1.1 still gets Firebase-posted notifications, which Android bundles when 4 or more pile up; tapping that bundle only opens the app. From 1.2 the app posts them itself (see below).
+
+## Android: the app's own notification group (1.2+)
+
+App 1.2 registers its token as platform **`android-data`**, and the function sends those tokens **data-only** messages (title and body in `data`). So `AthloTrackMessagingService.OnMessageReceived` runs even with the app in the background, and `PushNotifications.Show` posts each notification in the group `athlotrack_workouts`. From 2 notifications on, it adds a summary («N νέες ειδοποιήσεις»). Tapping the summary opens Προπονήσεις, marks all of the group's notifications read (their ids are passed comma-separated) and clears them. Tokens registered as `android` (app 1.1) keep getting notification messages, so older installs keep working until they're updated.
