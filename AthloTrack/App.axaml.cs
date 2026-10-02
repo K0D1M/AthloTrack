@@ -103,7 +103,7 @@ public partial class App : Application
         return new LoginView { DataContext = loginVm };
     }
 
-    /// <summary>Called on logout â€” resets the app root back to the login screen.</summary>
+    /// <summary>Called on logout — resets the app root back to the login screen.</summary>
     public void NavigateToLogin() => SetRoot(CreateLoginView());
 
     private void BuildServices()
@@ -169,7 +169,7 @@ public partial class App : Application
 
     private void ShowMain()
     {
-        // Name + photo for the drawer header and Î¡Ï…Î¸Î¼Î¯ÏƒÎµÎ¹Ï‚.
+        // Name + photo for the drawer header and Ρυθμίσεις.
         _ = Services.GetRequiredService<CurrentUserViewModel>().LoadAsync();
         // Phone push (Android): link this device to the signed-in user.
         _ = Services.GetRequiredService<AthloTrack.Core.Push.PushRegistrationService>().RegisterAsync();
