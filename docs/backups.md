@@ -16,29 +16,30 @@ Railway service **`supabase-backup`** (project AthloTrack). It's built from [`op
 
 Backups go to the private Railway bucket **`athlotrack-backups`** (region Amsterdam). The cost is a few cents a month for this size.
 
-### Variables (Railway â†’ `supabase-backup` â†’ Variables)
+### Variables (Railway → `supabase-backup` → Variables)
 
 | Variable | Value |
 |---|---|
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project URL and public key (same as the app) |
-| `SUPABASE_DB_URL` | **Secret.** Supabase â†’ **Connect â†’ Session pooler** URI, with the database password filled in |
+| `SUPABASE_DB_URL` | **Secret.** Supabase → **Connect → Session pooler** URI, with the database password filled in |
 | `SUPABASE_S3_ENDPOINT` | `https://tahsfrptizcdqhvghzqs.supabase.co/storage/v1/s3` |
-| `SUPABASE_S3_REGION` | Supabase â†’ Project Settings â†’ Storage â†’ S3 Connection â†’ Region |
-| `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | **Secret.** Same page â†’ S3 Access Keys |
+| `SUPABASE_S3_REGION` | Supabase → Project Settings → Storage → S3 Connection → Region |
+| `SUPABASE_S3_ACCESS_KEY_ID`, `SUPABASE_S3_SECRET_ACCESS_KEY` | **Secret.** Same page → S3 Access Keys |
 | `BACKUP_S3_*` | References to the `athlotrack-backups` bucket (`${{athlotrack-backups.ENDPOINT}}` etc.) |
 | `KEEP_DAYS` | Days of database dumps to keep (30) |
 
 If you change the database password in Supabase, update `SUPABASE_DB_URL` here too, or backups stop. The keep-alive still runs, because it is the first step.
 
 ### Checking it works
-Open **Railway â†’ `supabase-backup` â†’ Deployments â†’ latest â†’ Logs**. A good run ends with:
+Open **Railway → `supabase-backup` → Deployments → latest → Logs**. A good run ends with:
 ```
 keep-alive: HTTP 200
-database: db/2026-10-02_0130 (â€¦)
-photos: Total objects: â€¦ Total size: â€¦
+photos: Total objects: … Total size: …
+database: db/2026-10-02_0130 (…)
 backup done
 ```
-To browse or download the files, use **Railway â†’ `athlotrack-backups` â†’ Files**.
+If a database dump fails, nothing is uploaded for the database and the run shows as **failed**. The keep-alive and photos have already run by then. The most common cause is «password authentication failed»: the password in `SUPABASE_DB_URL` is wrong. If it contains characters like `@ # / ? %`, they must be URL-encoded (`@` → `%40`, `#` → `%23`, `/` → `%2F`, `?` → `%3F`, `%` → `%25`).
+To browse or download the files, use **Railway → `athlotrack-backups` → Files**.
 
 ## Restoring
 
