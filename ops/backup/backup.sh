@@ -17,20 +17,25 @@ export RCLONE_CONFIG_SUPABASE_ENDPOINT="$SUPABASE_S3_ENDPOINT" RCLONE_CONFIG_SUP
 export RCLONE_CONFIG_SUPABASE_ACCESS_KEY_ID="$SUPABASE_S3_ACCESS_KEY_ID" RCLONE_CONFIG_SUPABASE_SECRET_ACCESS_KEY="$SUPABASE_S3_SECRET_ACCESS_KEY"
 
 # 1. Keep-alive: a real API request, so Supabase doesn't pause the free project after a quiet week.
+#    First, so it still happens when a later step fails.
 code=$(curl -sS -o /dev/null -w '%{http_code}' -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/rest/v1/coaches?select=id")
 echo "keep-alive: HTTP $code"
 
-# 2. Database. The schema is also in git (supabase/*.sql); these dumps hold the data.
-#    public = AthloTrack's tables (+ functions/policies); auth users + identities = the logins.
-pg_dump "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges | gzip > "$WORK/public.sql.gz"
-pg_dump "$SUPABASE_DB_URL" --data-only --table=auth.users --table=auth.identities --no-owner | gzip > "$WORK/auth.sql.gz"
-pg_dump "$SUPABASE_DB_URL" --data-only --table=storage.objects --no-owner | gzip > "$WORK/storage-objects.sql.gz"
-rclone copy "$WORK" "backup:$BACKUP_S3_BUCKET/db/$STAMP"
-echo "database: db/$STAMP ($(du -ch "$WORK"/*.gz | tail -1 | cut -f1))"
-
-# 3. Photos: mirror of the private "avatars" bucket.
+# 2. Photos: mirror of the private "avatars" bucket. Before the database: they don't depend on
+#    the database password, so they're saved even if step 3 fails.
 rclone sync "supabase:avatars" "backup:$BACKUP_S3_BUCKET/photos/avatars"
 echo "photos: $(rclone size "backup:$BACKUP_S3_BUCKET/photos/avatars" | tr '\n' ' ')"
+
+# 3. Database. The schema is also in git (supabase/*.sql); these dumps hold the data.
+#    public = AthloTrack's tables (+ functions/policies); auth users + identities = the logins.
+#    Dump to files first (a failed pg_dump piped into gzip would still "succeed"), and upload
+#    only when every dump worked; set -e then fails the run so Railway shows it as failed.
+pg_dump "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges -f "$WORK/public.sql"
+pg_dump "$SUPABASE_DB_URL" --data-only --table=auth.users --table=auth.identities --no-owner -f "$WORK/auth.sql"
+pg_dump "$SUPABASE_DB_URL" --data-only --table=storage.objects --no-owner -f "$WORK/storage-objects.sql"
+gzip "$WORK"/*.sql
+rclone copy "$WORK" "backup:$BACKUP_S3_BUCKET/db/$STAMP"
+echo "database: db/$STAMP ($(du -ch "$WORK"/*.gz | tail -1 | cut -f1))"
 
 # 4. Keep the last $KEEP_DAYS days of database dumps.
 rclone delete --min-age "${KEEP_DAYS}d" "backup:$BACKUP_S3_BUCKET/db"
