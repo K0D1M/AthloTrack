@@ -70,7 +70,7 @@ public partial class MainView : DrawerPage
     private void ApplyPendingSection()
     {
         if (AthloTrack.Services.NotificationNavigation.TakePending() is not { } request) return;
-        if (request.NotificationId is { } notificationId) _ = MarkNotificationReadAsync(notificationId);
+        foreach (var notificationId in request.NotificationIds) _ = MarkNotificationReadAsync(notificationId);
 
         var index = request.Section;
         if (DrawerList.SelectedIndex != index)

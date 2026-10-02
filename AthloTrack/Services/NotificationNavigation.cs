@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AthloTrack.Services;
 
@@ -11,19 +13,27 @@ public static class NotificationNavigation
     /// <summary>Προπονήσεις, in MainView's drawer order.</summary>
     public const int WorkoutsSection = 2;
 
-    /// <summary>The section to open, and the tapped notification (marked read: it has been seen).</summary>
-    public sealed record Request(int Section, Guid? NotificationId);
+    /// <summary>The section to open, and the tapped notification(s) (marked read: they've been seen).</summary>
+    public sealed record Request(int Section, IReadOnlyList<Guid> NotificationIds);
 
     private static Request? _pending;
 
     /// <summary>Raised when a request arrives; the main view then calls <see cref="TakePending"/>.</summary>
     public static event Action? Requested;
 
-    /// <summary>Called with the push's data: <c>type</c> (notifications.type) and <c>notificationId</c>.</summary>
-    public static void RequestFor(string? type, string? notificationId = null)
+    /// <summary>
+    /// Called with the push's data: <c>type</c> (notifications.type) and <c>notificationId</c>,
+    /// which is a comma-separated list when an Android group summary was tapped.
+    /// </summary>
+    public static void RequestFor(string? type, string? notificationIds = null)
     {
         if (type is not ("new_workout" or "workout_updated" or "workout_completed")) return;
-        _pending = new Request(WorkoutsSection, Guid.TryParse(notificationId, out var id) ? id : null);
+        var ids = (notificationIds ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => Guid.TryParse(s, out var id) ? id : (Guid?)null)
+            .OfType<Guid>()
+            .ToList();
+        _pending = new Request(WorkoutsSection, ids);
         Requested?.Invoke();
     }
 

@@ -41,13 +41,17 @@ public class MainActivity : AvaloniaMainActivity
         HandleNotificationIntent(intent); // app already running
     }
 
-    /// <summary>A tapped push carries its data keys as extras ("type" = notifications.type).</summary>
-    private static void HandleNotificationIntent(Intent? intent)
+    /// <summary>
+    /// A tapped push carries its data keys as extras ("type" = notifications.type). The group
+    /// summary carries all its notification ids (comma-separated) and "clearAll".
+    /// </summary>
+    private void HandleNotificationIntent(Intent? intent)
     {
         var type = intent?.GetStringExtra("type");
         if (type is null) return;
-        var notificationId = intent!.GetStringExtra("notificationId");
+        var notificationIds = intent!.GetStringExtra("notificationId");
+        if (intent.GetStringExtra("clearAll") == "1") Services.PushNotifications.ClearAll(this);
         intent.RemoveExtra("type"); // don't replay on recreate
-        Dispatcher.UIThread.Post(() => NotificationNavigation.RequestFor(type, notificationId));
+        Dispatcher.UIThread.Post(() => NotificationNavigation.RequestFor(type, notificationIds));
     }
 }

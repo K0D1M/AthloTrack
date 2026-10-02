@@ -19,7 +19,7 @@ public sealed class NotificationNavigationTests
         var request = NotificationNavigation.TakePending();
         Assert.NotNull(request);
         Assert.Equal(NotificationNavigation.WorkoutsSection, request.Section);
-        Assert.Equal(id, request.NotificationId);
+        Assert.Equal(new[] { id }, request.NotificationIds);
     }
 
     [Fact]
@@ -50,6 +50,20 @@ public sealed class NotificationNavigationTests
 
         var request = NotificationNavigation.TakePending();
         Assert.NotNull(request);
-        Assert.Null(request.NotificationId);
+        Assert.Empty(request.NotificationIds);
+    }
+
+    [Fact]
+    public void A_group_summary_marks_all_its_notifications_read()
+    {
+        // Android's group summary sends every child's id, comma-separated.
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+
+        NotificationNavigation.RequestFor("workout_completed", string.Join(",", ids) + ",not-a-guid");
+
+        var request = NotificationNavigation.TakePending();
+        Assert.NotNull(request);
+        Assert.Equal(NotificationNavigation.WorkoutsSection, request.Section);
+        Assert.Equal(ids, request.NotificationIds);
     }
 }

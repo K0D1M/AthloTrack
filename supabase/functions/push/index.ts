@@ -81,6 +81,30 @@ async function recipientAuthUserId(n: NotificationRow): Promise<string | null> {
   return coach?.auth_user_id ?? null;
 }
 
+// ---- The FCM message for one device ----
+function messageFor(token: string, platform: string, n: NotificationRow) {
+  const data = { notificationId: n.id, type: n.type };
+
+  // Android app 1.2+: data only. The app posts the notification itself, in its own group whose
+  // summary opens Προπονήσεις (FCM-posted notifications get bundled by Android into a group whose
+  // tap only opens the app).
+  if (platform === "android-data") {
+    return { token, data: { ...data, title: "AthloTrack", body: n.message }, android: { priority: "high" } };
+  }
+
+  // Older Android app ("android"), and web tokens (browser, iPhone Home Screen app).
+  return {
+    token,
+    notification: { title: "AthloTrack", body: n.message },
+    data,
+    android: { priority: "high", notification: { channel_id: "athlotrack" } },
+    webpush: {
+      notification: { icon: `${APP_URL}/icon-192.png` },
+      fcm_options: { link: `${APP_URL}/?type=${encodeURIComponent(n.type)}&notification=${n.id}` },
+    },
+  };
+}
+
 Deno.serve(async (req) => {
   try {
     const payload = await req.json();
@@ -91,30 +115,18 @@ Deno.serve(async (req) => {
     if (!userId) return Response.json({ sent: 0, reason: "recipient has no login" });
 
     const { data: tokens } = await supabase
-      .from("device_tokens").select("token").eq("auth_user_id", userId);
+      .from("device_tokens").select("token, platform").eq("auth_user_id", userId);
     if (!tokens?.length) return Response.json({ sent: 0, reason: "no devices" });
 
     const access = await googleAccessToken();
     const url = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
     let sent = 0;
 
-    for (const { token } of tokens) {
+    for (const { token, platform } of tokens) {
       const res = await fetch(url, {
         method: "POST",
         headers: { Authorization: `Bearer ${access}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: {
-            token,
-            notification: { title: "AthloTrack", body: n.message },
-            data: { notificationId: n.id, type: n.type },
-            android: { priority: "high", notification: { channel_id: "athlotrack" } },
-            // Web tokens (browser, iPhone Home Screen app): icon, and the page a tap opens.
-            webpush: {
-              notification: { icon: `${APP_URL}/icon-192.png` },
-              fcm_options: { link: `${APP_URL}/?type=${encodeURIComponent(n.type)}&notification=${n.id}` },
-            },
-          },
-        }),
+        body: JSON.stringify({ message: messageFor(token, platform, n) }),
       });
       if (res.ok) {
         sent++;
