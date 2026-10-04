@@ -30,6 +30,14 @@
             <Setter Property="TextInputOptions.ShowSuggestions" Value="False" />
         </Style>
 
+        <!-- Multi-line boxes (the workout text, notes): Avalonia doesn't tell Android they are
+             multi-line, so the keyboard showed a ✓ "Done" key whose line break Avalonia added behind
+             its back; Gboard then dropped the next key. Declared multi-line, it shows ⏎ instead. -->
+        <Style Selector="TextBox[AcceptsReturn=True]">
+            <Setter Property="TextInputOptions.Multiline" Value="True" />
+            <Setter Property="TextInputOptions.ReturnKeyType" Value="Return" />
+        </Style>
+
         <!-- Floating "+" action button. Fluent's pointer-over/pressed template states replace a
              local Background, which turned the FAB grey; restate them in brand blue. -->
         <Style Selector="Button.fab">

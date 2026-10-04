@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <ApplicationId>com.k0d1m.athlotrack</ApplicationId>
     <!-- Raise ApplicationVersion for every APK you hand out, or phones refuse it as an update. -->
-    <ApplicationVersion>7</ApplicationVersion>
-    <ApplicationDisplayVersion>1.6</ApplicationDisplayVersion>
+    <ApplicationVersion>8</ApplicationVersion>
+    <ApplicationDisplayVersion>1.7</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>

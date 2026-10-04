@@ -73,6 +73,13 @@ dotnet test --project AthloTrack.Tests
 ## Android keyboards
 Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** words, which Gboard and Samsung do with suggestions on. You get e.g. only «te» of «test», or nothing at all, especially on slower phones or a busy first launch. `App.axaml` therefore sets `TextInputOptions.ShowSuggestions = False` on every TextBox, so the keyboard types each key directly. Greek, including accents via long-press, still works. Don't add `TextInputOptions.ContentType="Email"` to a field: combined with that setting, it produces an input type in which Gboard composes again. Upstream, Avalonia is rewriting this code ([PR #20890](https://github.com/AvaloniaUI/Avalonia/pull/20890)); once a release fixes it, the style can go.
 
+Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOptions.Multiline` and `ReturnKeyType=Return` from a second `App.axaml` style:
+- **Why:** Avalonia didn't tell Android they were multi-line, so Gboard showed a ✓ "Done" key. Avalonia turned that action into a line break Gboard didn't know about, and Gboard then dropped the next key.
+- **Result:** with the style, Gboard shows ⏎ and every key arrives.
+- **Cost:** Avalonia drops the no-suggestions flag on multi-line boxes, so Gboard composes words there again. Tests with fast typing lost nothing; the losses seen before were on the login screen during a busy first launch.
+
+The phone's keyboard doesn't resize the app's view. `AddWorkoutView` therefore listens to `TopLevel.InputPane` and, while the keyboard is open, ends the form above it and scrolls the line being typed into view.
+
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 

@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
 using AthloTrack.Core.Workouts;
 using AthloTrack.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
+using Avalonia.Controls.Presenters;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace AthloTrack.Views;
 
@@ -13,6 +17,8 @@ public partial class AddWorkoutView : UserControl
     private AddWorkoutViewModel? _vm;
     private string _lastText = string.Empty;
     private bool _applying;
+    private IInputPane? _inputPane;
+    private double _keyboardInset;
 
     public AddWorkoutView()
     {
@@ -29,10 +35,47 @@ public partial class AddWorkoutView : UserControl
         _lastText = Editor.Text ?? string.Empty;
     }
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _inputPane = TopLevel.GetTopLevel(this)?.InputPane;
+        if (_inputPane is not null) _inputPane.StateChanged += OnInputPaneChanged;
+    }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
         if (_vm is not null) _vm.InsertRequested -= InsertLine;
+        if (_inputPane is not null) _inputPane.StateChanged -= OnInputPaneChanged;
+        _inputPane = null;
+    }
+
+    /// <summary>
+    /// Phone keyboard: the app's view isn't resized for it, so the form would go on behind it.
+    /// While it's open the form ends above it, and the line being typed is scrolled into view.
+    /// </summary>
+    private void OnInputPaneChanged(object? sender, InputPaneStateEventArgs e)
+    {
+        var inset = 0.0;
+        if (e.NewState == InputPaneState.Open && TopLevel.GetTopLevel(this) is { } top
+            && this.TranslatePoint(new Point(0, Bounds.Height), top) is { } bottom)
+        {
+            inset = Math.Max(0, bottom.Y - e.EndRect.Top);
+        }
+
+        _keyboardInset = inset;
+        Form.Margin = new Thickness(16, 16, 16, 16 + inset);
+        if (inset > 0) Dispatcher.UIThread.Post(BringCaretIntoView, DispatcherPriority.Background);
+    }
+
+    private void BringCaretIntoView()
+    {
+        if (_keyboardInset <= 0 || !Editor.IsFocused) return;
+        var presenter = Editor.GetVisualDescendants().OfType<TextPresenter>().FirstOrDefault();
+        if (presenter is null) return;
+        var caret = presenter.TextLayout.HitTestTextPosition(Math.Clamp(Editor.CaretIndex, 0, (Editor.Text ?? string.Empty).Length));
+        // A little room below the line, so it doesn't sit right on the keyboard's edge.
+        presenter.BringIntoView(new Rect(caret.X, caret.Y, Math.Max(caret.Width, 1), caret.Height + 24));
     }
 
     /// <summary>Toolbar: formatting (Tag bold/bullet/numbered/heading) or a symbol to insert.</summary>
@@ -62,6 +105,7 @@ public partial class AddWorkoutView : UserControl
         var old = _lastText;
         var now = Editor.Text ?? string.Empty;
         _lastText = now;
+        if (_keyboardInset > 0) Dispatcher.UIThread.Post(BringCaretIntoView, DispatcherPriority.Background);
 
         // After the TextBox has moved its caret past the typed character.
         Dispatcher.UIThread.Post(() =>

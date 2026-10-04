@@ -142,7 +142,7 @@
     </UserControl.Styles>
 
     <Grid>
-        <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <Grid x:Name="Form" RowDefinitions="Auto,*,Auto" Margin="16">
 
             <!-- Header: athlete photo + title -->
             <!-- Grid, not a horizontal StackPanel: the title needs a width limit to wrap on a phone. -->
@@ -152,7 +152,7 @@
                            VerticalAlignment="Center" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
             </Grid>
 
-            <ScrollViewer Grid.Row="1">
+            <ScrollViewer x:Name="Scroller" Grid.Row="1">
                 <StackPanel Spacing="14">
                     <StackPanel Spacing="4">
                         <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
