@@ -44,3 +44,38 @@
     display: none;
     opacity: 0;
 }
+
+/* "New version" banner (update.js), above the app */
+.athlo-update {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 24px;
+    margin: 0 auto;
+    width: fit-content;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    padding: 10px 10px 10px 18px;
+    border-radius: 24px;
+    background: #003366;
+    color: #FFFFFF;
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.athlo-update button {
+    flex: none;
+    border: 0;
+    border-radius: 18px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #FFD54F, #FFB300);
+    color: #222222;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}

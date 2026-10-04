@@ -10,6 +10,8 @@ WORKDIR /src
 COPY . .
 # Only the browser head: Android/WinUI need other SDKs and aren't part of the site.
 RUN dotnet publish AthloTrack.Browser/AthloTrack.Browser.csproj -c Release -o /out
+# A new value on every build: the open app compares it to notice a new deploy (wwwroot/update.js).
+RUN date -u +%Y%m%d%H%M%S > /out/wwwroot/version.txt
 
 FROM caddy:2-alpine
 COPY Caddyfile /etc/caddy/Caddyfile

@@ -9,12 +9,18 @@
 	}
 
 	# Fingerprinted framework files never change under the same name: cache for a year.
-	@framework path /_framework/*
+	# Except dotnet.js: its name never changes, yet it lists the deploy's fingerprinted files,
+	# so cached for a year it kept starting the old app even after a reload.
+	@framework {
+		path /_framework/*
+		not path /_framework/dotnet.js
+	}
 	header @framework Cache-Control "public, max-age=31536000, immutable"
 
 	# Entry points must be revalidated so a new deploy is picked up.
-	# (push files too: the service worker and the Firebase config must update with the site.)
-	@entry path / /index.html /main.js /push.js /firebase-config.js /firebase-messaging-sw.js
+	# (push files too: the service worker and the Firebase config must update with the site;
+	# version.txt is what the open app checks to notice a new deploy, see update.js.)
+	@entry path / /index.html /main.js /update.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js
 	header @entry Cache-Control "no-cache"
 
 	encode zstd gzip

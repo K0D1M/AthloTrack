@@ -18,7 +18,11 @@ Both values are in the Supabase dashboard under **Project Settings → API**. Th
 - **URL:** https://athlotrack.up.railway.app
 - **Source:** GitHub `K0D1M/AthloTrack`, branch `main`. **Every push to `main` redeploys automatically.**
 - **Build:** the root `Dockerfile` installs the `wasm-tools` workload on the .NET 10 SDK image and publishes `AthloTrack.Browser` in Release. The output (`wwwroot`) is copied into a `caddy:2-alpine` image.
-- **Serving:** the `Caddyfile` listens on Railway's `$PORT` and serves the precompressed `.br`/`.gz` files that the publish step creates. The download is about 8 MB instead of about 28 MB. `/_framework/*` is cached as immutable; `index.html` and `main.js` are always revalidated, so browsers pick up a new deploy.
+- **Serving:** the `Caddyfile` listens on Railway's `$PORT` and serves the precompressed `.br`/`.gz` files that the publish step creates. The download is about 8 MB instead of about 28 MB. The fingerprinted `/_framework/*` files are cached as immutable. `index.html`, `main.js`, `update.js`, `version.txt` and `/_framework/dotnet.js` are always revalidated. `dotnet.js` keeps the same name on every build but lists that build's fingerprinted files, so caching it as immutable made browsers start the old app even after a reload.
+- **Updates reach open apps by themselves:** the Dockerfile writes a new `version.txt` on every build. `wwwroot/update.js` remembers the version the page started with, and checks again every 5 minutes and whenever the app comes back into view.
+  - Back after more than a minute away (another tab, a locked phone, the iPhone Home Screen app reopened): the page reloads itself.
+  - In use: a banner «Νέα έκδοση του AthloTrack · Ανανέωση» appears, so a half-filled form isn't lost.
+  - Locally there is no `version.txt`, so nothing happens.
 - A Release WASM build can only be tested locally with the wasm-tools workload installed. Otherwise, push and check the Railway build logs.
 
 Favicon, page title, web manifest and link-preview image (`og-image`) are in `AthloTrack.Browser/wwwroot/`.
