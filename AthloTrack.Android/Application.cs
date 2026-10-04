@@ -20,6 +20,7 @@ namespace AthloTrack.Android
             AthloTrack.AppBootstrap.RegisterPlatformServices = services =>
             {
                 services.AddSingleton<ICredentialStore, AndroidCredentialStore>();
+                services.AddSingleton<IAppPreferences, AndroidAppPreferences>();
                 services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, FirebaseTokenProvider>();
             };
             PushNotifications.EnsureChannel(this);

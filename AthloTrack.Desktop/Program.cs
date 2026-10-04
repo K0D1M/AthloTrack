@@ -17,7 +17,10 @@ sealed class Program
     public static void Main(string[] args)
     {
         AthloTrack.AppBootstrap.RegisterPlatformServices = services =>
+        {
             services.AddSingleton<ICredentialStore, DesktopCredentialStore>();
+            services.AddSingleton<IAppPreferences, DesktopAppPreferences>();
+        };
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

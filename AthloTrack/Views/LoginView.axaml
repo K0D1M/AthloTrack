@@ -13,15 +13,73 @@
             <Setter Property="Height" Value="46" />
             <Setter Property="CornerRadius" Value="23" />
         </Style>
-        <Style Selector="Button.link">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryBrush}" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="13" />
+
+        <!-- Step 1: the two role cards -->
+        <Style Selector="Button.rolecard">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="12,20" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
         </Style>
-        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button.rolecard:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1F6FD" />
+        </Style>
+        <Style Selector="Button.rolecard:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E3EDFA" />
+        </Style>
+        <Style Selector="Button.rolecard TextBlock.title">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.rolecard TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+
+        <!-- Step 1: outlined "new athlete" pill on the gradient -->
+        <Style Selector="Button.signup">
+            <Setter Property="Background" Value="#1FFFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#80FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="23" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.signup:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.signup:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#4DFFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- Step 2: back arrow in the form header -->
+        <Style Selector="Button.back">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryPressedBrush}" />
+            <Setter Property="Width" Value="38" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="CornerRadius" Value="19" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="Button.back:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EEF2F7" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
         </Style>
     </UserControl.Styles>
 
@@ -72,10 +130,77 @@
                            Foreground="#CFE3FF" HorizontalAlignment="Center" />
             </StackPanel>
 
-            <!-- Form card -->
+            <!-- Step 1: who is logging in (decides which profile the login is checked against) -->
+            <StackPanel Spacing="14" IsVisible="{Binding IsChoosingRole}">
+                <TextBlock Text="Ποιος συνδέεται;" FontSize="16" FontWeight="SemiBold"
+                           Foreground="White" HorizontalAlignment="Center" />
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Button Grid.Column="0" Classes="rolecard"
+                            Command="{Binding ChooseCoachCommand}"
+                            AutomationProperties.Name="Προπονητής">
+                        <StackPanel Spacing="10">
+                            <Border Width="60" Height="60" CornerRadius="30"
+                                    Background="{StaticResource BrandButtonGradient}"
+                                    HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource WhistleIcon}" Width="30" Height="30"
+                                          Foreground="White" />
+                            </Border>
+                            <TextBlock Classes="title" Text="Προπονητής" />
+                            <TextBlock Classes="hint" Text="Αθλητές, μετρήσεις και προγράμματα" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Grid.Column="1" Classes="rolecard"
+                            Command="{Binding ChooseAthleteCommand}"
+                            AutomationProperties.Name="Αθλητής">
+                        <StackPanel Spacing="10">
+                            <Border Width="60" Height="60" CornerRadius="30"
+                                    Background="{StaticResource BrandAccentGradient}"
+                                    HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource RunnerIcon}" Width="30" Height="30"
+                                          Foreground="{StaticResource BrandSupportBrush}" />
+                            </Border>
+                            <TextBlock Classes="title" Text="Αθλητής" />
+                            <TextBlock Classes="hint" Text="Οι προπονήσεις και η πρόοδός μου" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <Button Classes="signup" Command="{Binding ChooseSignUpCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource AccountPlusIcon}" Width="18" Height="18" />
+                        <TextBlock Text="Νέος αθλητής; Δημιουργία λογαριασμού" FontSize="13"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Shown while a saved session is being restored -->
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+            </StackPanel>
+
+            <!-- Step 2: the form for the chosen role -->
             <Border Background="White" CornerRadius="18" Padding="20"
-                    BoxShadow="0 12 32 0 #33000000">
+                    BoxShadow="0 12 32 0 #33000000"
+                    IsVisible="{Binding IsForm}">
                 <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Margin="-8,-6,0,0">
+                        <Button Classes="back" Command="{Binding BackCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                AutomationProperties.Name="Πίσω"
+                                ToolTip.Tip="Πίσω">
+                            <PathIcon Data="{StaticResource ArrowLeftIcon}" Width="20" Height="20" />
+                        </Button>
+                        <TextBlock Grid.Column="1" Text="{Binding FormTitle}"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{StaticResource BrandSupportBrush}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
+                               IsVisible="{Binding IsSignUp}"
+                               Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου, ώστε ο λογαριασμός να συνδεθεί με το προφίλ σου." />
+
                     <!-- (No ContentType="Email": combined with ShowSuggestions=False from App.axaml it
                          gives an input type in which Gboard composes again; see App.axaml.) -->
                     <TextBox PlaceholderText="Email"
@@ -86,7 +211,11 @@
                              PasswordChar="●"
                              Text="{Binding Password, Mode=TwoWay}"
                              UseFloatingPlaceholder="True"
-                             TextInputOptions.IsSensitive="True" />
+                             TextInputOptions.IsSensitive="True">
+                        <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
+                        </TextBox.KeyBindings>
+                    </TextBox>
 
                     <TextBlock Text="{Binding ErrorMessage}"
                                Foreground="#C62828"
@@ -98,33 +227,17 @@
                                TextWrapping="Wrap"
                                IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-                    <!-- Sign in -->
-                    <StackPanel Spacing="14" IsVisible="{Binding !IsSignUpMode}">
-                        <Button Classes="primary login"
-                                Content="Είσοδος προπονητή"
-                                Command="{Binding LoginAsCoachCommand}"
-                                IsEnabled="{Binding !IsBusy}" />
-
-                        <Button Classes="gold login"
-                                Content="Είσοδος αθλητή"
-                                Command="{Binding LoginAsAthleteCommand}"
-                                IsEnabled="{Binding !IsBusy}" />
-
-                        <Button Classes="link" Command="{Binding ToggleSignUpCommand}"
-                                Content="Νέος αθλητής; Δημιουργία λογαριασμού" />
-                    </StackPanel>
-
-                    <!-- Athlete sign-up -->
-                    <StackPanel Spacing="14" IsVisible="{Binding IsSignUpMode}">
-                        <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
-                                   Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου, ώστε ο λογαριασμός να συνδεθεί με το προφίλ σου." />
-                        <Button Classes="gold login"
-                                Content="Δημιουργία λογαριασμού"
-                                Command="{Binding SignUpCommand}"
-                                IsEnabled="{Binding !IsBusy}" />
-                        <Button Classes="link" Command="{Binding ToggleSignUpCommand}"
-                                Content="Έχω ήδη λογαριασμό" />
-                    </StackPanel>
+                    <!-- Blue for the coach, gold for the athlete forms (like the role cards) -->
+                    <Button Classes="primary login"
+                            Content="{Binding SubmitText}"
+                            Command="{Binding SubmitCommand}"
+                            IsEnabled="{Binding !IsBusy}"
+                            IsVisible="{Binding IsCoachForm}" />
+                    <Button Classes="gold login"
+                            Content="{Binding SubmitText}"
+                            Command="{Binding SubmitCommand}"
+                            IsEnabled="{Binding !IsBusy}"
+                            IsVisible="{Binding !IsCoachForm}" />
 
                     <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
                 </StackPanel>

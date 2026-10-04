@@ -25,7 +25,7 @@ This project has no UI dependencies.
 - `Models/` holds the domain types (`Athlete`, `Coach`, `Measurement`, `WorkoutProgram`, `AppNotification`).
 - `Supabase/Rows/` holds the Postgrest row models. These are mapped to the domain types in the repositories.
 - `Data/` holds the repositories (`IAthleteRepository`, `IMeasurementRepository`, `IWorkoutRepository`, `INotificationRepository`, `ICoachRepository`) and `AvatarService` (the private `avatars` bucket, read through signed URLs).
-- `Auth/` holds `AuthService` (sign in and sign up, and role detection from the `coaches` and `athletes` tables), `SessionInitializer` (restores the saved session at start-up), `SessionState` (the current user and role) and `ICredentialStore`. Each platform provides its own credential store.
+- `Auth/` holds `AuthService` (sign in and sign up, and role detection from the `coaches` and `athletes` tables), `AuthErrors` (Supabase Auth errors in Greek), `SessionInitializer` (restores the saved session at start-up), `SessionState` (the current user and role), `ICredentialStore` and `IAppPreferences`. Each platform provides its own credential store and preferences store (`localStorage`, Android `SharedPreferences`, a file under `%LOCALAPPDATA%\AthloTrack\prefs`); without one, an in-memory store is used.
 - `Push/PushRegistrationService.cs` registers this device's push token for the signed-in user through the RPC `claim_device_token`, and removes it on logout. `IPushTokenProvider` is supplied by the Android head. On other heads no token provider is registered, so push registration does nothing.
 - `DependencyInjection/CoreServiceRegistration.cs` registers all of the above.
 
@@ -70,6 +70,8 @@ dotnet test --project AthloTrack.Tests
 Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** words, which Gboard and Samsung do with suggestions on. You get e.g. only «te» of «test», or nothing at all, especially on slower phones or a busy first launch. `App.axaml` therefore sets `TextInputOptions.ShowSuggestions = False` on every TextBox, so the keyboard types each key directly. Greek, including accents via long-press, still works. Don't add `TextInputOptions.ContentType="Email"` to a field: combined with that setting, it produces an input type in which Gboard composes again. Upstream, Avalonia is rewriting this code ([PR #20890](https://github.com/AvaloniaUI/Avalonia/pull/20890)); once a release fixes it, the style can go.
 
 ## Roles in the UI
+The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
+
 `SessionState.Role` is `Coach` or `Athlete`, and the shared screens adapt to it:
 - A coach sees all of their athletes, the **+** menus (new athlete, measurement, workout) and the completion notifications.
 - An athlete sees only their own profile. `IsOwnProfile` shows the **Ολοκληρώθηκε** button and the photo editing. They also see their coach and their new-workout notifications.

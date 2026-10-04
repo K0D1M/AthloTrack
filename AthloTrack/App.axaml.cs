@@ -7,6 +7,7 @@ using AthloTrack.Core.DependencyInjection;
 using AthloTrack.ViewModels;
 using AthloTrack.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 
 namespace AthloTrack;
@@ -113,6 +114,8 @@ public partial class App : Application
         var services = new ServiceCollection();
         services.AddAthloTrackCore(config);
         AppBootstrap.RegisterPlatformServices?.Invoke(services);
+        // Heads without their own store still get a working login screen.
+        services.TryAddSingleton<IAppPreferences, InMemoryAppPreferences>();
 
         services.AddTransient<LoginViewModel>();
         services.AddTransient<RecentViewModel>();

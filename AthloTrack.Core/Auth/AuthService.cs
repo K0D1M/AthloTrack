@@ -29,7 +29,7 @@ public sealed class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            return AuthResult.Fail(ex.Message);
+            return AuthResult.Fail(AuthErrors.Describe(ex));
         }
     }
 
@@ -50,7 +50,7 @@ public sealed class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            return AuthResult.Fail(ex.Message);
+            return AuthResult.Fail(AuthErrors.Describe(ex));
         }
     }
 
@@ -77,7 +77,7 @@ public sealed class AuthService : IAuthService
         catch (Exception ex)
         {
             await _credentialStore.ClearAsync();
-            return AuthResult.Fail(ex.Message);
+            return AuthResult.Fail(AuthErrors.Describe(ex));
         }
     }
 
@@ -93,7 +93,7 @@ public sealed class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            return AuthResult.Fail(ex.Message);
+            return AuthResult.Fail(AuthErrors.Describe(ex));
         }
     }
 

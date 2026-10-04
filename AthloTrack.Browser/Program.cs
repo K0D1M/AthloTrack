@@ -22,6 +22,7 @@ internal sealed partial class Program
         AppBootstrap.RegisterPlatformServices = services =>
         {
             services.AddSingleton<ICredentialStore, BrowserCredentialStore>();
+            services.AddSingleton<IAppPreferences, BrowserAppPreferences>();
             // Only once Firebase is configured; otherwise the app shows no notification options at all.
             if (PushInterop.Configured)
                 services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, BrowserPushTokenProvider>();
