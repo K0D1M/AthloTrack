@@ -27,6 +27,7 @@ This project has no UI dependencies.
 - `Data/` holds the repositories (`IAthleteRepository`, `IMeasurementRepository`, `IWorkoutRepository`, `INotificationRepository`, `ICoachRepository`) and `AvatarService` (the private `avatars` bucket, read through signed URLs).
 - `Auth/` holds `AuthService` (sign in and sign up, and role detection from the `coaches` and `athletes` tables), `AuthErrors` (Supabase Auth errors in Greek), `SessionInitializer` (restores the saved session at start-up), `SessionState` (the current user and role), `ICredentialStore` and `IAppPreferences`. Each platform provides its own credential store and preferences store (`localStorage`, Android `SharedPreferences`, a file under `%LOCALAPPDATA%\AthloTrack\prefs`); without one, an in-memory store is used.
 - `Push/PushRegistrationService.cs` registers this device's push token for the signed-in user through the RPC `claim_device_token`, and removes it on logout. `IPushTokenProvider` is supplied by the Android head. On other heads no token provider is registered, so push registration does nothing.
+- `Workouts/WorkoutMarkup.cs` holds the workout-text markup (`## ` heading, `- ` bullet, `1. ` numbered, `**bold**`; any other line stays as typed) and the editor's helpers: bold and line-prefix toggles, list continuation on a new line, and the exercise builder's line format. It is pure and unit-tested. The content stays plain text in the database, so notifications, older app versions and old workouts are unaffected.
 - `DependencyInjection/CoreServiceRegistration.cs` registers all of the above.
 
 Three Postgrest-csharp pitfalls:
@@ -41,11 +42,14 @@ Three Postgrest-csharp pitfalls:
   - `Avatar`, and `GreekDatePicker` (a date picker with Greek ημέρα/μήνας/έτος placeholders)
   - `SeenTracker`, an attached property that runs a command once its control has been on screen for a second (workout read receipts)
   - `PlotView`, which shows a ScottPlot chart as an image
+  - `WorkoutText`, which shows a workout's text formatted, and `CoachPresence`, the coach's Παρών/Απών dot
 - `Services/NotificationNavigation.cs` carries a tapped push's request (open Προπονήσεις, mark the notification read) to `MainView`, and `Services/ChartFonts.cs` gives the chart the bundled Inter font.
 - `Services/PhotoPicker.cs` and `Services/PhotoProcessor.cs` handle photo selection and resize the photo before upload.
 - `Styles/Theme.axaml` holds the brand colours and gradients, and `Styles/Icons.axaml` the path icons.
 - `Assets/supabase.config.json` holds the Supabase URL and anon key. It is embedded and read by `AppBootstrap.LoadSupabaseConfig`.
 - `AppBootstrap.RegisterPlatformServices` is how each head registers its own services (credential store, push token provider).
+
+The workout editor (`AddWorkoutView`) handles the toolbar in its code-behind, because it needs the TextBox selection; the logic itself is in `WorkoutMarkup`. List continuation reacts to the text change rather than the Enter key, so phone keyboards behave the same. `AddWorkoutViewModel` keeps an unsaved draft in `IAppPreferences` (key `workout.draft.new.{athleteId}` or `workout.draft.edit.{workoutId}`), written on every change and cleared by Αποθήκευση, Άκυρο or Απόρριψη. An edit draft records a fingerprint of the workout it started from, and is dropped if the workout has changed since.
 
 The progress chart works in two steps. `AthleteProfileViewModel` produces plain data (`ProgressChart`: date labels plus one `ChartLine` per metric), and `AthleteProfileView.BuildChart` draws it with **ScottPlot** (core package only) into `PlotView`. ScottPlot's own Avalonia control froze the browser's single UI thread, so the app renders the chart to an image at the control's pixel size instead.
 

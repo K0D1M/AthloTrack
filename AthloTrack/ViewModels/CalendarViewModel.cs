@@ -115,7 +115,8 @@ public partial class CalendarViewModel : ViewModelBase
             {
                 byId.TryGetValue(p.AthleteId, out var athlete);
                 Entries.Add(new CalendarEntryViewModel(
-                    p.TargetDate, p.AthleteId, athlete?.FullName ?? "—", athlete?.ProfileImagePath, p.Content));
+                    p.TargetDate, p.AthleteId, athlete?.FullName ?? "—", athlete?.ProfileImagePath,
+                    AthloTrack.Core.Workouts.WorkoutMarkup.PlainPreview(p.Content)));
             }
 
             ShowMonth(_month);

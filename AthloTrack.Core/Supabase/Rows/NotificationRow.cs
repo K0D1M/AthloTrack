@@ -27,6 +27,7 @@ public sealed class NotificationRow : BaseModel
     [Column("is_read")]
     public bool IsRead { get; set; }
 
-    [Column("created_at")]
+    // Set by the database: sending the model's default would store 0001-01-01.
+    [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }
 }

@@ -55,6 +55,8 @@ public sealed class AthleteRepository : IAthleteRepository
     public async Task<Athlete> AddAsync(Athlete athlete)
     {
         var client = await _factory.GetClientAsync();
+        // A new athlete is recent activity too (unset, it was stored as 0001-01-01).
+        athlete.UpdatedAt = DateTimeOffset.UtcNow;
         var response = await client.From<AthleteRow>().Insert(MapBack(athlete));
         return Map(response.Models.First());
     }

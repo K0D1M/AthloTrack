@@ -27,6 +27,7 @@ public sealed class MeasurementRow : BaseModel
     [Column("created_by")]
     public Guid? CreatedBy { get; set; }
 
-    [Column("created_at")]
+    // Set by the database: sending the model's default would store 0001-01-01.
+    [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }
 }

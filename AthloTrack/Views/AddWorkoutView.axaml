@@ -49,50 +49,310 @@
             <Setter Property="BorderBrush" Value="#C62828" />
             <Setter Property="Foreground" Value="White" />
         </Style>
+
+        <!-- Editor toolbar: small square buttons that don't take focus (the text keeps its selection) -->
+        <Style Selector="Button.tool, ToggleButton.tool">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinWidth" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="#EEF3FB" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#DCE7F7" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.tool:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandPrimaryBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.tool PathIcon, ToggleButton.tool PathIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+
+        <!-- Panels opened from the toolbar (exercise builder, templates) -->
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="#F5F8FD" />
+            <Setter Property="BorderBrush" Value="#DCE7F7" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <!-- A template / earlier workout row: the whole row is a button -->
+        <Style Selector="Button.reuse">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.reuse:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EEF3FB" />
+        </Style>
+
+        <Style Selector="Button.small">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="16,0" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryBrush}" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+        </Style>
+        <Style Selector="Button.delete">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="9" />
+            <Setter Property="CornerRadius" Value="18" />
+        </Style>
+        <Style Selector="Button.delete PathIcon">
+            <Setter Property="Foreground" Value="#C62828" />
+        </Style>
+        <Style Selector="Button.dialog">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+        </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    <Grid>
+        <Grid RowDefinitions="Auto,*,Auto" Margin="16">
 
-        <!-- Header: athlete photo + title -->
-        <!-- Grid, not a horizontal StackPanel: the title needs a width limit to wrap on a phone. -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,0,0,16">
-            <controls:Avatar Grid.Column="0" Width="52" Height="52" Photo="{Binding Photo}" Initial="{Binding Initial}" />
-            <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
-                       VerticalAlignment="Center" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+            <!-- Header: athlete photo + title -->
+            <!-- Grid, not a horizontal StackPanel: the title needs a width limit to wrap on a phone. -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,0,0,16">
+                <controls:Avatar Grid.Column="0" Width="52" Height="52" Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
+                           VerticalAlignment="Center" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="1">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
+                        <controls:GreekDatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Παρουσία προπονητή (προαιρετικό)" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ToggleButton Classes="presence present" Content="● Παρών"
+                                          IsChecked="{Binding IsPresentChosen, Mode=TwoWay}" />
+                            <ToggleButton Classes="presence absent" Content="● Απών"
+                                          IsChecked="{Binding IsAbsentChosen, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Ασκησιολόγιο" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <ToggleButton Grid.Column="1" Classes="tool" IsChecked="{Binding IsPreview, Mode=TwoWay}"
+                                          ToolTip.Tip="Πώς θα το δει ο αθλητής">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource EyeIcon}" />
+                                    <TextBlock Text="Προεπισκόπηση" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </Grid>
+
+                        <!-- Unsaved changes from before were brought back -->
+                        <Border IsVisible="{Binding IsDraftRestored}" Background="#FFF8E1" BorderBrush="#FFE082"
+                                BorderThickness="1" CornerRadius="10" Padding="10,6">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Text="Επαναφέρθηκε πρόχειρο που δεν είχε αποθηκευτεί." FontSize="13"
+                                           TextWrapping="Wrap" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Classes="link" Content="Απόρριψη"
+                                        Command="{Binding DiscardDraftCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Toolbar -->
+                        <WrapPanel IsVisible="{Binding !IsPreview}" ItemSpacing="6" LineSpacing="6">
+                            <Button Classes="tool" Tag="bold" Click="OnFormat" ToolTip.Tip="Έντονα">
+                                <PathIcon Data="{StaticResource FormatBoldIcon}" />
+                            </Button>
+                            <Button Classes="tool" Tag="bullet" Click="OnFormat" ToolTip.Tip="Λίστα με κουκκίδες">
+                                <PathIcon Data="{StaticResource ListBulletedIcon}" />
+                            </Button>
+                            <Button Classes="tool" Tag="numbered" Click="OnFormat" ToolTip.Tip="Αριθμημένη λίστα">
+                                <PathIcon Data="{StaticResource ListNumberedIcon}" />
+                            </Button>
+                            <Button Classes="tool" Tag="heading" Click="OnFormat" ToolTip.Tip="Επικεφαλίδα">
+                                <PathIcon Data="{StaticResource HeadingIcon}" />
+                            </Button>
+                            <Button Classes="tool" Tag="×" Click="OnFormat" Content="×" ToolTip.Tip="Σετ × επαναλήψεις" />
+                            <Button Classes="tool" Tag="'" Click="OnFormat" Content="'" ToolTip.Tip="Λεπτά" />
+                            <Button Classes="tool" Tag="&quot;" Click="OnFormat" Content="&quot;" ToolTip.Tip="Δευτερόλεπτα" />
+                            <Button Classes="tool" Tag="→" Click="OnFormat" Content="→" />
+                            <Button Classes="tool" Command="{Binding ToggleBuilderCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <PathIcon Data="{StaticResource PlusIcon}" />
+                                    <TextBlock Text="Άσκηση" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Classes="tool" Command="{Binding ToggleReuseCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource TemplatesIcon}" Width="16" Height="16" />
+                                    <TextBlock Text="Πρότυπα" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- Exercise builder -->
+                        <Border Classes="panel" IsVisible="{Binding IsBuilderOpen}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="section" Text="Νέα άσκηση" />
+                                <TextBox PlaceholderText="Άσκηση (π.χ. Καθίσματα)" UseFloatingPlaceholder="True"
+                                         Text="{Binding ExerciseName, Mode=TwoWay}" />
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                    <TextBox Grid.Column="0" PlaceholderText="Σετ" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseSets, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" PlaceholderText="Επαναλήψεις" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseReps, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="2" PlaceholderText="Κιλά" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseKg, Mode=TwoWay}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                    <TextBox Grid.Column="0" PlaceholderText="Λεπτά" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseMinutes, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1" PlaceholderText="Απόσταση" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseDistance, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="2" PlaceholderText="Διάλ. (δευτ.)" UseFloatingPlaceholder="True"
+                                             Text="{Binding ExerciseRest, Mode=TwoWay}" />
+                                </Grid>
+                                <TextBlock Classes="hint" Text="Συμπλήρωσε μόνο ό,τι χρειάζεται: σετ/επαναλήψεις/κιλά για δύναμη, λεπτά/απόσταση για αερόβια." />
+                                <TextBlock Text="{Binding BuilderError}" Foreground="#C62828" TextWrapping="Wrap"
+                                           IsVisible="{Binding BuilderError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button Classes="small" Content="Κλείσιμο" Command="{Binding ToggleBuilderCommand}" />
+                                    <Button Classes="primary small" Content="Προσθήκη" Command="{Binding AddExerciseCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Templates and earlier workouts -->
+                        <Border Classes="panel" IsVisible="{Binding IsReuseOpen}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Classes="section" Text="Αποθήκευση ως πρότυπο" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <TextBox PlaceholderText="Όνομα προτύπου" Text="{Binding TemplateName, Mode=TwoWay}" />
+                                    <Button Grid.Column="1" Classes="primary small" Content="Αποθήκευση"
+                                            Command="{Binding SaveTemplateCommand}" />
+                                </Grid>
+                                <TextBlock Text="{Binding InfoMessage}" Foreground="#2E7D32" TextWrapping="Wrap"
+                                           IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock Text="{Binding ReuseError}" Foreground="#C62828" TextWrapping="Wrap"
+                                           IsVisible="{Binding ReuseError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsReuseLoading}" />
+
+                                <TextBlock Classes="section" Text="Τα πρότυπά μου" Margin="0,4,0,0" />
+                                <TextBlock Classes="hint" Text="Δεν υπάρχουν αποθηκευμένα πρότυπα." IsVisible="{Binding HasNoTemplates}" />
+                                <ItemsControl ItemsSource="{Binding Templates}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReuseItem">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                                                <Button Classes="reuse"
+                                                        Command="{Binding $parent[UserControl].((vm:AddWorkoutViewModel)DataContext).UseItemCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Spacing="2">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Classes="hint" Text="{Binding Subtitle}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Grid.Column="1" Classes="delete" ToolTip.Tip="Διαγραφή προτύπου"
+                                                        Command="{Binding $parent[UserControl].((vm:AddWorkoutViewModel)DataContext).DeleteTemplateCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <PathIcon Data="{StaticResource DeleteIcon}" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Classes="section" Text="Προηγούμενα ασκησιολόγια" Margin="0,4,0,0" />
+                                <TextBlock Classes="hint" Text="Δεν υπάρχουν ακόμη ασκησιολόγια." IsVisible="{Binding HasNoPrevious}" />
+                                <ItemsControl ItemsSource="{Binding Previous}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReuseItem">
+                                            <Button Classes="reuse" Margin="0,0,0,6"
+                                                    Command="{Binding $parent[UserControl].((vm:AddWorkoutViewModel)DataContext).UseItemCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Classes="hint" Text="{Binding Subtitle}" TextWrapping="NoWrap" />
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button Classes="small" Content="Κλείσιμο" HorizontalAlignment="Right"
+                                        Command="{Binding ToggleReuseCommand}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- The text itself, or how the athlete will see it -->
+                        <TextBox x:Name="Editor" IsVisible="{Binding !IsPreview}"
+                                 Text="{Binding Content, Mode=TwoWay}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="240"
+                                 PlaceholderText="Γράψε εδώ το πρόγραμμα προπόνησης..." />
+                        <Border IsVisible="{Binding IsPreview}" MinHeight="240" Padding="12,10"
+                                BorderBrush="#DCE7F7" BorderThickness="1" CornerRadius="4" Background="White">
+                            <controls:WorkoutText Text="{Binding Content}" />
+                        </Border>
+                        <TextBlock Classes="hint" IsVisible="{Binding !IsPreview}"
+                                   Text="Συμβουλή: ## για επικεφαλίδα, - για λίστα, **κείμενο** για έντονα." />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+                <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
+                <Button Classes="primary" Content="Αποθήκευση" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+            </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Spacing="14">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
-                    <controls:GreekDatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
-                </StackPanel>
-
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Παρουσία προπονητή (προαιρετικό)" FontWeight="SemiBold" />
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ToggleButton Classes="presence present" Content="● Παρών"
-                                      IsChecked="{Binding IsPresentChosen, Mode=TwoWay}" />
-                        <ToggleButton Classes="presence absent" Content="● Απών"
-                                      IsChecked="{Binding IsAbsentChosen, Mode=TwoWay}" />
+        <!-- In-app confirmation (browser/Android have no native message box) -->
+        <Grid IsVisible="{Binding IsConfirming}" Background="#66000000">
+            <Border Background="White" CornerRadius="14" Padding="20" Margin="16"
+                    MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <StackPanel Spacing="18">
+                    <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" FontSize="15" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="dialog" Content="Άκυρο" Command="{Binding CancelConfirmCommand}" />
+                        <Button Classes="dialog primary" Content="{Binding ConfirmButtonText}" Command="{Binding ConfirmCommand}" />
                     </StackPanel>
                 </StackPanel>
-
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Ασκησιολόγιο" FontWeight="SemiBold" />
-                    <TextBox Text="{Binding Content, Mode=TwoWay}"
-                             AcceptsReturn="True" TextWrapping="Wrap" Height="240"
-                             PlaceholderText="Γράψε εδώ το πρόγραμμα προπόνησης..." />
-                </StackPanel>
-
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
-                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-            </StackPanel>
-        </ScrollViewer>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
-            <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
-            <Button Classes="primary" Content="Αποθήκευση" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
-        </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

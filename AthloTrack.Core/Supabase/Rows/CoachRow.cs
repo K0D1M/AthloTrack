@@ -24,6 +24,7 @@ public sealed class CoachRow : BaseModel
     [Column("must_set_password")]
     public bool MustSetPassword { get; set; }
 
-    [Column("created_at")]
+    // Set by the database: sending the model's default would store 0001-01-01.
+    [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }
 }

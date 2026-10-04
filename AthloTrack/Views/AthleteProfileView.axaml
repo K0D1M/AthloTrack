@@ -200,7 +200,7 @@
                                         </StackPanel>
                                     </Grid>
                                     <controls:CoachPresence Present="{Binding CoachPresent}" />
-                                    <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+                                    <controls:WorkoutText Text="{Binding Content}" />
                                     <!-- done marker (everyone) -->
                                     <TextBlock IsVisible="{Binding IsCompleted}" Foreground="#2E7D32" FontWeight="SemiBold"
                                                Text="{Binding CompletedAt, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />

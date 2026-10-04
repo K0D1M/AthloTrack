@@ -31,6 +31,26 @@ internal sealed class FakeWorkouts : IWorkoutRepository
     public Task DeleteAsync(Guid id) { Deleted.Add(id); Items.RemoveAll(w => w.Id == id); return Task.CompletedTask; }
 }
 
+internal sealed class FakeTemplates : IWorkoutTemplateRepository
+{
+    public List<WorkoutTemplate> Items { get; } = new();
+
+    public Task<IReadOnlyList<WorkoutTemplate>> GetAllAsync() => Task.FromResult<IReadOnlyList<WorkoutTemplate>>(Items.ToList());
+
+    public Task<WorkoutTemplate> AddAsync(Guid coachId, string name, string content)
+    {
+        var template = new WorkoutTemplate { Id = Guid.NewGuid(), Name = name, Content = content };
+        Items.Insert(0, template);
+        return Task.FromResult(template);
+    }
+
+    public Task DeleteAsync(Guid id)
+    {
+        Items.RemoveAll(t => t.Id == id);
+        return Task.CompletedTask;
+    }
+}
+
 internal sealed class FakeAthletes : IAthleteRepository
 {
     public List<Athlete> Items { get; } = new();
