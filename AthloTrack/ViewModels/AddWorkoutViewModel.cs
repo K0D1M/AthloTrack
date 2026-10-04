@@ -41,6 +41,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
     {
         _editingId = workout.Id;
         Content = workout.Content;
+        CoachPresent = workout.CoachPresent;
         TargetDate = new DateTimeOffset(workout.TargetDate.ToDateTime(TimeOnly.MinValue));
         Title = $"Επεξεργασία ασκησιολογίου για τον αθλητή {athleteName}";
     }
@@ -59,6 +60,25 @@ public partial class AddWorkoutViewModel : ObservableValidator
     [Required(ErrorMessage = "Το ασκησιολόγιο δεν μπορεί να είναι κενό.")]
     [MinLength(3, ErrorMessage = "Πολύ σύντομο κείμενο.")]
     public partial string Content { get; set; } = string.Empty;
+
+    /// <summary>Optional: true Παρών, false Απών, null not said (no indicator for the athlete).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPresentChosen), nameof(IsAbsentChosen))]
+    public partial bool? CoachPresent { get; set; }
+
+    /// <summary>The «Παρών» toggle. Tapping it again when chosen clears the choice.</summary>
+    public bool IsPresentChosen
+    {
+        get => CoachPresent == true;
+        set => CoachPresent = value ? true : CoachPresent == true ? null : CoachPresent;
+    }
+
+    /// <summary>The «Απών» toggle. Tapping it again when chosen clears the choice.</summary>
+    public bool IsAbsentChosen
+    {
+        get => CoachPresent == false;
+        set => CoachPresent = value ? false : CoachPresent == false ? null : CoachPresent;
+    }
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
@@ -86,7 +106,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
             if (_editingId is { } id)
             {
                 // The DB clears the read receipt and sends the athlete "ενημέρωσε το ασκησιολόγιο".
-                await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime));
+                await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime), CoachPresent);
                 Saved?.Invoke();
                 return;
             }
@@ -97,6 +117,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
                 Content = Content.Trim(),
                 TargetDate = DateOnly.FromDateTime(TargetDate.DateTime),
                 CreatedBy = _session.ProfileId,
+                CoachPresent = CoachPresent,
             };
 
             // The DB trigger auto-creates the athlete's "νέο ασκησιολόγιο" notification.

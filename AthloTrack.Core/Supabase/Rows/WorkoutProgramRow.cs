@@ -27,6 +27,9 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("completed_at")]
     public DateTimeOffset? CompletedAt { get; set; }
 
+    [Column("coach_present")]
+    public bool? CoachPresent { get; set; }
+
     [Column("read_at")]
     public DateTimeOffset? ReadAt { get; set; }
 

@@ -62,17 +62,18 @@ public sealed class SupabaseIntegrationTests
     [Fact]
     public async Task Editing_a_workout_keeps_its_date()
     {
-        // Saving with unchanged text and date: nothing changes (no notification, receipt kept),
+        // Saving with unchanged text, date and presence: nothing changes (no notification, receipt kept),
         // but a time-zone slip in the update would move the date to the previous day.
         var (factory, _) = await SignIn("COACH");
         var repository = new WorkoutRepository(factory);
         var workout = (await repository.GetAllAsync()).FirstOrDefault();
         Assert.SkipWhen(workout is null, "the test coach has no workouts");
 
-        await repository.UpdateAsync(workout!.Id, workout.Content, workout.TargetDate);
+        await repository.UpdateAsync(workout!.Id, workout.Content, workout.TargetDate, workout.CoachPresent);
 
         var reloaded = (await repository.GetAllAsync()).Single(w => w.Id == workout.Id);
         Assert.Equal(workout.TargetDate, reloaded.TargetDate);
+        Assert.Equal(workout.CoachPresent, reloaded.CoachPresent);
         Assert.Equal(workout.ReadAt, reloaded.ReadAt);
     }
 }

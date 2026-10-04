@@ -11,7 +11,7 @@ internal sealed class FakeWorkouts : IWorkoutRepository
     public List<Guid> Completed { get; } = new();
     public List<Guid> Read { get; } = new();
     public List<Guid> Deleted { get; } = new();
-    public List<(Guid Id, string Content, DateOnly Date)> Updated { get; } = new();
+    public List<(Guid Id, string Content, DateOnly Date, bool? CoachPresent)> Updated { get; } = new();
     public List<WorkoutProgram> Added { get; } = new();
 
     public Task<IReadOnlyList<WorkoutProgram>> GetAllAsync() => Task.FromResult<IReadOnlyList<WorkoutProgram>>(Items.ToList());
@@ -19,7 +19,7 @@ internal sealed class FakeWorkouts : IWorkoutRepository
         Task.FromResult<IReadOnlyList<WorkoutProgram>>(Items.Where(w => w.AthleteId == athleteId).ToList());
     public Task<WorkoutProgram> AddAsync(WorkoutProgram program) { Added.Add(program); return Task.FromResult(program); }
     public Task MarkCompletedAsync(Guid id) { Completed.Add(id); return Task.CompletedTask; }
-    public Task UpdateAsync(Guid id, string content, DateOnly targetDate) { Updated.Add((id, content, targetDate)); return Task.CompletedTask; }
+    public Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent) { Updated.Add((id, content, targetDate, coachPresent)); return Task.CompletedTask; }
     /// <summary>When set, MarkReadAsync waits for it: a save that is still in flight.</summary>
     public TaskCompletionSource? ReadGate { get; set; }
 

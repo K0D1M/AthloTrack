@@ -8,6 +8,49 @@
              x:Class="AthloTrack.Views.AddWorkoutView"
              x:DataType="vm:AddWorkoutViewModel">
 
+    <UserControl.Styles>
+        <!-- Παρών / Απών: outlined pills, filled green or red when chosen. Fluent's checked,
+             pointer-over and pressed states replace a local Background, so restate them. -->
+        <Style Selector="ToggleButton.presence">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ToggleButton.presence.present">
+            <Setter Property="BorderBrush" Value="#2E7D32" />
+            <Setter Property="Foreground" Value="#2E7D32" />
+        </Style>
+        <Style Selector="ToggleButton.presence.absent">
+            <Setter Property="BorderBrush" Value="#C62828" />
+            <Setter Property="Foreground" Value="#C62828" />
+        </Style>
+        <Style Selector="ToggleButton.presence.present:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#142E7D32" />
+            <Setter Property="BorderBrush" Value="#2E7D32" />
+            <Setter Property="Foreground" Value="#2E7D32" />
+        </Style>
+        <Style Selector="ToggleButton.presence.absent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#14C62828" />
+            <Setter Property="BorderBrush" Value="#C62828" />
+            <Setter Property="Foreground" Value="#C62828" />
+        </Style>
+        <Style Selector="ToggleButton.presence.present:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2E7D32" />
+            <Setter Property="BorderBrush" Value="#2E7D32" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="ToggleButton.presence.absent:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#C62828" />
+            <Setter Property="BorderBrush" Value="#C62828" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </UserControl.Styles>
+
     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
 
         <!-- Header: athlete photo + title -->
@@ -23,6 +66,16 @@
                 <StackPanel Spacing="4">
                     <TextBlock Text="Ημ. ολοκλήρωσης" FontWeight="SemiBold" />
                     <controls:GreekDatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Παρουσία προπονητή (προαιρετικό)" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <ToggleButton Classes="presence present" Content="● Παρών"
+                                      IsChecked="{Binding IsPresentChosen, Mode=TwoWay}" />
+                        <ToggleButton Classes="presence absent" Content="● Απών"
+                                      IsChecked="{Binding IsAbsentChosen, Mode=TwoWay}" />
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Spacing="4">

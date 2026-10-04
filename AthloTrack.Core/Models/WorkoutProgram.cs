@@ -15,6 +15,9 @@ public sealed class WorkoutProgram
 
     public bool IsCompleted => CompletedAt is not null;
 
+    /// <summary>The coach's word on being at this workout: true Παρών, false Απών, null not said.</summary>
+    public bool? CoachPresent { get; set; }
+
     /// <summary>When the athlete first saw it (read receipt for the coach); null while unseen.</summary>
     public DateTimeOffset? ReadAt { get; set; }
 

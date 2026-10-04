@@ -199,6 +199,7 @@
                                             </Button>
                                         </StackPanel>
                                     </Grid>
+                                    <controls:CoachPresence Present="{Binding CoachPresent}" />
                                     <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
                                     <!-- done marker (everyone) -->
                                     <TextBlock IsVisible="{Binding IsCompleted}" Foreground="#2E7D32" FontWeight="SemiBold"

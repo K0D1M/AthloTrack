@@ -223,7 +223,7 @@ public sealed class AddWorkoutViewModelTests
 
         Assert.True(saved);
         Assert.Empty(workouts.Added);
-        Assert.Equal((existing.Id, "new program", new DateOnly(2026, 10, 1)), Assert.Single(workouts.Updated));
+        Assert.Equal((existing.Id, "new program", new DateOnly(2026, 10, 1), (bool?)null), Assert.Single(workouts.Updated));
         Assert.Equal("Επεξεργασία ασκησιολογίου", vm.PageTitle);
     }
 
@@ -239,5 +239,56 @@ public sealed class AddWorkoutViewModelTests
         var added = Assert.Single(workouts.Added);
         Assert.Equal(coachId, added.CreatedBy);
         Assert.Equal("Νέο ασκησιολόγιο", vm.PageTitle);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task A_new_workout_saves_the_coach_presence(bool present)
+    {
+        var workouts = new FakeWorkouts();
+        var vm = new AddWorkoutViewModel(Guid.NewGuid(), "Γιάννης", workouts, Sessions.Coach(Guid.NewGuid())) { Content = "intervals" };
+
+        if (present) vm.IsPresentChosen = true;
+        else vm.IsAbsentChosen = true;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        Assert.Equal(present, Assert.Single(workouts.Added).CoachPresent);
+    }
+
+    [Fact]
+    public async Task Presence_is_optional_and_tapping_the_choice_again_clears_it()
+    {
+        var workouts = new FakeWorkouts();
+        var vm = new AddWorkoutViewModel(Guid.NewGuid(), "Γιάννης", workouts, Sessions.Coach(Guid.NewGuid())) { Content = "intervals" };
+
+        vm.IsPresentChosen = true;
+        vm.IsAbsentChosen = true;   // switching
+        Assert.False(vm.IsPresentChosen);
+        Assert.False(vm.CoachPresent);
+
+        vm.IsAbsentChosen = false;  // tapped again
+        Assert.Null(vm.CoachPresent);
+
+        await vm.SaveCommand.ExecuteAsync(null);
+        Assert.Null(Assert.Single(workouts.Added).CoachPresent);
+    }
+
+    [Fact]
+    public async Task Editing_prefills_and_saves_a_changed_presence()
+    {
+        var workouts = new FakeWorkouts();
+        var existing = new WorkoutProgram
+        {
+            Id = Guid.NewGuid(), AthleteId = Guid.NewGuid(), Content = "run", TargetDate = new DateOnly(2026, 10, 6), CoachPresent = true,
+        };
+        var vm = new AddWorkoutViewModel(existing.AthleteId, "Γιάννης", workouts, Sessions.Coach(Guid.NewGuid()));
+        vm.BeginEdit(existing, "Γιάννης");
+        Assert.True(vm.IsPresentChosen);
+
+        vm.IsAbsentChosen = true;
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        Assert.Equal((existing.Id, "run", new DateOnly(2026, 10, 6), (bool?)false), Assert.Single(workouts.Updated));
     }
 }

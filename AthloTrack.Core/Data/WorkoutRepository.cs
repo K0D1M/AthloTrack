@@ -50,7 +50,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
-    public async Task UpdateAsync(Guid id, string content, DateOnly targetDate)
+    public async Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent)
     {
         var client = await _factory.GetClientAsync();
         // Update the whole row model, like AddAsync. Set(x => x.TargetDate, date) serialized the
@@ -59,6 +59,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
                   ?? throw new InvalidOperationException("Το ασκησιολόγιο δεν βρέθηκε.");
         row.Content = content;
         row.TargetDate = targetDate.ToDateTime(TimeOnly.MinValue);
+        row.CoachPresent = coachPresent;
         await row.Update<WorkoutProgramRow>();
     }
 
@@ -86,6 +87,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         CreatedAt = r.CreatedAt,
         CompletedAt = r.CompletedAt,
         ReadAt = r.ReadAt,
+        CoachPresent = r.CoachPresent,
     };
 
     private static WorkoutProgramRow MapBack(WorkoutProgram w) => new()
@@ -97,5 +99,6 @@ public sealed class WorkoutRepository : IWorkoutRepository
         TargetDate = w.TargetDate.ToDateTime(TimeOnly.MinValue),
         CreatedBy = w.CreatedBy,
         CreatedAt = w.CreatedAt,
+        CoachPresent = w.CoachPresent,
     };
 }
