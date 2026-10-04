@@ -76,6 +76,8 @@
             <Border Background="White" CornerRadius="18" Padding="20"
                     BoxShadow="0 12 32 0 #33000000">
                 <StackPanel Spacing="14">
+                    <!-- (No ContentType="Email": combined with ShowSuggestions=False from App.axaml it
+                         gives an input type in which Gboard composes again; see App.axaml.) -->
                     <TextBox PlaceholderText="Email"
                              Text="{Binding Email, Mode=TwoWay}"
                              UseFloatingPlaceholder="True" />
@@ -83,7 +85,8 @@
                     <TextBox PlaceholderText="Κωδικός"
                              PasswordChar="●"
                              Text="{Binding Password, Mode=TwoWay}"
-                             UseFloatingPlaceholder="True" />
+                             UseFloatingPlaceholder="True"
+                             TextInputOptions.IsSensitive="True" />
 
                     <TextBlock Text="{Binding ErrorMessage}"
                                Foreground="#C62828"

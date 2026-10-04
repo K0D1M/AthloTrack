@@ -66,6 +66,9 @@ The progress chart works in two steps. `AthleteProfileViewModel` produces plain 
 dotnet test --project AthloTrack.Tests
 ```
 
+## Android keyboards
+Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** words, which Gboard and Samsung do with suggestions on. You get e.g. only «te» of «test», or nothing at all, especially on slower phones or a busy first launch. `App.axaml` therefore sets `TextInputOptions.ShowSuggestions = False` on every TextBox, so the keyboard types each key directly. Greek, including accents via long-press, still works. Don't add `TextInputOptions.ContentType="Email"` to a field: combined with that setting, it produces an input type in which Gboard composes again. Upstream, Avalonia is rewriting this code ([PR #20890](https://github.com/AvaloniaUI/Avalonia/pull/20890)); once a release fixes it, the style can go.
+
 ## Roles in the UI
 `SessionState.Role` is `Coach` or `Athlete`, and the shared screens adapt to it:
 - A coach sees all of their athletes, the **+** menus (new athlete, measurement, workout) and the completion notifications.

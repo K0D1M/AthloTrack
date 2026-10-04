@@ -22,6 +22,14 @@
     <Application.Styles>
         <FluentTheme />
 
+        <!-- Android keyboards (Gboard, Samsung…) "compose" words and let the app replace them as
+             they go; Avalonia's Android TextBox loses keystrokes doing that on slower phones (e.g.
+             only "te" of "test", or nothing at all). Without suggestions the keyboard types each key
+             directly, which is reliable. Cost: no word suggestions/autocorrect in AthloTrack's fields. -->
+        <Style Selector="TextBox">
+            <Setter Property="TextInputOptions.ShowSuggestions" Value="False" />
+        </Style>
+
         <!-- Floating "+" action button. Fluent's pointer-over/pressed template states replace a
              local Background, which turned the FAB grey; restate them in brand blue. -->
         <Style Selector="Button.fab">
