@@ -132,7 +132,7 @@
 
             <!-- Step 1: who is logging in (decides which profile the login is checked against) -->
             <StackPanel Spacing="14" IsVisible="{Binding IsChoosingRole}">
-                <TextBlock Text="Ποιος συνδέεται;" FontSize="16" FontWeight="SemiBold"
+                <TextBlock Text="Σύνδεση ως..." FontSize="16" FontWeight="SemiBold"
                            Foreground="White" HorizontalAlignment="Center" />
 
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
