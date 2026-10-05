@@ -51,8 +51,16 @@ public partial class CalendarViewModel : ViewModelBase
     public partial string AgendaTitle { get; set; } = string.Empty;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasNoAgendaEntries))]
+    [NotifyPropertyChangedFor(nameof(ShowSkeleton), nameof(HasNoAgendaEntries))]
     public partial bool IsLoading { get; set; }
+
+    /// <summary>
+    /// The first load is running: show placeholders shaped like the content. Later reloads keep
+    /// the content and only show the loading line.
+    /// </summary>
+    public bool ShowSkeleton => IsLoading && !_hasLoaded;
+
+    private bool _hasLoaded;
 
     public bool HasNoAgendaEntries => !IsLoading && AgendaEntries.Count == 0;
 
@@ -127,6 +135,7 @@ public partial class CalendarViewModel : ViewModelBase
         }
         finally
         {
+            _hasLoaded = true;
             IsLoading = false;
         }
 

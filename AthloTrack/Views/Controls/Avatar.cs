@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -37,6 +39,12 @@ public class Avatar : Border
         ClipToBounds = true;
         Background = new SolidColorBrush(Color.Parse("#1565C0"));
         Child = new Panel { Children = { _initial, _image } };
+        // The photo usually arrives after the row: fade it in over the blue instead of popping.
+        _image.Opacity = 0;
+        _image.Transitions = new Transitions
+        {
+            new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) },
+        };
     }
 
     public byte[]? Photo
@@ -59,6 +67,7 @@ public class Avatar : Border
         {
             _image.Source = ToBitmap(Photo);
             _initial.IsVisible = _image.Source is null;
+            _image.Opacity = _image.Source is null ? 0 : 1;
         }
         else if (change.Property == InitialProperty)
         {

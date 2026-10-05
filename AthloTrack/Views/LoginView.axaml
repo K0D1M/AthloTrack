@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:controls="using:AthloTrack.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
              x:Class="AthloTrack.Views.LoginView"
              x:DataType="vm:LoginViewModel">
@@ -81,6 +82,10 @@
             <Setter Property="Background" Value="#EEF2F7" />
             <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
         </Style>
+        <Style Selector="Button.back:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="*,Auto" Background="{StaticResource BrandHeroGradient}">
@@ -108,7 +113,7 @@
         </Ellipse>
 
         <!-- Stretch + MaxWidth: fixed-width form on desktop, 16px gutters on a phone. -->
-        <StackPanel Grid.Row="0"
+        <StackPanel x:Name="Content" Grid.Row="0"
                     MaxWidth="380"
                     Margin="16,24"
                     Spacing="18"
@@ -131,7 +136,8 @@
             </StackPanel>
 
             <!-- Step 1: who is logging in (decides which profile the login is checked against) -->
-            <StackPanel Spacing="14" IsVisible="{Binding IsChoosingRole}">
+            <StackPanel Spacing="14" IsVisible="{Binding IsChoosingRole}"
+                        Classes="appear-shown" Classes.shown="{Binding IsChoosingRole}">
                 <TextBlock Text="Σύνδεση ως..." FontSize="16" FontWeight="SemiBold"
                            Foreground="White" HorizontalAlignment="Center" />
 
@@ -182,7 +188,8 @@
             <!-- Step 2: the form for the chosen role -->
             <Border Background="White" CornerRadius="18" Padding="20"
                     BoxShadow="0 12 32 0 #33000000"
-                    IsVisible="{Binding IsForm}">
+                    IsVisible="{Binding IsForm}"
+                    Classes="appear-shown" Classes.shown="{Binding IsForm}">
                 <StackPanel Spacing="14">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Margin="-8,-6,0,0">
                         <Button Classes="back" Command="{Binding BackCommand}"
@@ -203,7 +210,7 @@
 
                     <!-- (No ContentType="Email": combined with ShowSuggestions=False from App.axaml it
                          gives an input type in which Gboard composes again; see App.axaml.) -->
-                    <TextBox PlaceholderText="Email"
+                    <TextBox x:Name="EmailBox" PlaceholderText="Email"
                              Text="{Binding Email, Mode=TwoWay}"
                              UseFloatingPlaceholder="True" />
 
@@ -229,23 +236,23 @@
 
                     <!-- Blue for the coach, gold for the athlete forms (like the role cards) -->
                     <Button Classes="primary login"
-                            Content="{Binding SubmitText}"
                             Command="{Binding SubmitCommand}"
                             IsEnabled="{Binding !IsBusy}"
-                            IsVisible="{Binding IsCoachForm}" />
+                            IsVisible="{Binding IsCoachForm}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"><controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" /><TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
                     <Button Classes="gold login"
-                            Content="{Binding SubmitText}"
                             Command="{Binding SubmitCommand}"
                             IsEnabled="{Binding !IsBusy}"
-                            IsVisible="{Binding !IsCoachForm}" />
-
-                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+                            IsVisible="{Binding !IsCoachForm}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"><controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" /><TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" /></StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
         </StackPanel>
 
         <!-- Bottom-center Greek motto -->
-        <TextBlock Grid.Row="1"
+        <TextBlock x:Name="Motto" Grid.Row="1"
                    Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ"
                    FontFamily="{StaticResource GreekAccentFont}"
                    FontStyle="Italic"

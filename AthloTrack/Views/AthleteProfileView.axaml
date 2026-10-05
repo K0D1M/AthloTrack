@@ -100,6 +100,11 @@
                     </Panel>
 
                     <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                        <!-- First load: the name isn't known yet -->
+                        <StackPanel Spacing="8" IsVisible="{Binding ShowSkeleton}">
+                            <Border Classes="skeleton" Background="#40FFFFFF" Width="160" Height="20" HorizontalAlignment="Left" />
+                            <Border Classes="skeleton" Background="#40FFFFFF" Width="100" Height="12" HorizontalAlignment="Left" />
+                        </StackPanel>
                         <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
                                    Foreground="White" />
                         <TextBlock Text="{Binding Subtitle}" Foreground="#CFE3FF" TextWrapping="Wrap"
@@ -131,10 +136,34 @@
 
                 <!-- Measurements -->
                 <TextBlock Text="Μετρήσεις" FontSize="18" FontWeight="SemiBold" />
+                <!-- First load: rows shaped like the measurements -->
+                <StackPanel Spacing="16" IsVisible="{Binding ShowSkeleton}">
+                    <Grid ColumnDefinitions="100,*" ColumnSpacing="12">
+                        <Border Classes="skeleton" Width="84" Height="14" HorizontalAlignment="Left" />
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <Border Classes="skeleton" Width="170" Height="11" HorizontalAlignment="Left" />
+                            <Border Classes="skeleton" Width="130" Height="11" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnDefinitions="100,*" ColumnSpacing="12">
+                        <Border Classes="skeleton" Width="84" Height="14" HorizontalAlignment="Left" />
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <Border Classes="skeleton" Width="150" Height="11" HorizontalAlignment="Left" />
+                            <Border Classes="skeleton" Width="110" Height="11" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnDefinitions="100,*" ColumnSpacing="12">
+                        <Border Classes="skeleton" Width="84" Height="14" HorizontalAlignment="Left" />
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <Border Classes="skeleton" Width="190" Height="11" HorizontalAlignment="Left" />
+                            <Border Classes="skeleton" Width="150" Height="11" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
                 <TextBlock Text="Το γράφημα προόδου εμφανίζεται από τη δεύτερη μέτρηση."
                            FontSize="12" Foreground="{StaticResource BrandSupportBrush}"
                            IsVisible="{Binding ShowChartHint}" />
-                <ItemsControl ItemsSource="{Binding Measurements}">
+                <ItemsControl ItemsSource="{Binding Measurements}" Classes="fadeitems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:Measurement">
                             <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,6">
@@ -174,7 +203,19 @@
 
                 <!-- Workout programs -->
                 <TextBlock Text="Ασκησιολόγια" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" />
-                <ItemsControl ItemsSource="{Binding Workouts}">
+                <StackPanel Spacing="20" IsVisible="{Binding ShowSkeleton}">
+                    <StackPanel Spacing="8">
+                        <Border Classes="skeleton" Width="160" Height="14" HorizontalAlignment="Left" />
+                        <Border Classes="skeleton" Height="11" />
+                        <Border Classes="skeleton" Width="210" Height="11" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <Border Classes="skeleton" Width="160" Height="14" HorizontalAlignment="Left" />
+                        <Border Classes="skeleton" Height="11" />
+                        <Border Classes="skeleton" Width="160" Height="11" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Workouts}" Classes="fadeitems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:WorkoutProgram">
                             <!-- SeenTracker: on the athlete's own profile, counts as read once on screen -->
@@ -244,6 +285,7 @@
                 <Border Height="72" />
             </StackPanel>
         </ScrollViewer>
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
 
         <!-- Floating "+" button (coach only) -->
         <!-- "+" opens an in-page menu. A MenuFlyout (popup) left the next profile's chart blank on

@@ -104,8 +104,16 @@ public partial class LoginViewModel : ObservableValidator
         finally
         {
             IsBusy = false;
+            IsReady = true;
         }
     }
+
+    /// <summary>
+    /// The silent sign-in attempt is over and the login screen stays: the view may now put the
+    /// cursor in Email (earlier, the keyboard could flash up for someone already signed in).
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsReady { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsChoosingRole), nameof(IsForm), nameof(IsSignUp), nameof(IsCoachForm),

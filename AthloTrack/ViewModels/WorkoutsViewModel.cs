@@ -27,7 +27,16 @@ public partial class WorkoutsViewModel : ViewModelBase
     public ObservableCollection<WorkoutListItemViewModel> WorkoutPrograms { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSkeleton))]
     public partial bool IsLoading { get; set; }
+
+    /// <summary>
+    /// The first load is running: show placeholders shaped like the content. Later reloads keep
+    /// the content and only show the loading line.
+    /// </summary>
+    public bool ShowSkeleton => IsLoading && !_hasLoaded;
+
+    private bool _hasLoaded;
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
@@ -82,6 +91,7 @@ public partial class WorkoutsViewModel : ViewModelBase
         }
         finally
         {
+            _hasLoaded = true;
             IsLoading = false;
         }
     }

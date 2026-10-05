@@ -14,9 +14,20 @@ internal sealed class FakeWorkouts : IWorkoutRepository
     public List<(Guid Id, string Content, DateOnly Date, bool? CoachPresent)> Updated { get; } = new();
     public List<WorkoutProgram> Added { get; } = new();
 
-    public Task<IReadOnlyList<WorkoutProgram>> GetAllAsync() => Task.FromResult<IReadOnlyList<WorkoutProgram>>(Items.ToList());
-    public Task<IReadOnlyList<WorkoutProgram>> GetForAthleteAsync(Guid athleteId) =>
-        Task.FromResult<IReadOnlyList<WorkoutProgram>>(Items.Where(w => w.AthleteId == athleteId).ToList());
+    /// <summary>When set, loading waits for it: a load that is still running.</summary>
+    public TaskCompletionSource? LoadGate { get; set; }
+
+    public async Task<IReadOnlyList<WorkoutProgram>> GetAllAsync()
+    {
+        if (LoadGate is { } gate) await gate.Task;
+        return Items.ToList();
+    }
+
+    public async Task<IReadOnlyList<WorkoutProgram>> GetForAthleteAsync(Guid athleteId)
+    {
+        if (LoadGate is { } gate) await gate.Task;
+        return Items.Where(w => w.AthleteId == athleteId).ToList();
+    }
     public Task<WorkoutProgram> AddAsync(WorkoutProgram program) { Added.Add(program); return Task.FromResult(program); }
     public Task MarkCompletedAsync(Guid id) { Completed.Add(id); return Task.CompletedTask; }
     public Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent) { Updated.Add((id, content, targetDate, coachPresent)); return Task.CompletedTask; }

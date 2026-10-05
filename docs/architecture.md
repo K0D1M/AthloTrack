@@ -80,6 +80,19 @@ Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOpt
 
 The phone's keyboard doesn't resize the app's view. `AddWorkoutView` therefore listens to `TopLevel.InputPane` and, while the keyboard is open, ends the form above it and scrolls the line being typed into view.
 
+## Motion and loading
+Animations are subtle (about 200 ms), because the web build has one UI thread and phones can be slow.
+- `Styles/Motion.axaml`:
+  - `.appear` fades and lifts a control in when it's created; with `.appear-shown` it does so when a bound `shown` class switches on.
+  - `ItemsControl.fadeitems` fades each list row in.
+  - `Border.skeleton` is a pulsing placeholder, and `ProgressBar.topline` is the thin loading line along a screen's top.
+  - Brand buttons scale slightly when pressed, and the `Spinner` control turns.
+- `Views/Motion.cs` fades a page in when a section opens (`MainView.Show`) and fades the root in on login and logout (`App.SetRoot`). It animates the new content instead of using a `TransitioningContentControl`, because the sections are nested `ContentPage`s.
+- Screens with `IsLoading` also have `ShowSkeleton`, which is true only on their **first** load: placeholders shaped like the content show then. Later reloads keep the content and show only the top line.
+- Save buttons show a `Spinner` while `IsBusy`, and keep their brand colours, dimmed, while disabled.
+- The login form focuses Email when it opens. At start-up it waits until `LoginViewModel.IsReady`, after the silent sign-in attempt, so a signed-in user never sees the keyboard flash.
+- `Views/KeyboardInset.cs` reports how much of a view the phone keyboard covers, because the app's view isn't resized for it. The login screen and the workout editor use it to keep their content above the keyboard.
+
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 

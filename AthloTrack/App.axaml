@@ -21,6 +21,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://AthloTrack/Styles/Motion.axaml" />
 
         <!-- Android keyboards (Gboard, Samsung…) "compose" words and let the app replace them as
              they go; Avalonia's Android TextBox loses keystrokes doing that on slower phones (e.g.
@@ -122,6 +123,16 @@
         </Style>
         <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter, Button.gold:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Opacity" Value="0.6" />
+        </Style>
+        <!-- Disabled while saving (with the spinner): keep the brand colours, just dimmed, instead
+             of Fluent's grey, which read as "broken" rather than "working". -->
+        <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandButtonGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
+        </Style>
+        <Style Selector="Button.gold:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandAccentGradient}" />
+            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
         </Style>
 
         <!-- Top bar of the shell: gradient with white title and menu icon -->

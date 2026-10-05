@@ -72,7 +72,16 @@ public partial class RecentViewModel : ViewModelBase
     public partial bool HasCoach { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowSkeleton))]
     public partial bool IsLoading { get; set; }
+
+    /// <summary>
+    /// The first load is running: show placeholders shaped like the content. Later reloads keep
+    /// the content and only show the loading line.
+    /// </summary>
+    public bool ShowSkeleton => IsLoading && !_hasLoaded;
+
+    private bool _hasLoaded;
 
     [RelayCommand]
     private async Task MarkReadAsync(AppNotification? notification)
@@ -146,6 +155,7 @@ public partial class RecentViewModel : ViewModelBase
         }
         finally
         {
+            _hasLoaded = true;
             IsLoading = false;
         }
     }

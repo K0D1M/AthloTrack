@@ -111,8 +111,16 @@ public partial class AthleteProfileViewModel : ViewModelBase
     public partial bool IsUploadingPhoto { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasNoMeasurements), nameof(HasNoWorkouts), nameof(ShowChartHint))]
+    [NotifyPropertyChangedFor(nameof(ShowSkeleton), nameof(HasNoMeasurements), nameof(HasNoWorkouts), nameof(ShowChartHint))]
     public partial bool IsLoading { get; set; }
+
+    /// <summary>
+    /// The first load is running: show placeholders shaped like the content. Later reloads keep
+    /// the content and only show the loading line.
+    /// </summary>
+    public bool ShowSkeleton => IsLoading && !_hasLoaded;
+
+    private bool _hasLoaded;
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
@@ -318,6 +326,7 @@ public partial class AthleteProfileViewModel : ViewModelBase
         }
         finally
         {
+            _hasLoaded = true;
             IsLoading = false;
         }
 

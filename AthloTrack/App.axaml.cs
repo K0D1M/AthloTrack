@@ -168,6 +168,7 @@ public partial class App : Application
             _root.Background = b;
         }
         _root.Content = view;
+        Views.Motion.FadeInRoot(view);
     }
 
     private void ShowMain()

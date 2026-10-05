@@ -1,0 +1,95 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AthloTrack.Views.Controls">
+    <!-- Subtle motion (150–250 ms): the web build has a single UI thread and phones can be slow. -->
+
+    <!-- Fades in and rises 8px whenever the selector starts to match: on creation, or when a
+         bound class switches on (Classes.shown="{Binding …}"). -->
+    <Style Selector=":is(Control).appear, :is(Control).appear-shown.shown">
+        <Style.Animations>
+            <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Backward">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="TranslateTransform.Y" Value="8" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="TranslateTransform.Y" Value="0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- List rows/cards fade in as they arrive (the item containers of the list). -->
+    <Style Selector="ItemsControl.fadeitems > ContentPresenter">
+        <Style.Animations>
+            <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Backward">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="TranslateTransform.Y" Value="6" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="TranslateTransform.Y" Value="0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Skeleton placeholder while a screen's data loads: a grey block that gently pulses. -->
+    <Style Selector="Border.skeleton">
+        <Setter Property="Background" Value="#E6ECF4" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Style.Animations>
+            <Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.5" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <Style Selector="Border.skeleton.circle">
+        <Setter Property="CornerRadius" Value="999" />
+    </Style>
+
+    <!-- Thin loading line along the top of a screen -->
+    <Style Selector="ProgressBar.topline">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="3" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+
+    <!-- Pressed buttons give a little, and spring back -->
+    <Style Selector="Button.primary, Button.gold, Button.rolecard, Button.tool, Button.reuse, Button.fab, Button.signup">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.primary:pressed, Button.gold:pressed, Button.rolecard:pressed, Button.tool:pressed, Button.reuse:pressed, Button.fab:pressed, Button.signup:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.97)" />
+    </Style>
+
+    <!-- Busy spinner (e.g. inside a button while saving): turns forever -->
+    <Style Selector="controls|Spinner">
+        <Style.Animations>
+            <Animation Duration="0:0:0.8" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+</Styles>

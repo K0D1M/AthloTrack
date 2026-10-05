@@ -140,6 +140,7 @@ public partial class MainView : DrawerPage
     {
         ContentPage.Content = page;
         Header = title;
+        Motion.FadeInPage(ContentPage);
     }
 
     private void UpdatePage(int index)
