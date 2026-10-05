@@ -3,6 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <!-- Shown in Σχετικά. Keep it equal to ApplicationDisplayVersion in AthloTrack.Android.csproj. -->
+    <Version>1.9</Version>
   </PropertyGroup>
   
   <ItemGroup>

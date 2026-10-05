@@ -1,3 +1,4 @@
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AthloTrack.ViewModels;
@@ -9,5 +10,13 @@ public partial class AboutViewModel : ViewModelBase
     public partial string AppName { get; set; } = "AthloTrack";
 
     [ObservableProperty]
-    public partial string Version { get; set; } = "0.1.0";
+    public partial string Version { get; set; } = AppVersion();
+
+    /// <summary>The <c>Version</c> from AthloTrack.csproj, without the "+commit" suffix the SDK appends.</summary>
+    static string AppVersion()
+    {
+        var v = typeof(AboutViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
+        var plus = v.IndexOf('+');
+        return plus >= 0 ? v[..plus] : v;
+    }
 }
