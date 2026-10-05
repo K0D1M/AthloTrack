@@ -20,7 +20,7 @@
 	# Entry points must be revalidated so a new deploy is picked up.
 	# (push files too: the service worker and the Firebase config must update with the site;
 	# version.txt is what the open app checks to notice a new deploy, see update.js.)
-	@entry path / /index.html /main.js /update.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js
+	@entry path / /index.html /main.js /update.js /ime-fix.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js
 	header @entry Cache-Control "no-cache"
 
 	encode zstd gzip

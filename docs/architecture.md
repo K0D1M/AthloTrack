@@ -73,6 +73,11 @@ dotnet test --project AthloTrack.Tests
 ## Android keyboards
 Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** words, which Gboard and Samsung do with suggestions on. You get e.g. only «te» of «test», or nothing at all, especially on slower phones or a busy first launch. `App.axaml` therefore sets `TextInputOptions.ShowSuggestions = False` on every TextBox, so the keyboard types each key directly. Greek, including accents via long-press, still works. Don't add `TextInputOptions.ContentType="Email"` to a field: combined with that setting, it produces an input type in which Gboard composes again. Upstream, Avalonia is rewriting this code ([PR #20890](https://github.com/AvaloniaUI/Avalonia/pull/20890)); once a release fixes it, the style can go.
 
+**In the browser on Android** the `ShowSuggestions` setting doesn't reach the keyboard, so Gboard composes words there.
+- **The fault:** Avalonia's web text boxes share one hidden `<input>`, and Avalonia moves its focus on the touch that picks another field, before the browser has finished the word. The word then went into the new field (the email into the password box), and the old field lost it.
+- **The fix:** `wwwroot/ime-fix.js` ends the composition on that touch, by blurring the hidden input, while the old field still has the focus.
+- **Why not stop the composing:** `autocomplete`/`autocorrect=off` sets the no-suggestions flag, but Gboard keeps composing in web fields, so that alone doesn't help.
+
 Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOptions.Multiline` and `ReturnKeyType=Return` from a second `App.axaml` style:
 - **Why:** Avalonia didn't tell Android they were multi-line, so Gboard showed a ✓ "Done" key. Avalonia turned that action into a line break Gboard didn't know about, and Gboard then dropped the next key.
 - **Result:** with the style, Gboard shows ⏎ and every key arrives.
