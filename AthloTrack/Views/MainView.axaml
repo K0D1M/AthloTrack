@@ -553,7 +553,8 @@
                     <ContentPage.Icon>
                         <PathIcon Data="{StaticResource InfoIcon}" />
                     </ContentPage.Icon>
-                    <StackPanel Margin="24" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="360">
+                    <ScrollViewer>
+                    <StackPanel Margin="24" Spacing="10" HorizontalAlignment="Center" MaxWidth="420">
                         <Border Width="72" Height="72" CornerRadius="22" HorizontalAlignment="Center"
                                 Background="{StaticResource BrandLogoGradient}">
                             <PathIcon Data="{StaticResource LogoIcon}" Width="36" Height="36"
@@ -567,7 +568,64 @@
                         <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontStyle="Italic" HorizontalAlignment="Center"
                                    FontFamily="{StaticResource GreekAccentFont}"
                                    Margin="0,8,0,0" Foreground="{DynamicResource HeadingBrush}" />
+
+                        <!-- Credits -->
+                        <TextBlock Text="Δημιουργία" FontWeight="SemiBold" Margin="0,20,0,0"
+                                   Foreground="{DynamicResource HeadingBrush}" />
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="14,12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Σχεδιασμός και ανάπτυξη: K0D1M" TextWrapping="Wrap" />
+                                <TextBlock Text="Με τη βοήθεια του Claude (Anthropic)." TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Λογισμικό ανοιχτού κώδικα" FontWeight="SemiBold" Margin="0,12,0,0"
+                                   Foreground="{DynamicResource HeadingBrush}" />
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="14,8">
+                            <ItemsControl ItemsSource="{Binding Credits}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CreditItem">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,4">
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Use}" FontSize="12" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding License}" FontSize="12" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"
+                                   Text="Ευχαριστούμε τους δημιουργούς τους. Κάθε μέρος διέπεται από τη δική του άδεια χρήσης." />
+
+                        <!-- Legal -->
+                        <TextBlock Text="Νομικά" FontWeight="SemiBold" Margin="0,12,0,0"
+                                   Foreground="{DynamicResource HeadingBrush}" />
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="14,12">
+                            <StackPanel Spacing="10">
+                                <TextBlock TextWrapping="Wrap" FontSize="13"
+                                           Text="Άδεια χρήσης: PolyForm Strict 1.0.0. Επιτρέπεται μόνο μη εμπορική χρήση· δεν επιτρέπεται η αναδιανομή ή η τροποποίηση της εφαρμογής." />
+                                <TextBlock TextWrapping="Wrap" FontSize="13"
+                                           Text="Η εφαρμογή παρέχεται «ως έχει», χωρίς καμία εγγύηση. Ο δημιουργός δεν ευθύνεται για ζημίες από τη χρήση της." />
+                                <TextBlock TextWrapping="Wrap" FontSize="13"
+                                           Text="Δεν αποτελεί ιατρική συμβουλή. Συμβουλέψου γιατρό πριν ξεκινήσεις ή αλλάξεις πρόγραμμα άσκησης." />
+                                <TextBlock TextWrapping="Wrap" FontSize="13"
+                                           Text="Δεδομένα: οι λογαριασμοί, οι μετρήσεις, τα ασκησιολόγια και οι φωτογραφίες αποθηκεύονται στη Supabase και χρησιμοποιούνται μόνο για τη λειτουργία της εφαρμογής." />
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"
+                                           Text="Τα ονόματα και τα σήματα τρίτων ανήκουν στους κατόχους τους." />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding Copyright}" HorizontalAlignment="Center" FontSize="12" Margin="0,12,0,0"
+                                   Foreground="{DynamicResource MutedTextBrush}" />
                     </StackPanel>
+                    </ScrollViewer>
                 </ContentPage>
             </DataTemplate>
 
