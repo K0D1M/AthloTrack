@@ -51,6 +51,13 @@ public partial class AthleteProfileViewModel : ViewModelBase
     public ObservableCollection<Measurement> Measurements { get; } = new();
     public ObservableCollection<WorkoutProgram> Workouts { get; } = new();
 
+    /// <summary>The lists as shown: by month, newest first, each month opened/closed by its header.</summary>
+    [ObservableProperty]
+    public partial System.Collections.Generic.IReadOnlyList<MeasurementMonth> MeasurementGroups { get; set; } = [];
+
+    [ObservableProperty]
+    public partial System.Collections.Generic.IReadOnlyList<WorkoutMonth> WorkoutGroups { get; set; } = [];
+
     public bool CanEdit => _session.IsCoach;
 
     /// <summary>Coach, or the athlete viewing their own profile: may change photo and basic details.</summary>
@@ -319,6 +326,10 @@ public partial class AthleteProfileViewModel : ViewModelBase
             Workouts.Clear();
             foreach (var w in await _workouts.GetForAthleteAsync(_athleteId))
                 Workouts.Add(w);
+
+            // A reload (after an edit) keeps the months the user opened or closed.
+            MeasurementGroups = MonthGroups.Build(Measurements, MeasurementGroups);
+            WorkoutGroups = MonthGroups.Build(Workouts, WorkoutGroups);
         }
         catch (Exception ex)
         {

@@ -17,7 +17,7 @@
 
         <!-- Step 1: the two role cards -->
         <Style Selector="Button.rolecard">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
             <Setter Property="CornerRadius" Value="18" />
             <Setter Property="Padding" Value="12,20" />
             <Setter Property="BorderThickness" Value="0" />
@@ -27,20 +27,20 @@
             <Setter Property="VerticalContentAlignment" Value="Top" />
         </Style>
         <Style Selector="Button.rolecard:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#F1F6FD" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
         </Style>
         <Style Selector="Button.rolecard:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#E3EDFA" />
+            <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
         </Style>
         <Style Selector="Button.rolecard TextBlock.title">
             <Setter Property="FontSize" Value="17" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
             <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.rolecard TextBlock.hint">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextAlignment" Value="Center" />
         </Style>
@@ -76,11 +76,11 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
         </Style>
         <Style Selector="Button.back:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#EEF2F7" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
         </Style>
         <Style Selector="Button.back:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
@@ -165,7 +165,7 @@
                                     Background="{StaticResource BrandAccentGradient}"
                                     HorizontalAlignment="Center">
                                 <PathIcon Data="{StaticResource RunnerIcon}" Width="30" Height="30"
-                                          Foreground="{StaticResource BrandSupportBrush}" />
+                                          Foreground="{StaticResource OnAccentBrush}" />
                             </Border>
                             <TextBlock Classes="title" Text="Αθλητής" />
                             <TextBlock Classes="hint" Text="Οι προπονήσεις και η πρόοδός μου" />
@@ -186,7 +186,7 @@
             </StackPanel>
 
             <!-- Step 2: the form for the chosen role -->
-            <Border Background="White" CornerRadius="18" Padding="20"
+            <Border Background="{DynamicResource CardBrush}" CornerRadius="18" Padding="20"
                     BoxShadow="0 12 32 0 #33000000"
                     IsVisible="{Binding IsForm}"
                     Classes="appear-shown" Classes.shown="{Binding IsForm}">
@@ -200,11 +200,11 @@
                         </Button>
                         <TextBlock Grid.Column="1" Text="{Binding FormTitle}"
                                    FontSize="18" FontWeight="Bold"
-                                   Foreground="{StaticResource BrandSupportBrush}"
+                                   Foreground="{DynamicResource BrandSupportBrush}"
                                    VerticalAlignment="Center" />
                     </Grid>
 
-                    <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
+                    <TextBlock FontSize="12" Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap"
                                IsVisible="{Binding IsSignUp}"
                                Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου, ώστε ο λογαριασμός να συνδεθεί με το προφίλ σου." />
 
@@ -225,7 +225,7 @@
                     </TextBox>
 
                     <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="#C62828"
+                               Foreground="{DynamicResource DangerBrush}"
                                TextWrapping="Wrap"
                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 

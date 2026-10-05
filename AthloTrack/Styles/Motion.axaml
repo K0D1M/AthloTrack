@@ -38,7 +38,7 @@
 
     <!-- Skeleton placeholder while a screen's data loads: a grey block that gently pulses. -->
     <Style Selector="Border.skeleton">
-        <Setter Property="Background" Value="#E6ECF4" />
+        <Setter Property="Background" Value="{DynamicResource SkeletonBrush}" />
         <Setter Property="CornerRadius" Value="6" />
         <Style.Animations>
             <Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate" Easing="SineEaseInOut">

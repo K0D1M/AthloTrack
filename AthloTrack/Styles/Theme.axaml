@@ -11,7 +11,62 @@
     <SolidColorBrush x:Key="BrandPrimaryDarkBrush" Color="{StaticResource BrandPrimaryDarkColor}" />
     <SolidColorBrush x:Key="BrandAccentBrush" Color="{StaticResource BrandAccentColor}" />
     <SolidColorBrush x:Key="BrandSecondaryBrush" Color="{StaticResource BrandSecondaryColor}" />
-    <SolidColorBrush x:Key="BrandSupportBrush" Color="{StaticResource BrandSupportColor}" />
+    <!-- Dark text on the gold accent (buttons, icon circles): the same in both themes. -->
+    <SolidColorBrush x:Key="OnAccentBrush" Color="{StaticResource BrandSupportColor}" />
+
+    <!--
+      Surface colours that follow the Light/Dark theme (Ρυθμίσεις → Θέμα). Views use these with
+      DynamicResource, never literal colours, on page and card surfaces; colours on the blue
+      gradients (white text, #CFE3FF) stay as they are. BrandSupportBrush is the body text colour.
+    -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="BrandSupportBrush" Color="#333333" />
+            <SolidColorBrush x:Key="HeadingBrush" Color="#003366" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
+            <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="TintBrush" Color="#EEF3FB" />
+            <SolidColorBrush x:Key="TintStrongBrush" Color="#DCE7F7" />
+            <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0" />
+            <SolidColorBrush x:Key="NoticeBrush" Color="#FFF8E1" />
+            <SolidColorBrush x:Key="NoticeBorderBrush" Color="#FFE082" />
+            <SolidColorBrush x:Key="SkeletonBrush" Color="#E6ECF4" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#2E7D32" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#C62828" />
+            <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#EEF4FD" Offset="0" />
+                <GradientStop Color="#F8FAFD" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="PageBackdropGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#F4F8FE" Offset="0" />
+                <GradientStop Color="#FFFFFF" Offset="0.35" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#121417" />
+            <SolidColorBrush x:Key="BrandSupportBrush" Color="#E6E8EB" />
+            <SolidColorBrush x:Key="HeadingBrush" Color="#9CC3FF" />
+            <SolidColorBrush x:Key="MutedTextBrush" Color="#9AA3AE" />
+            <SolidColorBrush x:Key="CardBrush" Color="#1E2228" />
+            <SolidColorBrush x:Key="TintBrush" Color="#1D2735" />
+            <SolidColorBrush x:Key="TintStrongBrush" Color="#2A3A52" />
+            <SolidColorBrush x:Key="DividerBrush" Color="#2E343C" />
+            <SolidColorBrush x:Key="NoticeBrush" Color="#3A3220" />
+            <SolidColorBrush x:Key="NoticeBorderBrush" Color="#7A6420" />
+            <SolidColorBrush x:Key="SkeletonBrush" Color="#2A3038" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#66BB6A" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#EF5350" />
+            <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1D2735" Offset="0" />
+                <GradientStop Color="#1A1F26" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="PageBackdropGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#16202C" Offset="0" />
+                <GradientStop Color="#121417" Offset="0.35" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 
     <!-- Hover/pressed shades for the brand buttons -->
     <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#1976D2" />
@@ -66,16 +121,6 @@
     <LinearGradientBrush x:Key="BrandAccentPressedGradient" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="#F5C400" Offset="0" />
         <GradientStop Color="#FF8F00" Offset="1" />
-    </LinearGradientBrush>
-
-    <!-- Quiet page backdrop and card tint -->
-    <LinearGradientBrush x:Key="PageBackdropGradient" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Color="#F4F8FE" Offset="0" />
-        <GradientStop Color="#FFFFFF" Offset="0.35" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
-        <GradientStop Color="#EEF4FD" Offset="0" />
-        <GradientStop Color="#F8FAFD" Offset="1" />
     </LinearGradientBrush>
 
     <!--

@@ -34,6 +34,8 @@ public partial class App : Application
             Console.WriteLine($"[AthloTrack] Unhandled UI exception: {e.Exception}");
         UseGreekCulture();
         BuildServices();
+        // Light/Dark as chosen in Ρυθμίσεις (default: follow the device), before the first view.
+        ((Services.ThemeService)Services.GetRequiredService<IThemeService>()).ApplySaved();
         ConfigureCharts();
 
         // One permanent root on every head; screens change by swapping its content. Android
@@ -117,6 +119,7 @@ public partial class App : Application
         // Heads without their own store still get a working login screen.
         services.TryAddSingleton<IAppPreferences, InMemoryAppPreferences>();
 
+        services.AddSingleton<IThemeService, Services.ThemeService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<RecentViewModel>();
         services.AddTransient<AthletesViewModel>();

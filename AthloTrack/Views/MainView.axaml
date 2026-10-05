@@ -32,7 +32,7 @@
         <Grid Margin="10">
             <Label HorizontalAlignment="Center"
                    FontSize="11"
-                   Foreground="{StaticResource BrandSupportBrush}">Vibe-coded with ❤️ by K0D1M</Label>
+                   Foreground="{DynamicResource BrandSupportBrush}">Vibe-coded with ❤️ by K0D1M</Label>
         </Grid>
     </DrawerPage.DrawerFooter>
 
@@ -101,7 +101,7 @@
                             </Border>
 
                             <!-- Web: offer notifications until they're on (iPhone: after adding to the Home Screen) -->
-                            <Border IsVisible="{Binding Push.ShowBanner}" Background="#FFF8E1" CornerRadius="14" Padding="16"
+                            <Border IsVisible="{Binding Push.ShowBanner}" Background="{DynamicResource NoticeBrush}" CornerRadius="14" Padding="16"
                                     BorderBrush="#FFD700" BorderThickness="1">
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="Ειδοποιήσεις στο κινητό" FontWeight="SemiBold" />
@@ -113,7 +113,7 @@
 
                             <!-- First load: placeholders shaped like the card and the notifications -->
                             <StackPanel Spacing="16" IsVisible="{Binding ShowSkeleton}">
-                                <Border Background="#F5F8FD" CornerRadius="14" Padding="16" BorderBrush="#E3ECF8" BorderThickness="1">
+                                <Border Background="{DynamicResource TintBrush}" CornerRadius="14" Padding="16" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                         <Border Classes="skeleton circle" Width="52" Height="52" />
                                         <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
@@ -132,8 +132,8 @@
 
                             <!-- Coach: most recent athlete card -->
                             <Border Classes="appear-shown" Classes.shown="{Binding !ShowSkeleton}"
-                                    Background="{StaticResource CardTintGradient}" CornerRadius="14" Padding="16"
-                                    BorderBrush="#E3ECF8" BorderThickness="1">
+                                    Background="{DynamicResource CardTintGradient}" CornerRadius="14" Padding="16"
+                                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                                 <Border.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                                         <Binding Path="IsCoach" />
@@ -147,24 +147,24 @@
                                                      Initial="{Binding RecentAthleteInitial}" />
                                     <StackPanel Grid.Column="1" Spacing="6">
                                         <TextBlock Text="Πιο πρόσφατος αθλητής" FontSize="12"
-                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                                   Foreground="{DynamicResource BrandSupportBrush}" />
                                         <TextBlock Text="{Binding RecentAthleteName}" FontSize="18" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding RecentAthleteSummary}" FontSize="13"
-                                                   Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap" />
+                                                   Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
 
                             <!-- Athlete: their coach -->
                             <Border IsVisible="{Binding HasCoach}" Classes="appear-shown" Classes.shown="{Binding HasCoach}"
-                                    Background="{StaticResource CardTintGradient}" CornerRadius="14" Padding="16"
-                                    BorderBrush="#E3ECF8" BorderThickness="1">
+                                    Background="{DynamicResource CardTintGradient}" CornerRadius="14" Padding="16"
+                                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                     <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center"
                                                      Photo="{Binding CoachPhoto}" Initial="{Binding CoachInitial}" />
                                     <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                                         <TextBlock Text="Ο προπονητής σου" FontSize="12"
-                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                                   Foreground="{DynamicResource BrandSupportBrush}" />
                                         <TextBlock Text="{Binding CoachName}" FontSize="18" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </Grid>
@@ -176,7 +176,7 @@
                                 <ItemsControl ItemsSource="{Binding Notifications}" Classes="fadeitems">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#FFF8E1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                            <Border Background="{DynamicResource NoticeBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap"
                                                                VerticalAlignment="Center" />
@@ -189,7 +189,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <TextBlock Text="Καμία νέα ειδοποίηση."
-                                           Foreground="{StaticResource BrandSupportBrush}"
+                                           Foreground="{DynamicResource BrandSupportBrush}"
                                            IsVisible="{Binding !Notifications.Count}" />
                             </StackPanel>
                         </StackPanel>
@@ -221,7 +221,7 @@
                                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold" />
                                                 <TextBlock Text="{Binding Subtitle}" FontSize="12"
-                                                           Foreground="{StaticResource BrandSupportBrush}" />
+                                                           Foreground="{DynamicResource BrandSupportBrush}" />
                                             </StackPanel>
                                         </Grid>
                                     </Button>
@@ -271,7 +271,7 @@
 
                         <TextBlock Text="Δεν υπάρχουν αθλητές ακόμη."
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{StaticResource BrandSupportBrush}">
+                                   Foreground="{DynamicResource BrandSupportBrush}">
                             <TextBlock.IsVisible>
                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                     <Binding Path="!Athletes.Count" />
@@ -303,23 +303,23 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
                                         <!-- SeenTracker: an athlete's workout counts as read once on screen -->
-                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,10"
+                                        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="4,10"
                                                 controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
                                                 controls:SeenTracker.CommandParameter="{Binding}">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15" />
                                                 <TextBlock Text="{Binding TargetDateText}" FontSize="12"
-                                                           Foreground="{StaticResource BrandSupportBrush}" />
+                                                           Foreground="{DynamicResource BrandSupportBrush}" />
                                                 <controls:CoachPresence Present="{Binding Program.CoachPresent}" Margin="0,2,0,0" />
                                                 <controls:WorkoutText Text="{Binding Content}" Margin="0,4,0,0" />
                                                 <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
-                                                           Foreground="#2E7D32" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                           Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
                                                             IsVisible="{Binding ShowReadReceipt}">
                                                     <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
-                                                              Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                              Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
                                                     <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
-                                                               Foreground="{StaticResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                               Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
                                                 </StackPanel>
                                                 <!-- the athlete marks an open workout done (the coach is notified) -->
                                                 <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
@@ -357,7 +357,7 @@
 
                         <TextBlock Text="Δεν υπάρχουν ασκησιολόγια ακόμη."
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{StaticResource BrandSupportBrush}">
+                                   Foreground="{DynamicResource BrandSupportBrush}">
                             <TextBlock.IsVisible>
                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                     <Binding Path="!WorkoutPrograms.Count" />
@@ -390,7 +390,7 @@
                             <Setter Property="Opacity" Value="0.4" />
                         </Style>
                         <Style Selector="Button.calday:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="#EEF3FB" />
+                            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
                         </Style>
                         <Style Selector="Button.calday.today /template/ ContentPresenter#PART_ContentPresenter">
                             <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryBrush}" />
@@ -428,7 +428,7 @@
                                 </Button>
                                 <TextBlock Grid.Column="1" Text="{Binding MonthTitle}" FontSize="18" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                                           Foreground="{DynamicResource HeadingBrush}" />
                                 <Button Grid.Column="2" Classes="calnav" Command="{Binding NextMonthCommand}">
                                     <TextBlock Text="›" FontSize="22" />
                                 </Button>
@@ -442,7 +442,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="x:String">
                                         <TextBlock Text="{Binding}" FontSize="12" HorizontalAlignment="Center"
-                                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                                   Foreground="{DynamicResource BrandSupportBrush}" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -528,7 +528,7 @@
                                                 <StackPanel Grid.Column="1" Spacing="2">
                                                     <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" />
                                                     <TextBlock Text="{Binding DateText}" FontSize="12"
-                                                               Foreground="{StaticResource BrandSupportBrush}" />
+                                                               Foreground="{DynamicResource BrandSupportBrush}" />
                                                     <TextBlock Text="{Binding Content}" FontSize="13" TextWrapping="Wrap"
                                                                MaxLines="2" TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
@@ -539,7 +539,7 @@
                             </ItemsControl>
 
                             <TextBlock Text="Καμία προπόνηση για αυτό το διάστημα."
-                                       Foreground="{StaticResource BrandSupportBrush}"
+                                       Foreground="{DynamicResource BrandSupportBrush}"
                                        IsVisible="{Binding HasNoAgendaEntries}" />
                         </StackPanel>
                     </ScrollViewer>
@@ -561,12 +561,12 @@
                         </Border>
                         <TextBlock Text="{Binding AppName}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding Version, StringFormat='Έκδοση {0}'}" HorizontalAlignment="Center"
-                                   Foreground="{StaticResource BrandSupportBrush}" />
+                                   Foreground="{DynamicResource BrandSupportBrush}" />
                         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0"
                                    Text="Παρακολούθηση προόδου αθλητών: μετρήσεις, ασκησιολόγια και γραφήματα προόδου, για προπονητές και αθλητές." />
                         <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontStyle="Italic" HorizontalAlignment="Center"
                                    FontFamily="{StaticResource GreekAccentFont}"
-                                   Margin="0,8,0,0" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                                   Margin="0,8,0,0" Foreground="{DynamicResource HeadingBrush}" />
                     </StackPanel>
                 </ContentPage>
             </DataTemplate>
@@ -587,22 +587,32 @@
                                 </Button>
                             </Panel>
                             <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="Συνδεδεμένος ως" FontSize="12" Foreground="{StaticResource BrandSupportBrush}" />
+                                <TextBlock Text="Συνδεδεμένος ως" FontSize="12" Foreground="{DynamicResource BrandSupportBrush}" />
                                 <TextBlock Text="{Binding User.DisplayName}" FontSize="16" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding User.RoleText}" FontSize="12" Foreground="{StaticResource BrandSupportBrush}" />
+                                <TextBlock Text="{Binding User.RoleText}" FontSize="12" Foreground="{DynamicResource BrandSupportBrush}" />
                             </StackPanel>
                         </Grid>
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding User.IsUploading}" />
-                        <TextBlock Text="{Binding User.ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding User.ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                                    IsVisible="{Binding User.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
                         <!-- Web (and iPhone from the Home Screen): notifications need a tap to allow. -->
                         <StackPanel Spacing="6" IsVisible="{Binding Push.IsAvailable}">
                             <TextBlock Text="Ειδοποιήσεις" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Push.StatusText}" FontSize="12" TextWrapping="Wrap"
-                                       Foreground="{StaticResource BrandSupportBrush}" />
+                                       Foreground="{DynamicResource BrandSupportBrush}" />
                             <Button Classes="primary" Content="Ενεργοποίηση ειδοποιήσεων" HorizontalAlignment="Left"
                                     Height="40" Command="{Binding Push.EnableCommand}" IsVisible="{Binding Push.CanEnable}" />
+                        </StackPanel>
+
+                        <!-- Light/Dark, remembered on this device; "Σύστημα" follows the phone/computer. -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Θέμα" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <RadioButton GroupName="theme" Content="Σύστημα" IsChecked="{Binding IsSystemTheme, Mode=TwoWay}" />
+                                <RadioButton GroupName="theme" Content="Ανοιχτό" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" />
+                                <RadioButton GroupName="theme" Content="Σκούρο" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
+                            </StackPanel>
                         </StackPanel>
 
                         <!-- Greek only until translations (.resx) exist; a live toggle would change nothing. -->
@@ -613,7 +623,7 @@
                                 <ComboBoxItem>English</ComboBoxItem>
                             </ComboBox>
                             <TextBlock Text="Η αγγλική έκδοση έρχεται σύντομα." FontSize="12"
-                                       Foreground="{StaticResource BrandSupportBrush}" />
+                                       Foreground="{DynamicResource BrandSupportBrush}" />
                         </StackPanel>
 
                         <Button Classes="dark" Content="Αποσύνδεση" Command="{Binding LogoutCommand}"

@@ -16,8 +16,6 @@ public class WorkoutText : StackPanel
     public static readonly StyledProperty<string?> TextProperty =
         AvaloniaProperty.Register<WorkoutText, string?>(nameof(Text));
 
-    private static readonly IBrush HeadingBrush = new SolidColorBrush(Color.Parse("#003366"));
-
     public WorkoutText()
     {
         Spacing = 2;
@@ -50,7 +48,8 @@ public class WorkoutText : StackPanel
                     var heading = Paragraph(line);
                     heading.FontWeight = FontWeight.SemiBold;
                     heading.FontSize = 15;
-                    heading.Foreground = HeadingBrush;
+                    // Follows the Light/Dark theme (Styles/Theme.axaml).
+                    heading.Bind(TextBlock.ForegroundProperty, this.GetResourceObservable("HeadingBrush"));
                     if (!first) heading.Margin = new Thickness(0, 6, 0, 0);
                     Children.Add(heading);
                     break;

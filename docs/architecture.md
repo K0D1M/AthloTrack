@@ -80,6 +80,36 @@ Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOpt
 
 The phone's keyboard doesn't resize the app's view. `AddWorkoutView` therefore listens to `TopLevel.InputPane` and, while the keyboard is open, ends the form above it and scrolls the line being typed into view.
 
+## Light/Dark theme
+`Styles/Theme.axaml` keeps the brand colours (blue gradients, gold) the same in both themes. The surface colours are theme tokens in `ResourceDictionary.ThemeDictionaries` (`Light` and `Dark`):
+- `SurfaceBrush` and `CardBrush`
+- `TintBrush` and `TintStrongBrush`
+- `DividerBrush`
+- `BrandSupportBrush`, the body text
+- `HeadingBrush` and `MutedTextBrush`
+- `NoticeBrush` and `NoticeBorderBrush`
+- `SkeletonBrush`
+- `SuccessBrush` and `DangerBrush`
+- `CardTintGradient` and `PageBackdropGradient`
+
+**Rules:**
+- On a page or card surface, use these with `DynamicResource`, never a literal colour; a `StaticResource` wouldn't follow a theme switch.
+- Colours on the blue gradients (white text, `#CFE3FF`) stay literal.
+- Text on gold uses `OnAccentBrush`.
+- Controls that set colours in code (`WorkoutText`, `CoachPresence`) bind to the tokens with `GetResourceObservable`.
+- The chart is redrawn on `ActualThemeVariantChanged`.
+
+`Services/ThemeService.cs` applies the choice from Ρυθμίσεις (`ViewModels/ThemeChoice.cs`, stored in `IAppPreferences` as `app.theme`) as `Application.RequestedThemeVariant`, at start-up and whenever it changes. `System` means `ThemeVariant.Default`, which follows the device.
+
+## Month groups
+The athlete profile shows its measurements and workouts by month. `ViewModels/MonthGroupViewModel.cs` builds the groups:
+- `MonthGroups.Build` returns `MeasurementMonth` / `WorkoutMonth`. These are concrete types because compiled XAML bindings can't name a generic.
+- Newest month first, and the newest month starts open.
+- The first group of an older year carries the year separator.
+- A reload keeps each month's open or closed state.
+
+The flat `Measurements` and `Workouts` lists remain for the chart and the empty states. Inside a group the nearest `ItemsControl` is the group's, so the item templates reach the profile's commands through `$parent[UserControl]`.
+
 ## Motion and loading
 Animations are subtle (about 200 ms), because the web build has one UI thread and phones can be slow.
 - `Styles/Motion.axaml`:

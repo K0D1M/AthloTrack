@@ -22,31 +22,31 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="ToggleButton.presence.present">
-            <Setter Property="BorderBrush" Value="#2E7D32" />
-            <Setter Property="Foreground" Value="#2E7D32" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
         </Style>
         <Style Selector="ToggleButton.presence.absent">
-            <Setter Property="BorderBrush" Value="#C62828" />
-            <Setter Property="Foreground" Value="#C62828" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
         </Style>
         <Style Selector="ToggleButton.presence.present:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#142E7D32" />
-            <Setter Property="BorderBrush" Value="#2E7D32" />
-            <Setter Property="Foreground" Value="#2E7D32" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
         </Style>
         <Style Selector="ToggleButton.presence.absent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#14C62828" />
-            <Setter Property="BorderBrush" Value="#C62828" />
-            <Setter Property="Foreground" Value="#C62828" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
         </Style>
         <Style Selector="ToggleButton.presence.present:checked /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#2E7D32" />
-            <Setter Property="BorderBrush" Value="#2E7D32" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="ToggleButton.presence.absent:checked /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#C62828" />
-            <Setter Property="BorderBrush" Value="#C62828" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
 
@@ -57,15 +57,15 @@
             <Setter Property="Height" Value="36" />
             <Setter Property="Padding" Value="8,0" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Background" Value="#EEF3FB" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#DCE7F7" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
         </Style>
         <Style Selector="ToggleButton.tool:checked /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BrandPrimaryBrush}" />
@@ -78,8 +78,8 @@
 
         <!-- Panels opened from the toolbar (exercise builder, templates) -->
         <Style Selector="Border.panel">
-            <Setter Property="Background" Value="#F5F8FD" />
-            <Setter Property="BorderBrush" Value="#DCE7F7" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="12" />
@@ -87,14 +87,14 @@
 
         <!-- A template / earlier workout row: the whole row is a button -->
         <Style Selector="Button.reuse">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Button.reuse:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#EEF3FB" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
         </Style>
 
         <Style Selector="Button.small">
@@ -111,7 +111,7 @@
         </Style>
         <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
         </Style>
         <Style Selector="Button.delete">
             <Setter Property="Background" Value="Transparent" />
@@ -121,7 +121,7 @@
             <Setter Property="CornerRadius" Value="18" />
         </Style>
         <Style Selector="Button.delete PathIcon">
-            <Setter Property="Foreground" Value="#C62828" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
         </Style>
         <Style Selector="Button.dialog">
             <Setter Property="Height" Value="40" />
@@ -132,12 +132,12 @@
         </Style>
         <Style Selector="TextBlock.hint">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBlock.section">
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource BrandPrimaryDarkBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
         </Style>
     </UserControl.Styles>
 
@@ -149,7 +149,7 @@
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,0,0,16">
                 <controls:Avatar Grid.Column="0" Width="52" Height="52" Photo="{Binding Photo}" Initial="{Binding Initial}" />
                 <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
-                           VerticalAlignment="Center" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                           VerticalAlignment="Center" Foreground="{DynamicResource HeadingBrush}" />
             </Grid>
 
             <ScrollViewer x:Name="Scroller" Grid.Row="1">
@@ -182,7 +182,7 @@
                         </Grid>
 
                         <!-- Unsaved changes from before were brought back -->
-                        <Border IsVisible="{Binding IsDraftRestored}" Background="#FFF8E1" BorderBrush="#FFE082"
+                        <Border IsVisible="{Binding IsDraftRestored}" Background="{DynamicResource NoticeBrush}" BorderBrush="{DynamicResource NoticeBorderBrush}"
                                 BorderThickness="1" CornerRadius="10" Padding="10,6">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <TextBlock Text="Επαναφέρθηκε πρόχειρο που δεν είχε αποθηκευτεί." FontSize="13"
@@ -247,7 +247,7 @@
                                              Text="{Binding ExerciseRest, Mode=TwoWay}" />
                                 </Grid>
                                 <TextBlock Classes="hint" Text="Συμπλήρωσε μόνο ό,τι χρειάζεται: σετ/επαναλήψεις/κιλά για δύναμη, λεπτά/απόσταση για αερόβια." />
-                                <TextBlock Text="{Binding BuilderError}" Foreground="#C62828" TextWrapping="Wrap"
+                                <TextBlock Text="{Binding BuilderError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                                            IsVisible="{Binding BuilderError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                                     <Button Classes="small" Content="Κλείσιμο" Command="{Binding ToggleBuilderCommand}" />
@@ -265,9 +265,9 @@
                                     <Button Grid.Column="1" Classes="primary small" Content="Αποθήκευση"
                                             Command="{Binding SaveTemplateCommand}" />
                                 </Grid>
-                                <TextBlock Text="{Binding InfoMessage}" Foreground="#2E7D32" TextWrapping="Wrap"
+                                <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
                                            IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                <TextBlock Text="{Binding ReuseError}" Foreground="#C62828" TextWrapping="Wrap"
+                                <TextBlock Text="{Binding ReuseError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                                            IsVisible="{Binding ReuseError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsReuseLoading}" />
 
@@ -323,14 +323,14 @@
                                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="240"
                                  PlaceholderText="Γράψε εδώ το πρόγραμμα προπόνησης..." />
                         <Border IsVisible="{Binding IsPreview}" MinHeight="240" Padding="12,10"
-                                BorderBrush="#DCE7F7" BorderThickness="1" CornerRadius="4" Background="White">
+                                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" CornerRadius="4" Background="{DynamicResource CardBrush}">
                             <controls:WorkoutText Text="{Binding Content}" />
                         </Border>
                         <TextBlock Classes="hint" IsVisible="{Binding !IsPreview}"
                                    Text="Συμβουλή: ## για επικεφαλίδα, - για λίστα, **κείμενο** για έντονα." />
                     </StackPanel>
 
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
             </ScrollViewer>
@@ -343,7 +343,7 @@
 
         <!-- In-app confirmation (browser/Android have no native message box) -->
         <Grid IsVisible="{Binding IsConfirming}" Background="#66000000">
-            <Border Background="White" CornerRadius="14" Padding="20" Margin="16"
+            <Border Background="{DynamicResource CardBrush}" CornerRadius="14" Padding="20" Margin="16"
                     MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="18">
                     <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" FontSize="15" />

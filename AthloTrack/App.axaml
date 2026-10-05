@@ -1,10 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:AthloTrack"
-             x:Class="AthloTrack.App"
-             RequestedThemeVariant="Light">
-             <!-- Locked to Light: the brand palette (white secondary, light cards) is designed for it.
-                  "Default" followed the OS dark mode and left dark text on black in the browser. -->
+             x:Class="AthloTrack.App">
+             <!-- Light/Dark follows Ρυθμίσεις → Θέμα (Services/ThemeService.cs). Surface colours come
+                  from the theme tokens in Styles/Theme.axaml. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
@@ -22,6 +21,11 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AthloTrack/Styles/Motion.axaml" />
+
+        <!-- Page background from the theme (Fluent's dark pages are pure black) -->
+        <Style Selector="ContentPage">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        </Style>
 
         <!-- Android keyboards (Gboard, Samsung…) "compose" words and let the app replace them as
              they go; Avalonia's Android TextBox loses keystrokes doing that on slower phones (e.g.
@@ -55,7 +59,7 @@
             <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
         </Style>
         <Style Selector="Button.dark">
-            <Setter Property="Background" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Background" Value="#333333" />
             <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
         </Style>
         <Style Selector="Button.dark:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -111,15 +115,15 @@
         </Style>
         <Style Selector="Button.gold">
             <Setter Property="Background" Value="{StaticResource BrandAccentGradient}" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         </Style>
         <Style Selector="Button.gold:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BrandAccentHoverGradient}" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         </Style>
         <Style Selector="Button.gold:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BrandAccentPressedGradient}" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         </Style>
         <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter, Button.gold:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Opacity" Value="0.6" />
@@ -132,7 +136,7 @@
         </Style>
         <Style Selector="Button.gold:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BrandAccentGradient}" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         </Style>
 
         <!-- Top bar of the shell: gradient with white title and menu icon -->

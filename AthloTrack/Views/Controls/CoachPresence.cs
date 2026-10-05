@@ -15,9 +15,6 @@ public class CoachPresence : StackPanel
     public static readonly StyledProperty<bool?> PresentProperty =
         AvaloniaProperty.Register<CoachPresence, bool?>(nameof(Present));
 
-    private static readonly IBrush PresentBrush = new SolidColorBrush(Color.Parse("#2E7D32"));
-    private static readonly IBrush AbsentBrush = new SolidColorBrush(Color.Parse("#C62828"));
-
     private readonly Ellipse _dot = new() { Width = 10, Height = 10, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock _text = new()
     {
@@ -53,9 +50,10 @@ public class CoachPresence : StackPanel
         IsVisible = Present is not null;
         if (Present is not { } present) return;
 
-        var brush = present ? PresentBrush : AbsentBrush;
-        _dot.Fill = brush;
-        _text.Foreground = brush;
+        // Theme tokens, so the green/red follow Light/Dark (Styles/Theme.axaml).
+        var brush = this.GetResourceObservable(present ? "SuccessBrush" : "DangerBrush");
+        _dot.Bind(Shape.FillProperty, brush);
+        _text.Bind(TextBlock.ForegroundProperty, brush);
         _text.Text = present ? "Ο προπονητής θα είναι παρών" : "Ο προπονητής δεν θα είναι παρών";
     }
 }

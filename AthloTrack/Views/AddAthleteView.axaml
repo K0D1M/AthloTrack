@@ -32,7 +32,7 @@
                 <StackPanel Spacing="4" IsVisible="{Binding ShowCoachFields}">
                     <TextBlock Text="Email αθλητή (για σύνδεση)" FontWeight="SemiBold" />
                     <TextBox Text="{Binding Email, Mode=TwoWay}" PlaceholderText="athlete@mail.com" />
-                    <TextBlock FontSize="12" Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap"
+                    <TextBlock FontSize="12" Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap"
                                Text="Όταν ο αθλητής δημιουργήσει λογαριασμό με αυτό το email, συνδέεται αυτόματα με το προφίλ του." />
                 </StackPanel>
 
@@ -42,7 +42,7 @@
                              TextWrapping="Wrap" />
                 </StackPanel>
 
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </StackPanel>
         </ScrollViewer>

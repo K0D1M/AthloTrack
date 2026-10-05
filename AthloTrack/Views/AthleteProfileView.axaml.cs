@@ -29,6 +29,8 @@ public partial class AthleteProfileView : UserControl
                 BuildChart(vm.Chart);
             }
         };
+        // Light/Dark switched in Ρυθμίσεις: redraw the chart image in the new colours.
+        ActualThemeVariantChanged += (_, _) => BuildChart((DataContext as AthleteProfileViewModel)?.Chart);
     }
 
     private void BuildChart(ProgressChart? chart)
@@ -72,10 +74,19 @@ public partial class AthleteProfileView : UserControl
         plot.Axes.Left.TickLabelStyle.FontSize = 11;
         plot.Axes.Top.FrameLineStyle.Width = 0;
         plot.Axes.Right.FrameLineStyle.Width = 0;
-        plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#E8EEF6");
+        var dark = ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+        plot.Grid.MajorLineColor = ScottPlot.Color.FromHex(dark ? "#2E343C" : "#E8EEF6");
         plot.FigureBackground.Color = ScottPlot.Colors.Transparent;
+        plot.DataBackground.Color = ScottPlot.Colors.Transparent;
+        plot.Axes.Color(ScottPlot.Color.FromHex(dark ? "#C9CED6" : "#333333"));
         plot.ShowLegend(ScottPlot.Edge.Bottom);
         plot.Legend.FontSize = 12;
+        if (dark)
+        {
+            plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#1E2228");
+            plot.Legend.FontColor = ScottPlot.Color.FromHex("#E6E8EB");
+            plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#2E343C");
+        }
         plot.Axes.Margins(horizontal: 0.05, vertical: 0.15);
 
         // A static image: nothing to pan or zoom, so dragging scrolls the page as usual.

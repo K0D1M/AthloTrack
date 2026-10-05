@@ -28,17 +28,17 @@
                     <TextBlock Text="Fat Mass/WT" FontWeight="SemiBold" />
                     <TextBox Text="{Binding FatMassWt, Mode=TwoWay}" />
                     <TextBlock Text="Λιπώδης μάζα ως προς το βάρος" FontSize="12"
-                               Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap" />
+                               Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Spacing="4">
                     <TextBlock Text="fat/hgt" FontWeight="SemiBold" />
                     <TextBox Text="{Binding FatHgt, Mode=TwoWay}" />
                     <TextBlock Text="Λίπος ως προς το ύψος" FontSize="12"
-                               Foreground="{StaticResource BrandSupportBrush}" TextWrapping="Wrap" />
+                               Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" TextWrapping="Wrap"
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </StackPanel>
         </ScrollViewer>
