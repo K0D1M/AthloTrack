@@ -563,6 +563,12 @@
                         <TextBlock Text="{Binding AppName}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding Version, StringFormat='Έκδοση {0}'}" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource BrandSupportBrush}" />
+                        <Border IsVisible="{Binding IsPreRelease}" HorizontalAlignment="Center" Margin="0,4,0,0"
+                                Background="{DynamicResource NoticeBrush}" BorderBrush="{DynamicResource NoticeBorderBrush}"
+                                BorderThickness="1" CornerRadius="10" Padding="12,8">
+                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" FontSize="13"
+                                       Text="Δοκιμαστική έκδοση (alpha): μπορεί να υπάρχουν σφάλματα και αλλαγές." />
+                        </Border>
                         <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0"
                                    Text="Παρακολούθηση προόδου αθλητών: μετρήσεις, ασκησιολόγια και γραφήματα προόδου, για προπονητές και αθλητές." />
                         <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontStyle="Italic" HorizontalAlignment="Center"

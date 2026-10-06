@@ -8,7 +8,7 @@
     <!-- Raise ApplicationVersion for every APK you hand out, or phones refuse it as an update. -->
     <ApplicationVersion>11</ApplicationVersion>
     <!-- Keep ApplicationDisplayVersion equal to <Version> in AthloTrack.csproj (shown in Σχετικά). -->
-    <ApplicationDisplayVersion>1.10</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>1.10-alpha</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>

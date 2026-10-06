@@ -133,6 +133,11 @@
                            Foreground="White" HorizontalAlignment="Center" />
                 <TextBlock Text="Παρακολούθηση προόδου αθλητών" FontSize="14"
                            Foreground="#CFE3FF" HorizontalAlignment="Center" />
+                <!-- Release stage from <Version> in AthloTrack.csproj (e.g. 1.10-alpha); hidden for a stable release. -->
+                <Border IsVisible="{x:Static vm:AppInfo.IsPreRelease}" HorizontalAlignment="Center" Margin="0,6,0,0"
+                        Background="#40FFFFFF" CornerRadius="8" Padding="8,2">
+                    <TextBlock Text="{x:Static vm:AppInfo.Stage}" FontSize="12" FontWeight="SemiBold" Foreground="White" />
+                </Border>
             </StackPanel>
 
             <!-- Step 1: who is logging in (decides which profile the login is checked against) -->

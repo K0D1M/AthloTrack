@@ -38,7 +38,7 @@ Requirements: the .NET 10 SDK with `dotnet workload install android`, and the An
 |---|---|
 | Package ID | `com.k0d1m.athlotrack` |
 | Minimum Android | 6.0 (API 23). Push notifications need Google Play services |
-| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj` (now 11 / 1.10). Keep `<Version>` in `AthloTrack/AthloTrack.csproj` equal to `ApplicationDisplayVersion`: it is the version shown in Σχετικά on every platform. **Increase `ApplicationVersion` for every APK you hand out**, or Android refuses to install it over the old one |
+| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj` (now 11 / 1.10-alpha; the part after the dash is the release stage, shown as a tag on the login screen and a notice in Σχετικά, and dropped for a stable release). Keep `<Version>` in `AthloTrack/AthloTrack.csproj` equal to `ApplicationDisplayVersion`: it is the version shown in Σχετικά on every platform. **Increase `ApplicationVersion` for every APK you hand out**, or Android refuses to install it over the old one |
 
 ```powershell
 # Debug build, installed on the connected device/emulator

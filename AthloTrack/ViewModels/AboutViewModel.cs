@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AthloTrack.ViewModels;
@@ -14,7 +13,9 @@ public partial class AboutViewModel : ViewModelBase
     public partial string AppName { get; set; } = "AthloTrack";
 
     [ObservableProperty]
-    public partial string Version { get; set; } = AppVersion();
+    public partial string Version { get; set; } = AppInfo.Version;
+
+    public bool IsPreRelease => AppInfo.IsPreRelease;
 
     public string Copyright { get; } = "© 2026 K0D1M";
 
@@ -31,12 +32,4 @@ public partial class AboutViewModel : ViewModelBase
         new("Inter", "γραμματοσειρά", "SIL OFL 1.1"),
         new("GFS Didot (Greek Font Society)", "ελληνική γραμματοσειρά", "SIL OFL 1.1"),
     ];
-
-    /// <summary>The <c>Version</c> from AthloTrack.csproj, without the "+commit" suffix the SDK appends.</summary>
-    static string AppVersion()
-    {
-        var v = typeof(AboutViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
-        var plus = v.IndexOf('+');
-        return plus >= 0 ? v[..plus] : v;
-    }
 }
