@@ -1,15 +1,21 @@
-// Phone keyboards (Gboard on Android Chrome) "compose" a word before committing it. Avalonia's
-// web text boxes share one hidden <input>, and Avalonia moves its focus on the touch that picks
-// another field, *before* the browser finishes the word (compositionend). The finished word then
-// landed in the newly chosen field (e.g. the email in the password box), and the field being
-// typed in kept only its uncommitted preview, which vanished.
+// Phone keyboards and Avalonia's web text boxes (which share one hidden <input>). Avalonia takes
+// text from two places only: keydown events with a real key (desktop typing) and finished
+// compositions (compositionend). Two fixes for phone keyboards:
 //
-// Fix: when a touch starts while a word is being composed, end the composition first (blurring the
-// hidden input makes the browser commit it), while the old field still has Avalonia's focus. The
-// window capture listener runs before Avalonia's own pointer handling. Desktop browsers rarely
-// compose, so this changes nothing there.
+// 1. Text committed without either. Samsung Keyboard (and others) send digits, symbols and
+//    sometimes whole words as a plain `beforeinput insertText` with an "Unidentified" (229) keydown.
+//    Avalonia dropped it: no @ or . in an email, nothing at all in a password box. That text is
+//    replayed here as keydown/keyup events, which Avalonia turns into text input as usual.
 //
-// Diagnostics for a phone: ?imelog shows the keyboard events on screen; ?noimefix turns the fix off.
+// 2. A word being composed when another field is tapped (Gboard). Avalonia moves its focus on the
+//    touch, *before* the browser finishes the word, so the word landed in the newly chosen field
+//    (e.g. the email in the password box) and the old field kept only its vanishing preview. When a
+//    touch starts while composing, the hidden input is blurred first, which makes the browser commit
+//    the word while the old field still has Avalonia's focus. The window capture listener runs
+//    before Avalonia's own pointer handling.
+//
+// Desktop browsers type through real keydowns and rarely compose, so neither changes anything there.
+// Diagnostics for a phone: ?imelog shows the keyboard events on screen; ?noimefix turns the fixes off.
 
 const params = new URLSearchParams(location.search);
 if (params.has('imelog')) showLog(params.has('noimefix'));
@@ -19,6 +25,20 @@ if (!params.has('noimefix')) {
   document.addEventListener('compositionstart', () => { composing = true; }, true);
   document.addEventListener('compositionend', () => { composing = false; }, true);
 
+  // 1. Replay committed text as key presses.
+  document.addEventListener('beforeinput', e => {
+    if (e.inputType !== 'insertText' || !e.data || composing || e.isComposing) return;
+    const input = e.target;
+    if (!(input instanceof HTMLInputElement) || !input.classList.contains('avalonia-input-element')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    for (const ch of e.data) {
+      for (const type of ['keydown', 'keyup'])
+        input.dispatchEvent(new KeyboardEvent(type, { key: ch, bubbles: true, cancelable: true }));
+    }
+  }, true);
+
+  // 2. Finish the word before another field takes the focus.
   window.addEventListener('pointerdown', () => {
     if (!composing) return;
     const input = document.activeElement;
@@ -40,7 +60,7 @@ function showLog(fixOff) {
   const tag = el => el && el.tagName ? el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : '') : '-';
   const val = e => e.target && 'value' in e.target ? ' v=' + JSON.stringify(e.target.value) : '';
   for (const t of ['keydown', 'keyup'])
-    document.addEventListener(t, e => add(t + ' key=' + JSON.stringify(e.key) + ' code=' + e.keyCode + (e.isComposing ? ' comp' : '') + ' ' + tag(e.target)), true);
+    document.addEventListener(t, e => add(t + ' key=' + JSON.stringify(e.key) + ' code=' + e.keyCode + (e.isComposing ? ' comp' : '') + (e.isTrusted ? '' : ' replay') + ' ' + tag(e.target)), true);
   for (const t of ['beforeinput', 'input'])
     document.addEventListener(t, e => add(t + ' ' + e.inputType + ' d=' + JSON.stringify(e.data) + val(e)), true);
   for (const t of ['compositionstart', 'compositionupdate', 'compositionend'])

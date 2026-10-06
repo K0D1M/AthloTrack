@@ -78,6 +78,10 @@ Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** wo
 - **The fix:** `wwwroot/ime-fix.js` ends the composition on that touch, by blurring the hidden input, while the old field still has the focus.
 - **Why not stop the composing:** `autocomplete`/`autocorrect=off` sets the no-suggestions flag, but Gboard keeps composing in web fields, so that alone doesn't help.
 
+Avalonia's web code takes text only from `keydown` events with a real key and from `compositionend`. Samsung Keyboard sends digits, symbols and some words as a plain `beforeinput insertText` with an "Unidentified" (229) keydown, which Avalonia dropped: an email arrived without `@` and `.`, and a password box stayed empty. `ime-fix.js` cancels that event and replays its text as `keydown`/`keyup` events, which Avalonia handles like desktop typing. Desktop keydowns are cancelled by Avalonia before any `beforeinput`, so nothing is typed twice.
+
+**Diagnosing on a phone:** open the site with `?imelog` to see the keyboard events on screen, and add `&noimefix` to turn both fixes off.
+
 Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOptions.Multiline` and `ReturnKeyType=Return` from a second `App.axaml` style:
 - **Why:** Avalonia didn't tell Android they were multi-line, so Gboard showed a ✓ "Done" key. Avalonia turned that action into a line break Gboard didn't know about, and Gboard then dropped the next key.
 - **Result:** with the style, Gboard shows ⏎ and every key arrives.
