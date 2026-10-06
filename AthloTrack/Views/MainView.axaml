@@ -1,86 +1,130 @@
-<DrawerPage xmlns="https://github.com/avaloniaui"
-            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-            xmlns:vm="using:AthloTrack.ViewModels"
-            xmlns:controls="using:AthloTrack.Views.Controls"
-            mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-            Header="AthloTrack"
-            x:Class="AthloTrack.Views.MainView"
-            x:DataType="vm:MainViewModel">
+<ContentPage xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
+             x:Class="AthloTrack.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             AutomaticallyApplySafeAreaPadding="False">
+    <!-- AutomaticallyApplySafeAreaPadding off: the PageNavigationHost already keeps the page clear of
+         the Android status and navigation bars; padding here too doubled the gap above the top bar
+         and below the bottom bar. -->
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <DrawerPage.DrawerHeader>
-        <!-- Signed-in user; DataContext is the shared CurrentUserViewModel (set in code-behind). -->
-        <StackPanel x:Name="DrawerHeaderRoot" x:DataType="vm:CurrentUserViewModel"
-                    Margin="10" Spacing="4" Background="{StaticResource BrandHeroGradient}">
-            <controls:Avatar Width="68" Height="68" Margin="0,16,0,6" HorizontalAlignment="Center"
-                             BorderBrush="White" BorderThickness="3"
-                             Photo="{Binding Photo}" Initial="{Binding Initial}" />
-            <TextBlock Text="{Binding DisplayName}" Foreground="White" FontSize="16" FontWeight="Bold"
-                       HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="8,0" />
-            <TextBlock Text="{Binding RoleText}" Foreground="#CFE3FF" FontSize="12"
-                       HorizontalAlignment="Center" Margin="0,0,0,14" />
-        </StackPanel>
-    </DrawerPage.DrawerHeader>
+    <ContentPage.Styles>
+        <!-- Top bar buttons (back, avatar): no Fluent chrome on the gradient. -->
+        <Style Selector="Button.bar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.bar:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26FFFFFF" />
+        </Style>
+        <Style Selector="Button.bar:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#40FFFFFF" />
+        </Style>
 
-    <DrawerPage.DrawerFooter>
-        <Grid Margin="10">
-            <Label HorizontalAlignment="Center"
-                   FontSize="11"
-                   Foreground="{DynamicResource BrandSupportBrush}">Vibe-coded with ❤️ by K0D1M</Label>
+        <!-- Bottom bar: filled icon + coloured label when selected, outline + muted when not. -->
+        <Style Selector="ListBox#TabBar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:selected">
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem :is(Control).filled">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:selected :is(Control).filled">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:selected :is(Control).outline">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ListBox#TabBar Border.pill">
+            <Setter Property="Width" Value="56" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:selected Border.pill">
+            <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+        </Style>
+        <Style Selector="ListBox#TabBar PathIcon, ListBox#TabBar Path">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+        </Style>
+        <Style Selector="ListBox#TabBar TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+        <Style Selector="ListBox#TabBar > ListBoxItem:selected TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </ContentPage.Styles>
+
+    <ContentPage.Resources>
+        <!-- Bottom bar items: an own theme (not based on Fluent's) so there's no selection block or
+             hover fill; the pill and the filled icon show the selection. -->
+        <ControlTheme x:Key="TabItemTheme" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0,8,0,6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Background="{TemplateBinding Background}"
+                                      Padding="{TemplateBinding Padding}"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center" />
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource SurfaceBrush}">
+
+    <!-- Top bar: Up arrow on sub-pages, the page title, and the signed-in user's photo (opens Ρυθμίσεις). -->
+    <Border x:Name="TopBar" Grid.Row="0" Background="{StaticResource BrandBarGradient}">
+        <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56" Margin="8,0">
+            <Button x:Name="BackButton" Grid.Column="0" Classes="bar" IsVisible="False"
+                    Click="OnBackClick" ToolTip.Tip="Πίσω">
+                <PathIcon Data="{StaticResource ArrowLeftIcon}" Width="22" Height="22" />
+            </Button>
+            <TextBlock x:Name="TitleText" Grid.Column="1" Text="AthloTrack" Foreground="White"
+                       FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" Margin="8,0" />
+            <Button x:Name="AvatarButton" Grid.Column="2" Classes="bar" Padding="4"
+                    Click="OnAvatarClick" ToolTip.Tip="Ρυθμίσεις">
+                <controls:Avatar x:Name="TopAvatar" x:DataType="vm:CurrentUserViewModel" Width="34" Height="34"
+                                 BorderBrush="White" BorderThickness="2"
+                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+            </Button>
         </Grid>
-    </DrawerPage.DrawerFooter>
+    </Border>
 
-    <DrawerPage.Drawer>
-        <ListBox Name="DrawerList"
-                 SelectionMode="AlwaysSelected"
-                 SelectionChanged="DrawerList_SelectionChanged"
-                 Tapped="DrawerList_Tapped">
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource ClockIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Πρόσφατα</Label>
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource PersonIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Αθλητές</Label>
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource DumbbellIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Προπονήσεις</Label>
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource CalendarIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ημερολόγιο</Label>
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource InfoIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Σχετικά</Label>
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel Spacing="15" Orientation="Horizontal">
-                    <PathIcon Data="{StaticResource GearIcon}" />
-                    <Label VerticalAlignment="Center" FontSize="16" VerticalContentAlignment="Center" Padding="0">Ρυθμίσεις</Label>
-                </StackPanel>
-            </ListBoxItem>
-        </ListBox>
-    </DrawerPage.Drawer>
-
-    <ContentPage Name="ContentPage">
+    <ContentPage Name="ContentPage" Grid.Row="1" AutomaticallyApplySafeAreaPadding="False">
         <ContentPage.DataTemplates>
             <DataTemplate x:DataType="vm:RecentViewModel">
                 <ContentPage Header="Πρόσφατα">
@@ -630,6 +674,8 @@
                         </Border>
                         <TextBlock Text="{Binding Copyright}" HorizontalAlignment="Center" FontSize="12" Margin="0,12,0,0"
                                    Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="Vibe-coded with ❤️ by K0D1M" HorizontalAlignment="Center" FontSize="11"
+                                   Foreground="{DynamicResource BrandSupportBrush}" />
                     </StackPanel>
                     </ScrollViewer>
                 </ContentPage>
@@ -690,6 +736,18 @@
                                        Foreground="{DynamicResource BrandSupportBrush}" />
                         </StackPanel>
 
+                        <!-- Σχετικά is a sub-page of Ρυθμίσεις (Up arrow / Android back return here). -->
+                        <Button Click="OnOpenAbout" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                Background="{DynamicResource TintBrush}" CornerRadius="12" Padding="14,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <PathIcon Data="{StaticResource InfoIcon}" Width="20" Height="20"
+                                          Foreground="{DynamicResource HeadingBrush}" />
+                                <TextBlock Grid.Column="1" Text="Σχετικά" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="18" Height="18"
+                                          Foreground="{DynamicResource MutedTextBrush}" />
+                            </Grid>
+                        </Button>
+
                         <Button Classes="dark" Content="Αποσύνδεση" Command="{Binding LogoutCommand}"
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center"
@@ -699,4 +757,79 @@
             </DataTemplate>
         </ContentPage.DataTemplates>
     </ContentPage>
-</DrawerPage>
+
+    <!-- Bottom bar: the five sections, in NotificationNavigation's section order. -->
+    <Border x:Name="BottomBar" Grid.Row="2" Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+        <ListBox Name="TabBar"
+                 ItemContainerTheme="{StaticResource TabItemTheme}"
+                 SelectionMode="AlwaysSelected"
+                 SelectionChanged="TabBar_SelectionChanged"
+                 Tapped="TabBar_Tapped">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" Columns="5" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBoxItem>
+                <StackPanel>
+                    <Border Classes="pill">
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes="outline" Data="{StaticResource TabRecentOutline}" />
+                            <PathIcon Classes="filled" Data="{StaticResource TabRecentFilled}" />
+                        </Panel>
+                    </Border>
+                    <TextBlock Text="Πρόσφατα" />
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel>
+                    <Border Classes="pill">
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes="outline" Data="{StaticResource TabAthletesOutline}" />
+                            <PathIcon Classes="filled" Data="{StaticResource TabAthletesFilled}" />
+                        </Panel>
+                    </Border>
+                    <TextBlock Text="Αθλητές" />
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel>
+                    <Border Classes="pill">
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- No outline dumbbell in MDI: the same shape, stroked instead of filled. -->
+                            <Path Classes="outline" Data="{StaticResource DumbbellIcon}" Stretch="Uniform"
+                                  Stroke="{Binding $parent[ListBoxItem].Foreground}" StrokeThickness="1.5"
+                                  StrokeJoin="Round" Margin="1" />
+                            <PathIcon Classes="filled" Data="{StaticResource DumbbellIcon}" />
+                        </Panel>
+                    </Border>
+                    <TextBlock Text="Προπονήσεις" />
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel>
+                    <Border Classes="pill">
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes="outline" Data="{StaticResource TabCalendarOutline}" />
+                            <PathIcon Classes="filled" Data="{StaticResource TabCalendarFilled}" />
+                        </Panel>
+                    </Border>
+                    <TextBlock Text="Ημερολόγιο" />
+                </StackPanel>
+            </ListBoxItem>
+            <ListBoxItem>
+                <StackPanel>
+                    <Border Classes="pill">
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <PathIcon Classes="outline" Data="{StaticResource TabSettingsOutline}" />
+                            <PathIcon Classes="filled" Data="{StaticResource TabSettingsFilled}" />
+                        </Panel>
+                    </Border>
+                    <TextBlock Text="Ρυθμίσεις" />
+                </StackPanel>
+            </ListBoxItem>
+        </ListBox>
+    </Border>
+    </Grid>
+</ContentPage>

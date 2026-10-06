@@ -132,6 +132,21 @@ Animations are subtle (about 200 ms), because the web build has one UI thread an
 - The login form focuses Email when it opens. At start-up it waits until `LoginViewModel.IsReady`, after the silent sign-in attempt, so a signed-in user never sees the keyboard flash.
 - `Views/KeyboardInset.cs` reports how much of a view the phone keyboard covers, because the app's view isn't resized for it. The login screen and the workout editor use it to keep their content above the keyboard.
 
+## Shell and back navigation
+`Views/MainView` is a `ContentPage` hosted by `PageNavigationHost` (`App.CreateMainShell`). It has three rows: a top bar (Up arrow, title, own photo), the current page, and a bottom bar.
+- **Bottom bar:** `ListBox TabBar` with five items in `NotificationNavigation`'s section order (`WorkoutsSection = 2`).
+  - The items use their own `ItemContainerTheme` (`TabItemTheme`), not based on Fluent's, so Fluent's selection block doesn't show.
+  - Each item holds an `.outline` and a `.filled` icon (`Tab*Outline` / `Tab*Filled` in `Styles/Icons.axaml`). Styles show the filled one on `:selected`. The dumbbell has no MDI outline, so its outline state is the same geometry drawn as a stroked `Path`.
+  - Σχετικά is a sub-page of Ρυθμίσεις.
+- **Safe area:** `AutomaticallyApplySafeAreaPadding` is off. `PageNavigationHost` already keeps the page clear of the Android status and navigation bars, and padding on `MainView` as well doubled both gaps.
+- **Back:** `Show(page, title, back)` stores where back goes from the page shown. It's null on a section's root.
+  - The profile goes back to the page that opened it (Αθλητές or Ημερολόγιο).
+  - Editors go back to the profile without calling Cancel, so a workout draft stays saved.
+  - The Up arrow and Android's back button and gesture (`TopLevel.BackRequested`, which Avalonia raises from the activity's `OnBackPressedDispatcher`) both use it.
+  - The page on screen is asked first through `Views/IHandlesBack` (the profile closes its **+** menu).
+  - Then the sub-page goes back. On a non-home tab, back selects Πρόσφατα. On Πρόσφατα the event is left unhandled, so Android moves the app to the background.
+  - The manifest sets `enableOnBackInvokedCallback="true"` (predictive back).
+
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 

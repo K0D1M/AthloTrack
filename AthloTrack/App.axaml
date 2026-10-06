@@ -139,18 +139,5 @@
             <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         </Style>
 
-        <!-- Top bar of the shell: gradient with white title and menu icon -->
-        <Style Selector="DrawerPage /template/ ContentPresenter#PART_TitlePresenter">
-            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-        <Style Selector="DrawerPage /template/ ToggleButton#PART_PaneButton">
-            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
-        </Style>
-        <Style Selector="DrawerPage /template/ ToggleButton#PART_PaneButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#26FFFFFF" />
-            <Setter Property="Foreground" Value="{StaticResource BrandSecondaryBrush}" />
-        </Style>
-
     </Application.Styles>
 </Application>

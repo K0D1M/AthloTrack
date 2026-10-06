@@ -8,8 +8,16 @@ using Avalonia.Interactivity;
 
 namespace AthloTrack.Views;
 
-public partial class AthleteProfileView : UserControl
+public partial class AthleteProfileView : UserControl, IHandlesBack
 {
+    /// <summary>Back with the "+" menu open closes the menu, like a native menu.</summary>
+    public bool TryHandleBack()
+    {
+        if (!AddMenu.IsVisible) return false;
+        ShowAddMenu(false);
+        return true;
+    }
+
     public AthleteProfileView()
     {
         InitializeComponent();
