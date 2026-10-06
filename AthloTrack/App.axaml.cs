@@ -134,6 +134,11 @@ public partial class App : Application
         services.AddSingleton<CurrentUserViewModel>();
         services.AddTransient<SetPasswordViewModel>();
         services.AddTransient<PushPromptViewModel>();
+        services.AddTransient<AdminOverviewViewModel>();
+        services.AddTransient<AdminAuditViewModel>();
+        services.AddTransient<AdminCoachesViewModel>();
+        services.AddTransient<AdminAthletesViewModel>();
+        services.AddTransient<AdminPushViewModel>();
 
         Services = services.BuildServiceProvider();
     }

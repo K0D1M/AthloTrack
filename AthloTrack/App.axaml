@@ -21,6 +21,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AthloTrack/Styles/Motion.axaml" />
+        <StyleInclude Source="avares://AthloTrack/Styles/Admin.axaml" />
 
         <!-- Page background from the theme (Fluent's dark pages are pure black) -->
         <Style Selector="ContentPage">

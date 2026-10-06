@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.AdminCoachesView"
+             x:DataType="vm:AdminCoachesViewModel">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16,20" Spacing="12" MaxWidth="720">
+
+                <!-- Search -->
+                <TextBox Text="{Binding Search}" Watermark="Αναζήτηση με όνομα ή email">
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Data="{StaticResource SearchIcon}" Width="18" Height="18" Margin="10,0,0,0"
+                                  Foreground="{DynamicResource MutedTextBrush}" />
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                <!-- A new temporary password, shown once -->
+                <StackPanel Spacing="6" IsVisible="{Binding HasIssuedPassword}">
+                    <views:IssuedPasswordCard DataContext="{Binding Issued}" />
+                    <Button Classes="act" Content="Το κράτησα" HorizontalAlignment="Right" Command="{Binding DismissIssuedCommand}" />
+                </StackPanel>
+
+                <!-- New coach -->
+                <Border Classes="admincard" IsVisible="{Binding IsCreating}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Νέος προπονητής" Classes="admin-section" Margin="0" />
+                        <TextBox Text="{Binding NewName}" Watermark="Ονοματεπώνυμο" />
+                        <TextBox Text="{Binding NewEmail}" Watermark="Email" />
+                        <TextBlock Classes="admin-hint"
+                                   Text="Δημιουργείται λογαριασμός με προσωρινό κωδικό, που θα εμφανιστεί εδώ μία φορά. Στην πρώτη σύνδεση ο προπονητής ορίζει δικό του κωδικό." />
+                        <TextBlock Text="{Binding FormError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                   IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                            <Button Classes="admin-dialog" Content="Άκυρο" Command="{Binding CancelCreateCommand}" />
+                            <Button Classes="admin-dialog primary" Command="{Binding CreateCommand}" IsEnabled="{Binding !IsWorking}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <controls:Spinner Width="16" Height="16" IsVisible="{Binding IsWorking}" />
+                                    <TextBlock Text="Δημιουργία" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Δεν βρέθηκαν προπονητές." IsVisible="{Binding IsEmpty}"
+                           Foreground="{DynamicResource BrandSupportBrush}" />
+
+                <!-- First load -->
+                <StackPanel Spacing="10" IsVisible="{Binding ShowSkeleton}">
+                    <Border Classes="skeleton" Height="96" CornerRadius="14" />
+                    <Border Classes="skeleton" Height="96" CornerRadius="14" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding Coaches}" Classes="fadeitems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AdminCoachItem">
+                            <Border Classes="admincard" Margin="0,0,0,10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <controls:Avatar Width="44" Height="44" Initial="{Binding Initial}" VerticalAlignment="Top" />
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Email}" FontSize="13" Foreground="{DynamicResource BrandSupportBrush}" />
+                                            <TextBlock Text="{Binding Summary}" Classes="admin-hint" />
+                                            <WrapPanel Margin="0,2,0,0">
+                                                <Border Classes="badge warn" Margin="0,0,6,4" IsVisible="{Binding PendingPassword}">
+                                                    <TextBlock Text="Εκκρεμεί δικός του κωδικός" />
+                                                </Border>
+                                                <Border Classes="badge" Margin="0,0,6,4" IsVisible="{Binding HasApp}">
+                                                    <TextBlock Text="Έχει την εφαρμογή" />
+                                                </Border>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    <WrapPanel IsVisible="{Binding HasLogin}">
+                                        <Button Classes="act" Content="Νέος προσωρινός κωδικός" Margin="0,0,8,6"
+                                                Command="{Binding $parent[UserControl].((vm:AdminCoachesViewModel)DataContext).ResetPasswordCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Classes="act" Content="Επιβολή αλλαγής κωδικού" Margin="0,0,8,6"
+                                                IsVisible="{Binding !PendingPassword}"
+                                                Command="{Binding $parent[UserControl].((vm:AdminCoachesViewModel)DataContext).ForcePasswordChangeCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Classes="act danger" Content="Διαγραφή" Margin="0,0,8,6"
+                                                Command="{Binding $parent[UserControl].((vm:AdminCoachesViewModel)DataContext).DeleteCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Room above the "+" button -->
+                <Border Height="72" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Classes="fab" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20"
+                Command="{Binding StartCreateCommand}" IsVisible="{Binding !IsCreating}" ToolTip.Tip="Νέος προπονητής">
+            <PathIcon Data="{StaticResource PlusIcon}" />
+        </Button>
+
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>

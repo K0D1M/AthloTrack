@@ -37,6 +37,14 @@ The web app gets the same pushes through **Firebase web push**, using the same F
 4. **Function:** in Supabase, open **Edge Functions → Deploy a new function** and name it `push`, with the contents of `supabase/functions/push/index.ts`. Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` automatically.
 5. **Webhook:** in Supabase, open **Database → Webhooks → Create**. Use table `notifications`, event **Insert**, type **Supabase Edge Function**, and choose `push`.
 
+## Admin test pushes and announcements
+The admin dashboard («Ειδοποιήσεις») sends pushes through the `admin` Edge Function, which calls `push` with a **direct** payload: `{ "direct": { "auth_user_ids": [...], "title": "...", "body": "..." } }`.
+- `push` accepts a direct payload only with the service-role key as the bearer token, so only the `admin` function can send one.
+- It goes to every device of those logins, with type `admin`.
+- No `notifications` row is written, so it doesn't appear in Πρόσφατα.
+
+Re-deploy `push` from `supabase/functions/push/index.ts` after updating it. The `admin` function is deployed the same way (see [administration.md](administration.md#admin-dashboard)).
+
 ## Troubleshooting
 
 | Symptom | Check |

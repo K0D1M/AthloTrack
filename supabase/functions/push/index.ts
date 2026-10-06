@@ -2,6 +2,9 @@
 // Triggered by a Database Webhook on INSERT into public.notifications. Sends the notification
 // as an FCM push to every registered Android device of the recipient (athlete or coach).
 //
+// Also called by the "admin" function (test push, announcements) with a direct payload
+// { direct: { auth_user_ids, title, body } } and the service-role key as bearer token.
+//
 // Secrets (Edge Functions > Secrets):
 //   FIREBASE_SERVICE_ACCOUNT  the Firebase service-account JSON (Project settings > Service accounts)
 // Provided by Supabase automatically: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -82,64 +85,85 @@ async function recipientAuthUserId(n: NotificationRow): Promise<string | null> {
 }
 
 // ---- The FCM message for one device ----
-function messageFor(token: string, platform: string, n: NotificationRow) {
-  const data = { notificationId: n.id, type: n.type };
+type Push = { id: string; type: string; title: string; body: string };
+
+function messageFor(token: string, platform: string, p: Push) {
+  const data = { notificationId: p.id, type: p.type };
 
   // Android app 1.2+: data only. The app posts the notification itself, in its own group whose
   // summary opens Προπονήσεις (FCM-posted notifications get bundled by Android into a group whose
   // tap only opens the app).
   if (platform === "android-data") {
-    return { token, data: { ...data, title: "AthloTrack", body: n.message }, android: { priority: "high" } };
+    return { token, data: { ...data, title: p.title, body: p.body }, android: { priority: "high" } };
   }
 
   // Older Android app ("android"), and web tokens (browser, iPhone Home Screen app).
   return {
     token,
-    notification: { title: "AthloTrack", body: n.message },
+    notification: { title: p.title, body: p.body },
     data,
     android: { priority: "high", notification: { channel_id: "athlotrack" } },
     webpush: {
       notification: { icon: `${APP_URL}/icon-192.png` },
-      fcm_options: { link: `${APP_URL}/?type=${encodeURIComponent(n.type)}&notification=${n.id}` },
+      fcm_options: { link: `${APP_URL}/?type=${encodeURIComponent(p.type)}&notification=${p.id}` },
     },
   };
+}
+
+// ---- Send to every device of the given logins ----
+async function sendToUsers(userIds: string[], p: Push): Promise<number> {
+  if (!userIds.length) return 0;
+  const { data: tokens } = await supabase
+    .from("device_tokens").select("token, platform").in("auth_user_id", userIds);
+  if (!tokens?.length) return 0;
+
+  const access = await googleAccessToken();
+  const url = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
+  let sent = 0;
+
+  for (const { token, platform } of tokens) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${access}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: messageFor(token, platform, p) }),
+    });
+    if (res.ok) {
+      sent++;
+    } else {
+      const err = await res.text();
+      // App uninstalled or token rotated: forget it.
+      if (res.status === 404 || err.includes("UNREGISTERED") || err.includes("INVALID_ARGUMENT")) {
+        await supabase.from("device_tokens").delete().eq("token", token);
+      }
+      console.error("FCM error", res.status, err);
+    }
+  }
+  return sent;
 }
 
 Deno.serve(async (req) => {
   try {
     const payload = await req.json();
+
+    // From the "admin" function only: it authenticates with the service-role key.
+    if (payload.direct) {
+      const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+      if (bearer !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return new Response("forbidden", { status: 403 });
+      const d = payload.direct as { auth_user_ids: string[]; title?: string; body: string };
+      const sent = await sendToUsers(d.auth_user_ids ?? [], {
+        id: crypto.randomUUID(), type: "admin", title: d.title || "AthloTrack", body: d.body,
+      });
+      return Response.json({ sent });
+    }
+
     const n = payload.record as NotificationRow | undefined;
     if (!n?.id) return new Response("no record", { status: 400 });
 
     const userId = await recipientAuthUserId(n);
     if (!userId) return Response.json({ sent: 0, reason: "recipient has no login" });
 
-    const { data: tokens } = await supabase
-      .from("device_tokens").select("token, platform").eq("auth_user_id", userId);
-    if (!tokens?.length) return Response.json({ sent: 0, reason: "no devices" });
-
-    const access = await googleAccessToken();
-    const url = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
-    let sent = 0;
-
-    for (const { token, platform } of tokens) {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${access}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageFor(token, platform, n) }),
-      });
-      if (res.ok) {
-        sent++;
-      } else {
-        const err = await res.text();
-        // App uninstalled or token rotated: forget it.
-        if (res.status === 404 || err.includes("UNREGISTERED") || err.includes("INVALID_ARGUMENT")) {
-          await supabase.from("device_tokens").delete().eq("token", token);
-        }
-        console.error("FCM error", res.status, err);
-      }
-    }
-    return Response.json({ sent });
+    const sent = await sendToUsers([userId], { id: n.id, type: n.type, title: "AthloTrack", body: n.message });
+    return Response.json(sent ? { sent } : { sent: 0, reason: "no devices" });
   } catch (e) {
     console.error(e);
     return new Response(String(e), { status: 500 });

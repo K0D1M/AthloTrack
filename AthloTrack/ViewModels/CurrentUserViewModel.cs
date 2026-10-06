@@ -41,6 +41,9 @@ public sealed partial class CurrentUserViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsUploading { get; set; }
 
+    /// <summary>Coaches and athletes have a photo; admins don't (no storage folder of their own).</summary>
+    public bool CanChangePhoto => !_session.IsAdmin;
+
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
@@ -48,7 +51,8 @@ public sealed partial class CurrentUserViewModel : ObservableObject
     public async Task LoadAsync()
     {
         DisplayName = _session.DisplayName ?? string.Empty;
-        RoleText = _session.IsCoach ? "Προπονητής" : "Αθλητής";
+        RoleText = _session.IsAdmin ? "Διαχειριστής" : _session.IsCoach ? "Προπονητής" : "Αθλητής";
+        OnPropertyChanged(nameof(CanChangePhoto));
         Photo = await _avatars.GetAsync(_session.ProfileImagePath);
     }
 

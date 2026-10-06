@@ -1,0 +1,93 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The admin dashboard («Διαχείριση»): cards, row actions, badges, dialog buttons. -->
+
+    <Style Selector="Border.admincard">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="14" />
+    </Style>
+
+    <Style Selector="TextBlock.admin-section">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+        <Setter Property="Margin" Value="0,8,0,0" />
+    </Style>
+    <Style Selector="TextBlock.admin-hint">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Small tinted buttons under a row (Νέος κωδικός, Μεταφορά, Διαγραφή, …) -->
+    <Style Selector="Button.act">
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="CornerRadius" Value="17" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    </Style>
+    <Style Selector="Button.act:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    </Style>
+    <Style Selector="Button.act.danger">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Button.act.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+
+    <Style Selector="Button.admin-dialog">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="18,0" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.admin-dialog.danger">
+        <Setter Property="Background" Value="#C62828" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.admin-dialog.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#B71C1C" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Status chips: «Με λογαριασμό», «Εκκρεμεί κωδικός», «Εφαρμογή» -->
+    <Style Selector="Border.badge">
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Padding" Value="8,2" />
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge > TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    </Style>
+    <Style Selector="Border.badge.warn">
+        <Setter Property="Background" Value="{DynamicResource NoticeBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource NoticeBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Border.badge.warn > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+    </Style>
+
+    <!-- KPI tile -->
+    <Style Selector="Border.kpi">
+        <Setter Property="Background" Value="{DynamicResource CardTintGradient}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Margin" Value="4" />
+    </Style>
+</Styles>

@@ -22,6 +22,8 @@ public sealed class SessionState
 
     public bool IsCoach => Role == UserRole.Coach;
 
+    public bool IsAdmin => Role == UserRole.Admin;
+
     public void Clear()
     {
         AuthUserId = null;

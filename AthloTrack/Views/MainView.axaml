@@ -691,7 +691,7 @@
                             <Panel Grid.Column="0" Width="68" Height="68">
                                 <controls:Avatar Width="64" Height="64" HorizontalAlignment="Left" VerticalAlignment="Top"
                                                  Photo="{Binding User.Photo}" Initial="{Binding User.Initial}" />
-                                <Button Classes="photobadge" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                <Button Classes="photobadge" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding User.CanChangePhoto}"
                                         Click="OnChangeOwnPhoto" ToolTip.Tip="Αλλαγή φωτογραφίας">
                                     <PathIcon Data="{StaticResource CameraIcon}" Foreground="{StaticResource BrandPrimaryDarkBrush}" />
                                 </Button>
@@ -758,7 +758,7 @@
         </ContentPage.DataTemplates>
     </ContentPage>
 
-    <!-- Bottom bar: the five sections, in NotificationNavigation's section order. -->
+    <!-- Bottom bar: the role's five sections (see MainView.axaml.cs). -->
     <Border x:Name="BottomBar" Grid.Row="2" Background="{DynamicResource CardBrush}"
             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
         <ListBox Name="TabBar"
@@ -771,64 +771,7 @@
                     <UniformGrid Rows="1" Columns="5" />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
-            <ListBoxItem>
-                <StackPanel>
-                    <Border Classes="pill">
-                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <PathIcon Classes="outline" Data="{StaticResource TabRecentOutline}" />
-                            <PathIcon Classes="filled" Data="{StaticResource TabRecentFilled}" />
-                        </Panel>
-                    </Border>
-                    <TextBlock Text="Πρόσφατα" />
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel>
-                    <Border Classes="pill">
-                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <PathIcon Classes="outline" Data="{StaticResource TabAthletesOutline}" />
-                            <PathIcon Classes="filled" Data="{StaticResource TabAthletesFilled}" />
-                        </Panel>
-                    </Border>
-                    <TextBlock Text="Αθλητές" />
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel>
-                    <Border Classes="pill">
-                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <!-- No outline dumbbell in MDI: the same shape, stroked instead of filled. -->
-                            <Path Classes="outline" Data="{StaticResource DumbbellIcon}" Stretch="Uniform"
-                                  Stroke="{Binding $parent[ListBoxItem].Foreground}" StrokeThickness="1.5"
-                                  StrokeJoin="Round" Margin="1" />
-                            <PathIcon Classes="filled" Data="{StaticResource DumbbellIcon}" />
-                        </Panel>
-                    </Border>
-                    <TextBlock Text="Προπονήσεις" />
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel>
-                    <Border Classes="pill">
-                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <PathIcon Classes="outline" Data="{StaticResource TabCalendarOutline}" />
-                            <PathIcon Classes="filled" Data="{StaticResource TabCalendarFilled}" />
-                        </Panel>
-                    </Border>
-                    <TextBlock Text="Ημερολόγιο" />
-                </StackPanel>
-            </ListBoxItem>
-            <ListBoxItem>
-                <StackPanel>
-                    <Border Classes="pill">
-                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <PathIcon Classes="outline" Data="{StaticResource TabSettingsOutline}" />
-                            <PathIcon Classes="filled" Data="{StaticResource TabSettingsFilled}" />
-                        </Panel>
-                    </Border>
-                    <TextBlock Text="Ρυθμίσεις" />
-                </StackPanel>
-            </ListBoxItem>
+            <!-- Items: built in MainView.axaml.cs from the role's tabs (coach/athlete or admin). -->
         </ListBox>
     </Border>
     </Grid>

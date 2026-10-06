@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.AdminPushView"
+             x:DataType="vm:AdminPushViewModel">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16,20" Spacing="12" MaxWidth="720">
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                <!-- Announcement -->
+                <Border Classes="admincard">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Ανακοίνωση" Classes="admin-section" Margin="0" />
+                        <TextBlock Classes="admin-hint"
+                                   Text="Ειδοποίηση στο κινητό (και στον browser όπου επιτράπηκε) όσων έχουν την εφαρμογή. Δεν εμφανίζεται στα Πρόσφατα." />
+                        <WrapPanel>
+                            <RadioButton GroupName="aud" Content="Όλοι" IsChecked="{Binding ToAll}" Margin="0,0,14,0" />
+                            <RadioButton GroupName="aud" Content="Προπονητές" IsChecked="{Binding ToCoaches}" Margin="0,0,14,0" />
+                            <RadioButton GroupName="aud" Content="Αθλητές" IsChecked="{Binding ToAthletes}" />
+                        </WrapPanel>
+                        <TextBox Text="{Binding Title}" Watermark="Τίτλος (προαιρετικό, αλλιώς AthloTrack)" />
+                        <TextBox Text="{Binding Body}" Watermark="Κείμενο" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" />
+                        <TextBlock Text="{Binding FormError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                   IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <Button Classes="admin-dialog primary" HorizontalAlignment="Right" Command="{Binding SendCommand}"
+                                IsEnabled="{Binding !IsWorking}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <controls:Spinner Width="16" Height="16" IsVisible="{Binding IsWorking}" />
+                                <TextBlock Text="Αποστολή" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Devices -->
+                <TextBlock Text="Συσκευές με την εφαρμογή" Classes="admin-section" />
+                <TextBlock Text="Καμία συσκευή δεν έχει ενεργοποιήσει ειδοποιήσεις." IsVisible="{Binding IsEmpty}"
+                           Foreground="{DynamicResource BrandSupportBrush}" />
+                <StackPanel Spacing="10" IsVisible="{Binding ShowSkeleton}">
+                    <Border Classes="skeleton" Height="64" CornerRadius="14" />
+                    <Border Classes="skeleton" Height="64" CornerRadius="14" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Devices}" Classes="fadeitems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AdminDeviceItem">
+                            <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="2,10">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <controls:Avatar Width="38" Height="38" Initial="{Binding Initial}" />
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Summary}" Classes="admin-hint" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Classes="act" Content="Δοκιμή" VerticalAlignment="Center"
+                                            ToolTip.Tip="Δοκιμαστική ειδοποίηση"
+                                            IsEnabled="{Binding !$parent[UserControl].((vm:AdminPushViewModel)DataContext).IsWorking}"
+                                            Command="{Binding $parent[UserControl].((vm:AdminPushViewModel)DataContext).TestPushCommand}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>

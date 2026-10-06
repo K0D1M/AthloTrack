@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:admin="using:AthloTrack.Core.Models.Admin"
+             x:Class="AthloTrack.Views.AdminHealthListView"
+             x:DataType="vm:AdminHealthListViewModel">
+    <ScrollViewer>
+        <StackPanel Margin="16,20" Spacing="12" MaxWidth="720">
+            <TextBlock Text="{Binding Description}" Classes="admin-hint" FontSize="13" />
+            <ItemsControl ItemsSource="{Binding Items}" Classes="fadeitems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="admin:HealthItem">
+                        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="2,10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding Detail}" Classes="admin-hint" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

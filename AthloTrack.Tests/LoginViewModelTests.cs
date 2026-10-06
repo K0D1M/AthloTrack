@@ -133,4 +133,38 @@ public class LoginViewModelTests
         Assert.NotNull(vm.InfoMessage);
         Assert.Equal("Athlete", prefs.Get(LoginViewModel.LastRoleKey));
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task An_admin_signs_in_with_either_form_and_is_remembered(bool coachForm)
+    {
+        var prefs = new InMemoryAppPreferences();
+        var auth = new FakeAuth();
+        var vm = Create(prefs, UserRole.Admin, auth);
+        UserRole? loggedIn = null;
+        vm.LoginSucceeded += r => loggedIn = r;
+
+        if (coachForm) vm.ChooseCoachCommand.Execute(null);
+        else vm.ChooseAthleteCommand.Execute(null);
+        vm.Email = "admin@example.com";
+        vm.Password = "secret1";
+        await vm.SubmitCommand.ExecuteAsync(null);
+
+        Assert.Equal(UserRole.Admin, loggedIn);
+        Assert.False(auth.SignedOut);
+        Assert.Null(vm.ErrorMessage);
+        Assert.Equal("Admin", prefs.Get(LoginViewModel.LastRoleKey));
+    }
+
+    [Fact]
+    public void A_remembered_admin_opens_the_coach_form()
+    {
+        var prefs = new InMemoryAppPreferences();
+        prefs.Set(LoginViewModel.LastRoleKey, "Admin");
+
+        var vm = Create(prefs, UserRole.Admin);
+
+        Assert.Equal(LoginStep.Coach, vm.Step);
+    }
 }

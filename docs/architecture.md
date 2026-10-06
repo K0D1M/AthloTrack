@@ -150,7 +150,13 @@ Animations are subtle (about 200 ms), because the web build has one UI thread an
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 
-`SessionState.Role` is `Coach` or `Athlete`, and the shared screens adapt to it:
+**Administrators** (`UserRole.Admin`, a row in `admins`) have no card on the login screen:
+- If a login has no profile for the chosen role, `LoginViewModel` tries `Admin` before showing «Δεν βρέθηκε προφίλ…», so an admin uses either form.
+- Session restore tries `Admin` first, then `Coach`, then `Athlete`.
+- A failing admin lookup (e.g. before `011_admin.sql` exists) is treated as "not an admin" and never blocks the others.
+- `MainView` builds the bottom bar per role: admins get Επισκόπηση, Προπονητές, Αθλητές, Ειδοποιήσεις and Ρυθμίσεις (`ViewModels/Admin/*`, `Views/Admin/*`, data through `IAdminRepository`). Coaches and athletes keep their tabs and order (`NotificationNavigation.WorkoutsSection = 2`).
+
+`SessionState.Role` is `Coach` or `Athlete` for everyone else, and the shared screens adapt to it:
 - A coach sees all of their athletes, the **+** menus (new athlete, measurement, workout) and the completion notifications.
 - An athlete sees only their own profile. `IsOwnProfile` shows the **Ολοκληρώθηκε** button and the photo editing. They also see their coach and their new-workout notifications.
 

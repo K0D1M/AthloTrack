@@ -39,6 +39,7 @@ public partial class LoginViewModel : ObservableValidator
         {
             nameof(UserRole.Coach) => LoginStep.Coach,
             nameof(UserRole.Athlete) => LoginStep.Athlete,
+            nameof(UserRole.Admin) => LoginStep.Coach, // admins have no card of their own (see LoginAsync)
             _ => LoginStep.ChooseRole,
         };
 
@@ -71,8 +72,8 @@ public partial class LoginViewModel : ObservableValidator
 
     /// <summary>
     /// Signs back in from the stored session (the app remembers the login until the user logs
-    /// out). The role isn't stored: RLS only lets a user's token see their own coaches/athletes
-    /// row, so whichever profile lookup succeeds decides it. Silent on failure.
+    /// out). The role isn't stored: RLS only lets a user's token see their own admins/coaches/
+    /// athletes row, so whichever profile lookup succeeds decides it. Silent on failure.
     /// </summary>
     public async Task TryRestoreSessionAsync()
     {
@@ -85,9 +86,19 @@ public partial class LoginViewModel : ObservableValidator
                 return;
             }
 
-            foreach (var role in new[] { UserRole.Coach, UserRole.Athlete })
+            foreach (var role in new[] { UserRole.Admin, UserRole.Coach, UserRole.Athlete })
             {
-                if (await _sessionInitializer.InitializeAsync(role, result.UserId.Value))
+                bool found;
+                try
+                {
+                    found = await _sessionInitializer.InitializeAsync(role, result.UserId.Value);
+                }
+                catch when (role == UserRole.Admin)
+                {
+                    found = false; // the admin lookup failing must not stop coaches and athletes
+                }
+
+                if (found)
                 {
                     LoginSucceeded?.Invoke(role);
                     return;
@@ -175,6 +186,18 @@ public partial class LoginViewModel : ObservableValidator
 
     private void RememberRole(UserRole role) => _preferences.Set(LastRoleKey, role.ToString());
 
+    private async Task<bool> TryAdminAsync(Guid userId)
+    {
+        try
+        {
+            return await _sessionInitializer.InitializeAsync(UserRole.Admin, userId);
+        }
+        catch
+        {
+            return false; // then the usual "no profile" message
+        }
+    }
+
     /// <summary>
     /// Athlete creates their own login. The database links it to the athlete whose email the
     /// coach entered, and so to that coach.
@@ -251,6 +274,14 @@ public partial class LoginViewModel : ObservableValidator
             }
 
             var initialized = await _sessionInitializer.InitializeAsync(role, result.UserId.Value);
+
+            // Administrators have no card of their own: they sign in with either form.
+            if (!initialized && await TryAdminAsync(result.UserId.Value))
+            {
+                role = UserRole.Admin;
+                initialized = true;
+            }
+
             if (!initialized)
             {
                 await _authService.SignOutAsync();

@@ -1,6 +1,6 @@
 # Database (Supabase)
 
-The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–010) are safe to run again.
+The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–011) are safe to run again.
 
 | File | Adds |
 |---|---|
@@ -14,6 +14,7 @@ The schema lives in `supabase/`. On a fresh project, run the files **in order** 
 | `008_workout_coach_presence.sql` | `workout_programs.coach_present` (the coach will be there: true Παρών, false Απών, null not stated); changing it counts as an edit (receipt cleared, athlete notified) |
 | `009_workout_templates.sql` | Table `workout_templates`: the coach's saved workout texts («Πρότυπα» in the editor) |
 | `010_fix_created_at.sql` | Data repair: before 1.6 the app stored `created_at` (and a new athlete's `updated_at`) as 0001-01-01; this sets real values. The row models now leave `created_at` to the database (`ignoreOnInsert`) |
+| `011_admin.sql` | Administrators: tables `admins` and `admin_audit`, `is_admin()`, and the admin dashboard's functions (`admin_overview`, `admin_activity`, `admin_health`, `admin_coaches`, `admin_athletes`, `admin_devices`, `admin_audit_log`, `admin_force_password_change`, `admin_move_athlete`, `admin_delete_athlete`) |
 
 ## Tables
 
@@ -26,6 +27,8 @@ The schema lives in `supabase/`. On a fresh project, run the files **in order** 
 | `workout_templates` | `coach_id`, `name`, `content`, `created_at` | `coach_id` defaults to `auth_coach_id()` |
 | `notifications` | `athlete_id`, `recipient` (`athlete` / `coach`), `type`, `message`, `related_workout_id`, `is_read` | Every insert triggers a phone push, see [push-notifications.md](push-notifications.md) |
 | `device_tokens` | `token` (PK), `auth_user_id`, `platform` | The Firebase token of each installed Android app |
+| `admins` | `auth_user_id`, `full_name`, `email` | One row per administrator login. Inserted by SQL ([administration.md](administration.md#admin-dashboard)) |
+| `admin_audit` | `admin_auth_id`, `action`, `target`, `details`, `created_at` | What admins did. Written by the admin functions and the `admin` Edge Function only |
 
 Deleting an athlete also deletes their measurements, workouts and notifications (cascade).
 
@@ -41,6 +44,8 @@ RLS is enabled on every table, so what each user can read or change is enforced 
 |---|---|
 | Coach | Read and write their own `coaches` row, their own athletes, those athletes' measurements, workouts and notifications, and their own `workout_templates` |
 | Athlete | Read their own athlete row, measurements and workouts, their coach's row, and notifications addressed to them (`recipient = 'athlete'`). Update their own profile and mark their workouts as done |
+
+Admins get no table policies beyond reading their own `admins` row and `admin_audit`. They see and change everything else only through the `admin_*` functions, which are `security definer` and start with `admin_guard()`: anyone who isn't in `admins` gets the error `not admin`. `admin_log` (writes `admin_audit`) can't be called from the app.
 
 Two triggers stop athletes from editing more than they should:
 - `guard_athlete_self_edit`: when an athlete updates their own row, `coach_id`, `auth_user_id`, `email`, `notes` and `created_at` keep their old values. They can change only their name, date of birth, height and photo.

@@ -13,24 +13,23 @@ namespace AthloTrack.Views;
 
 /// <summary>
 /// The signed-in shell: top bar (Up arrow, title, own photo), the current page, and the bottom bar
-/// with the five sections. Sub-pages remember how to go back; the Up arrow and Android's back
+/// with the sections of the user's role (coaches and athletes: Πρόσφατα … Ρυθμίσεις; admins: the
+/// «Διαχείριση» dashboard). Sub-pages remember how to go back; the Up arrow and Android's back
 /// button/gesture use that.
 /// </summary>
 public partial class MainView : ContentPage
 {
-    // Bottom bar order; NotificationNavigation.WorkoutsSection relies on Προπονήσεις being 2.
-    private const int RecentTab = 0, AthletesTab = 1, WorkoutsTab = 2, CalendarTab = 3, SettingsTab = 4;
+    // Back from another tab leads to the first one; Ρυθμίσεις is the last.
+    private const int HomeTab = 0;
 
-    private static readonly Type[] SectionRootTypes =
-    {
-        typeof(RecentViewModel), typeof(AthletesViewModel), typeof(WorkoutsViewModel),
-        typeof(CalendarViewModel), typeof(SettingsViewModel),
-    };
+    /// <summary>A bottom-bar section: label, icons (filled when selected), and its root page.</summary>
+    private sealed record Tab(string Title, string OutlineIcon, string FilledIcon, Type RootType,
+        Func<ViewModelBase> Create, bool StrokedOutline = false);
 
-    private static readonly string[] SectionTitles =
-    {
-        "Πρόσφατα", "Αθλητές", "Προπονήσεις", "Ημερολόγιο", "Ρυθμίσεις",
-    };
+    private readonly Tab[] _tabs;
+    private readonly bool _isAdmin;
+
+    private int SettingsTab => _tabs.Length - 1;
 
     /// <summary>Where back goes from the page shown now; null on a section's root page.</summary>
     private Action? _back;
@@ -41,10 +40,83 @@ public partial class MainView : ContentPage
     {
         InitializeComponent();
         TopAvatar.DataContext = Resolve<CurrentUserViewModel>();
+
+        _isAdmin = Resolve<AthloTrack.Core.Auth.SessionState>().IsAdmin;
+        _tabs = _isAdmin ? AdminTabs() : MemberTabs();
+        foreach (var tab in _tabs) TabBar.Items.Add(BuildTabItem(tab));
+        TabBar.SelectedIndex = HomeTab;
     }
 
-    /// <summary>Whether back stays inside the app (a sub-page, or a section other than Πρόσφατα).</summary>
-    public bool CanGoBack => _back is not null || TabBar.SelectedIndex != RecentTab;
+    // Coaches and athletes. NotificationNavigation.WorkoutsSection relies on Προπονήσεις being 2.
+    private Tab[] MemberTabs() =>
+    [
+        new("Πρόσφατα", "TabRecentOutline", "TabRecentFilled", typeof(RecentViewModel), Resolve<RecentViewModel>),
+        new("Αθλητές", "TabAthletesOutline", "TabAthletesFilled", typeof(AthletesViewModel), CreateAthletesPage),
+        // No outline dumbbell in MDI: the same shape, stroked instead of filled.
+        new("Προπονήσεις", "DumbbellIcon", "DumbbellIcon", typeof(WorkoutsViewModel), Resolve<WorkoutsViewModel>,
+            StrokedOutline: true),
+        new("Ημερολόγιο", "TabCalendarOutline", "TabCalendarFilled", typeof(CalendarViewModel), CreateCalendarPage),
+        new("Ρυθμίσεις", "TabSettingsOutline", "TabSettingsFilled", typeof(SettingsViewModel), CreateSettingsPage),
+    ];
+
+    // Administrators: the «Διαχείριση» dashboard.
+    private Tab[] AdminTabs() =>
+    [
+        new("Επισκόπηση", "TabOverviewOutline", "TabOverviewFilled", typeof(AdminOverviewViewModel), CreateAdminOverview),
+        new("Προπονητές", "TabCoachesOutline", "TabCoachesFilled", typeof(AdminCoachesViewModel), Resolve<AdminCoachesViewModel>),
+        new("Αθλητές", "TabPeopleOutline", "TabPeopleFilled", typeof(AdminAthletesViewModel), Resolve<AdminAthletesViewModel>),
+        new("Ειδοποιήσεις", "TabPushOutline", "TabPushFilled", typeof(AdminPushViewModel), Resolve<AdminPushViewModel>),
+        new("Ρυθμίσεις", "TabSettingsOutline", "TabSettingsFilled", typeof(SettingsViewModel), CreateSettingsPage),
+    ];
+
+    /// <summary>A bottom-bar button: the outline and filled icons (styles show one), and the label.</summary>
+    private static ListBoxItem BuildTabItem(Tab tab)
+    {
+        static Avalonia.Media.Geometry Icon(string key) =>
+            (Avalonia.Media.Geometry)Application.Current!.FindResource(key)!;
+
+        Control outline = tab.StrokedOutline
+            ? new Avalonia.Controls.Shapes.Path
+            {
+                Data = Icon(tab.OutlineIcon),
+                Stretch = Avalonia.Media.Stretch.Uniform,
+                StrokeThickness = 1.5,
+                StrokeJoin = Avalonia.Media.PenLineJoin.Round,
+                Margin = new Thickness(1),
+                [!Avalonia.Controls.Shapes.Shape.StrokeProperty] = new Avalonia.Data.Binding("Foreground")
+                {
+                    RelativeSource = new Avalonia.Data.RelativeSource(Avalonia.Data.RelativeSourceMode.FindAncestor)
+                    {
+                        AncestorType = typeof(ListBoxItem),
+                    },
+                },
+            }
+            : new PathIcon { Data = Icon(tab.OutlineIcon) };
+        outline.Classes.Add("outline");
+        var filled = new PathIcon { Data = Icon(tab.FilledIcon) };
+        filled.Classes.Add("filled");
+
+        var pill = new Border
+        {
+            Child = new Panel
+            {
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Children = { outline, filled },
+            },
+        };
+        pill.Classes.Add("pill");
+
+        return new ListBoxItem
+        {
+            Content = new StackPanel { Children = { pill, new TextBlock { Text = tab.Title } } },
+        };
+    }
+
+    private int TabOf<T>() => Array.FindIndex(_tabs, t => t.RootType == typeof(T));
+
+    /// <summary>Whether back stays inside the app (a sub-page, or a section other than the first).</summary>
+    public bool CanGoBack => _back is not null || TabBar.SelectedIndex != HomeTab;
 
     // Ρυθμίσεις: the signed-in user (coach or athlete) changes their own photo.
     private async void OnChangeOwnPhoto(object? sender, RoutedEventArgs e)
@@ -103,9 +175,9 @@ public partial class MainView : ContentPage
             GoBack();
             e.Handled = true;
         }
-        else if (TabBar.SelectedIndex != RecentTab)
+        else if (TabBar.SelectedIndex != HomeTab)
         {
-            TabBar.SelectedIndex = RecentTab; // like native apps with a bottom bar: back leads home first
+            TabBar.SelectedIndex = HomeTab; // like native apps with a bottom bar: back leads home first
             e.Handled = true;
         }
     }
@@ -134,6 +206,7 @@ public partial class MainView : ContentPage
     private void ApplyPendingSection()
     {
         if (AthloTrack.Services.NotificationNavigation.TakePending() is not { } request) return;
+        if (_isAdmin) return; // an admin's pushes (tests, announcements) have no section to open
         foreach (var notificationId in request.NotificationIds) _ = MarkNotificationReadAsync(notificationId);
 
         var index = request.Section;
@@ -160,8 +233,8 @@ public partial class MainView : ContentPage
     private void TabBar_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         var index = TabBar.SelectedIndex;
-        if (index >= 0 && index < SectionRootTypes.Length &&
-            (_back is not null || ContentPage.Content?.GetType() != SectionRootTypes[index]))
+        if (index >= 0 && index < _tabs.Length &&
+            (_back is not null || ContentPage.Content?.GetType() != _tabs[index].RootType))
         {
             UpdatePage(index);
         }
@@ -194,17 +267,18 @@ public partial class MainView : ContentPage
 
     private void UpdatePage(int index)
     {
-        ViewModelBase page = index switch
-        {
-            RecentTab => Resolve<RecentViewModel>(),
-            AthletesTab => CreateAthletesPage(),
-            WorkoutsTab => Resolve<WorkoutsViewModel>(),
-            CalendarTab => CreateCalendarPage(),
-            SettingsTab => CreateSettingsPage(),
-            _ => throw new NotImplementedException()
-        };
+        if (index < 0 || index >= _tabs.Length) return;
+        Show(_tabs[index].Create(), _tabs[index].Title);
+    }
 
-        Show(page, SectionTitles[index]);
+    private AdminOverviewViewModel CreateAdminOverview()
+    {
+        var vm = Resolve<AdminOverviewViewModel>();
+        vm.OpenCheckRequested += check =>
+            Show(new AdminHealthListViewModel(check), check.Title, back: () => UpdatePage(HomeTab));
+        vm.OpenAuditRequested += () =>
+            Show(Resolve<AdminAuditViewModel>(), "Ιστορικό ενεργειών", back: () => UpdatePage(HomeTab));
+        return vm;
     }
 
     private SettingsViewModel CreateSettingsPage()
@@ -217,7 +291,7 @@ public partial class MainView : ContentPage
     private CalendarViewModel CreateCalendarPage()
     {
         var vm = Resolve<CalendarViewModel>();
-        vm.OpenAthleteRequested += id => ShowAthleteProfile(id, back: () => UpdatePage(CalendarTab));
+        vm.OpenAthleteRequested += id => ShowAthleteProfile(id, back: () => UpdatePage(TabOf<CalendarViewModel>()));
         return vm;
     }
 
@@ -232,7 +306,7 @@ public partial class MainView : ContentPage
     private void ShowAthletesList()
     {
         // Re-create the athletes page so its list reloads after add/edit/delete.
-        Show(CreateAthletesPage(), SectionTitles[AthletesTab]);
+        Show(CreateAthletesPage(), "Αθλητές");
     }
 
     /// <param name="back">Back to the page the profile was opened from (Αθλητές or Ημερολόγιο).</param>

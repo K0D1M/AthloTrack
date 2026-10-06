@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             x:Class="AthloTrack.Views.ConfirmOverlay"
+             x:DataType="vm:ConfirmPrompt"
+             IsVisible="{Binding IsOpen}">
+    <!-- In-app "are you sure?" over the page (set DataContext to a ConfirmPrompt). -->
+    <Grid Background="#66000000">
+        <Border Background="{DynamicResource CardBrush}" CornerRadius="14" Padding="20" Margin="16"
+                MaxWidth="400" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            <StackPanel Spacing="14">
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="15" />
+                <StackPanel Spacing="6" IsVisible="{Binding NeedsText}">
+                    <TextBlock Text="{Binding TextHint}" Classes="admin-hint" />
+                    <TextBox Text="{Binding Input}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                    <Button Classes="admin-dialog" Content="Άκυρο" Command="{Binding CancelCommand}" />
+                    <Button Classes="admin-dialog" Classes.danger="{Binding IsDanger}"
+                            Classes.primary="{Binding !IsDanger}"
+                            Content="{Binding ButtonText}" Command="{Binding ConfirmCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

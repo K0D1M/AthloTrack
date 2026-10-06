@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.AdminAthletesView"
+             x:DataType="vm:AdminAthletesViewModel">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16,20" Spacing="12" MaxWidth="720">
+
+                <!-- Filters -->
+                <TextBox Text="{Binding Search}" Watermark="Αναζήτηση με όνομα ή email">
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Data="{StaticResource SearchIcon}" Width="18" Height="18" Margin="10,0,0,0"
+                                  Foreground="{DynamicResource MutedTextBrush}" />
+                    </TextBox.InnerLeftContent>
+                </TextBox>
+                <ComboBox ItemsSource="{Binding CoachFilterChoices}" SelectedItem="{Binding CoachFilter}"
+                          HorizontalAlignment="Stretch" />
+                <WrapPanel>
+                    <RadioButton GroupName="link" Content="Όλοι" IsChecked="{Binding ShowAll}" Margin="0,0,14,0" />
+                    <RadioButton GroupName="link" Content="Με λογαριασμό" IsChecked="{Binding ShowLinked}" Margin="0,0,14,0" />
+                    <RadioButton GroupName="link" Content="Χωρίς λογαριασμό" IsChecked="{Binding ShowUnlinked}" />
+                </WrapPanel>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                <StackPanel Spacing="6" IsVisible="{Binding HasIssuedPassword}">
+                    <views:IssuedPasswordCard DataContext="{Binding Issued}" />
+                    <Button Classes="act" Content="Το κράτησα" HorizontalAlignment="Right" Command="{Binding DismissIssuedCommand}" />
+                </StackPanel>
+
+                <TextBlock Text="Δεν βρέθηκαν αθλητές." IsVisible="{Binding IsEmpty}"
+                           Foreground="{DynamicResource BrandSupportBrush}" />
+
+                <StackPanel Spacing="10" IsVisible="{Binding ShowSkeleton}">
+                    <Border Classes="skeleton" Height="96" CornerRadius="14" />
+                    <Border Classes="skeleton" Height="96" CornerRadius="14" />
+                    <Border Classes="skeleton" Height="96" CornerRadius="14" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding Athletes}" Classes="fadeitems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AdminAthleteItem">
+                            <Border Classes="admincard" Margin="0,0,0,10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <controls:Avatar Width="44" Height="44" Initial="{Binding Initial}" VerticalAlignment="Top" />
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding CoachLine}" FontSize="13" Foreground="{DynamicResource BrandSupportBrush}" />
+                                            <TextBlock Text="{Binding Email}" FontSize="13" Foreground="{DynamicResource BrandSupportBrush}" />
+                                            <TextBlock Text="{Binding Summary}" Classes="admin-hint" />
+                                            <WrapPanel Margin="0,2,0,0">
+                                                <Border Classes="badge" Margin="0,0,6,4" IsVisible="{Binding IsLinked}">
+                                                    <TextBlock Text="Με λογαριασμό" />
+                                                </Border>
+                                                <Border Classes="badge warn" Margin="0,0,6,4" IsVisible="{Binding IsUnlinked}">
+                                                    <TextBlock Text="Χωρίς λογαριασμό" />
+                                                </Border>
+                                                <Border Classes="badge" Margin="0,0,6,4" IsVisible="{Binding HasApp}">
+                                                    <TextBlock Text="Έχει την εφαρμογή" />
+                                                </Border>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    <WrapPanel>
+                                        <Button Classes="act" Content="Μεταφορά σε άλλον προπονητή" Margin="0,0,8,6"
+                                                Command="{Binding $parent[UserControl].((vm:AdminAthletesViewModel)DataContext).MoveCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Classes="act" Content="Νέος προσωρινός κωδικός" Margin="0,0,8,6"
+                                                IsVisible="{Binding IsLinked}"
+                                                Command="{Binding $parent[UserControl].((vm:AdminAthletesViewModel)DataContext).ResetPasswordCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Classes="act danger" Content="Διαγραφή" Margin="0,0,8,6"
+                                                Command="{Binding $parent[UserControl].((vm:AdminAthletesViewModel)DataContext).DeleteCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+
+        <!-- Move to another coach -->
+        <Grid IsVisible="{Binding IsMoving}" Background="#66000000">
+            <Border Background="{DynamicResource CardBrush}" CornerRadius="14" Padding="20" Margin="16"
+                    MaxWidth="400" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="{Binding MoveTitle}" TextWrapping="Wrap" FontSize="15" />
+                    <ComboBox ItemsSource="{Binding MoveTargets}" SelectedItem="{Binding MoveTarget}"
+                              PlaceholderText="Επίλεξε προπονητή" HorizontalAlignment="Stretch" />
+                    <TextBlock Classes="admin-hint"
+                               Text="Ο νέος προπονητής βλέπει όλες τις μετρήσεις και τα ασκησιολόγια· ο παλιός δεν τα βλέπει πια." />
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="admin-dialog" Content="Άκυρο" Command="{Binding CancelMoveCommand}" />
+                        <Button Classes="admin-dialog primary" Content="Μεταφορά" Command="{Binding ConfirmMoveCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>
