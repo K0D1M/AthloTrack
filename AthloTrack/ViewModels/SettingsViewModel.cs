@@ -14,11 +14,15 @@ public partial class SettingsViewModel : ViewModelBase
 
     private readonly AthloTrack.Core.Push.PushRegistrationService _push;
     private readonly IThemeService? _theme;
+    private readonly AthloTrack.Services.WorkoutAnswerSettings? _answers;
 
     public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user,
-        AthloTrack.Core.Push.PushRegistrationService push, PushPromptViewModel pushPrompt, IThemeService? theme = null)
+        AthloTrack.Core.Push.PushRegistrationService push, PushPromptViewModel pushPrompt, IThemeService? theme = null,
+        AthloTrack.Services.WorkoutAnswerSettings? answers = null)
     {
         _push = push;
+        ConfirmAnswers = answers?.ConfirmAnswers ?? true;
+        _answers = answers;
         // Show the saved choice first, then listen: opening the page mustn't re-apply it.
         Theme = theme?.Current ?? ThemeChoice.System;
         _theme = theme;
@@ -53,6 +57,18 @@ public partial class SettingsViewModel : ViewModelBase
     public bool IsDarkTheme { get => Theme == ThemeChoice.Dark; set { if (value) Theme = ThemeChoice.Dark; } }
 
     public string CurrentUser => _session.DisplayName ?? string.Empty;
+
+    /// <summary>Athletes answer workouts, so only they see «Επιβεβαίωση ολοκλήρωσης».</summary>
+    public bool IsAthlete => _session.Role == UserRole.Athlete;
+
+    /// <summary>Ask «Σίγουρα;» before «Ολοκληρώθηκε» / «Δεν ολοκληρώθηκε» (this device).</summary>
+    [ObservableProperty]
+    public partial bool ConfirmAnswers { get; set; }
+
+    partial void OnConfirmAnswersChanged(bool value)
+    {
+        if (_answers is not null) _answers.ConfirmAnswers = value;
+    }
 
     [RelayCommand]
     private async Task LogoutAsync()

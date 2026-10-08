@@ -30,6 +30,29 @@ internal sealed class FakeWorkouts : IWorkoutRepository
     }
     public Task<WorkoutProgram> AddAsync(WorkoutProgram program) { Added.Add(program); return Task.FromResult(program); }
     public Task MarkCompletedAsync(Guid id) { Completed.Add(id); return Task.CompletedTask; }
+
+    public List<Guid> NotCompleted { get; } = new();
+    public List<Guid> Reminded { get; } = new();
+
+    /// <summary>The server refuses the next reminders with this reason.</summary>
+    public ReminderRefusal? RemindRefusal { get; set; }
+
+    public Task MarkNotCompletedAsync(Guid id)
+    {
+        NotCompleted.Add(id);
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) w.NotCompletedAt = DateTimeOffset.UtcNow;
+        return Task.CompletedTask;
+    }
+
+    public Task RemindAsync(Guid id)
+    {
+        if (RemindRefusal is { } reason) throw new WorkoutReminderException(reason);
+        Reminded.Add(id);
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) w.LastRemindedAt = DateTimeOffset.UtcNow;
+        return Task.CompletedTask;
+    }
+
+    public Task<WorkoutProgram?> GetByIdAsync(Guid id) => Task.FromResult(Items.FirstOrDefault(w => w.Id == id));
     public Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent) { Updated.Add((id, content, targetDate, coachPresent)); return Task.CompletedTask; }
     /// <summary>When set, MarkReadAsync waits for it: a save that is still in flight.</summary>
     public TaskCompletionSource? ReadGate { get; set; }

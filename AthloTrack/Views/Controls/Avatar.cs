@@ -22,6 +22,10 @@ public class Avatar : Border
     public static readonly StyledProperty<string?> InitialProperty =
         AvaloniaProperty.Register<Avatar, string?>(nameof(Initial));
 
+    /// <summary>Tapping the photo shows it large (<see cref="AthloTrack.Services.PhotoPreview"/>).</summary>
+    public static readonly StyledProperty<bool> CanPreviewProperty =
+        AvaloniaProperty.Register<Avatar, bool>(nameof(CanPreview));
+
     // Decoded bitmaps keyed by the byte array, so list re-renders don't re-decode.
     private static readonly ConditionalWeakTable<byte[], Bitmap> Cache = new();
 
@@ -59,9 +63,30 @@ public class Avatar : Border
         set => SetValue(InitialProperty, value);
     }
 
+    public bool CanPreview
+    {
+        get => GetValue(CanPreviewProperty);
+        set => SetValue(CanPreviewProperty, value);
+    }
+
+    protected override void OnTapped(Avalonia.Input.TappedEventArgs e)
+    {
+        base.OnTapped(e);
+        if (CanPreview && Photo is { Length: > 0 } photo)
+        {
+            AthloTrack.Services.PhotoPreview.Show(photo);
+            e.Handled = true;
+        }
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+
+        if (change.Property == PhotoProperty || change.Property == CanPreviewProperty)
+        {
+            Cursor = CanPreview && Photo is { Length: > 0 } ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+        }
 
         if (change.Property == PhotoProperty)
         {
@@ -84,7 +109,7 @@ public class Avatar : Border
         }
     }
 
-    private static Bitmap? ToBitmap(byte[]? bytes)
+    internal static Bitmap? ToBitmap(byte[]? bytes)
     {
         if (bytes is null || bytes.Length == 0) return null;
         if (Cache.TryGetValue(bytes, out var cached)) return cached;

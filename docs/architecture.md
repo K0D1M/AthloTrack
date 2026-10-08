@@ -147,6 +147,14 @@ Animations are subtle (about 200 ms), because the web build has one UI thread an
   - Then the sub-page goes back. On a non-home tab, back selects Πρόσφατα. On Πρόσφατα the event is left unhandled, so Android moves the app to the background.
   - The manifest sets `enableOnBackInvokedCallback="true"` (predictive back).
 
+## Workout answers, reminders and notification links
+- **Answers:** `WorkoutProgram.IsAnswered` is `CompletedAt` or `NotCompletedAt` (final, enforced by `guard_workout_athlete_edit`). Both answer buttons go through `AnswerAsync` in `AthleteProfileViewModel` and `WorkoutsViewModel`, which asks `WorkoutAnswerSettings.ConfirmText` first unless `workout.confirm_answer` is off (Ρυθμίσεις).
+- **Reminders:** `IWorkoutRepository.RemindAsync` calls `remind_workout`; its refusals arrive as `WorkoutReminderException(ReminderRefusal)` and are shown in Greek. The bell's cooldown is `WorkoutProgram.ReminderRecentlySent`.
+- **Row model:** `not_completed_at` / `last_reminded_at` are `ignoreOnInsert/ignoreOnUpdate` in `WorkoutProgramRow`, so saving a whole row never sends them (and works on a database without 012).
+- **Notification → workout:** a tapped card (`RecentViewModel.OpenNotificationRequested`) or a push with one notification id (`MainView.OpenNotificationTargetAsync`, which reads the notification for `related_workout_id`) opens the athlete profile with `focusWorkoutId`. The profile opens that month, sets `FocusedWorkout`, and the view scrolls to it and tints it (`Border.workoutitem.focused`). A group summary still opens Προπονήσεις.
+- **Weeks:** `WorkoutMonth.Weeks` (`MonthGroups.Weeks`): fixed 7-day blocks of the month, newest first. Each `WorkoutWeek` opens and closes like a month (`IsExpanded`, `Toggle`); the newest week of the newest month starts open, and a rebuild keeps each week's state by `Key` ("yyyy-MM-wN").
+- **Photo preview:** `Avatar.CanPreview` raises `Services/PhotoPreview`; `MainView` shows the overlay (`PhotoOverlay`), closed by a tap or back.
+
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 

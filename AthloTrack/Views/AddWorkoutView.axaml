@@ -147,7 +147,7 @@
             <!-- Header: athlete photo + title -->
             <!-- Grid, not a horizontal StackPanel: the title needs a width limit to wrap on a phone. -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,0,0,16">
-                <controls:Avatar Grid.Column="0" Width="52" Height="52" Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                <controls:Avatar Grid.Column="0" Width="52" Height="52" CanPreview="True" Photo="{Binding Photo}" Initial="{Binding Initial}" />
                 <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
                            VerticalAlignment="Center" Foreground="{DynamicResource HeadingBrush}" />
             </Grid>

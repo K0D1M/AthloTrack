@@ -15,14 +15,23 @@ public partial class WorkoutsViewModel : ViewModelBase
     private readonly IWorkoutRepository _workouts;
     private readonly IAthleteRepository _athletes;
     private readonly SessionState _session;
+    private readonly AthloTrack.Services.WorkoutAnswerSettings? _answerSettings;
 
-    public WorkoutsViewModel(IWorkoutRepository workouts, IAthleteRepository athletes, SessionState session)
+    public WorkoutsViewModel(IWorkoutRepository workouts, IAthleteRepository athletes, SessionState session,
+        AthloTrack.Services.WorkoutAnswerSettings? answerSettings = null)
     {
         _workouts = workouts;
         _athletes = athletes;
         _session = session;
+        _answerSettings = answerSettings;
         _ = LoadAsync();
     }
+
+    /// <summary>«Σίγουρα;» before an answer (unless turned off in Ρυθμίσεις).</summary>
+    public ConfirmPrompt Confirm { get; } = new();
+
+    [ObservableProperty]
+    public partial string? InfoMessage { get; set; }
 
     public ObservableCollection<WorkoutListItemViewModel> WorkoutPrograms { get; } = new();
 
@@ -43,13 +52,54 @@ public partial class WorkoutsViewModel : ViewModelBase
 
     /// <summary>The athlete marks an open workout done; the DB then notifies the coach.</summary>
     [RelayCommand]
-    private async Task CompleteWorkoutAsync(WorkoutListItemViewModel? item)
+    private Task CompleteWorkoutAsync(WorkoutListItemViewModel? item) =>
+        AnswerAsync(item, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
+
+    /// <summary>The athlete answers «Δεν ολοκληρώθηκε»; the DB then notifies the coach.</summary>
+    [RelayCommand]
+    private Task NotCompleteWorkoutAsync(WorkoutListItemViewModel? item) =>
+        AnswerAsync(item, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
+
+    private async Task AnswerAsync(WorkoutListItemViewModel? item, string button, Func<Guid, Task> send)
     {
         if (item is null || !item.CanComplete) return;
+        async Task Run()
+        {
+            try
+            {
+                await send(item.Program.Id);
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+        }
+
+        if (_answerSettings?.ConfirmAnswers ?? true)
+        {
+            Confirm.Ask(AthloTrack.Services.WorkoutAnswerSettings.ConfirmText, button, Run);
+            return;
+        }
+        await Run();
+    }
+
+    /// <summary>The coach asks the athlete whether the workout was done (at most once an hour).</summary>
+    [RelayCommand]
+    private async Task RemindWorkoutAsync(WorkoutListItemViewModel? item)
+    {
+        if (item is null || !item.CanRemind || !item.RemindEnabled) return;
+        ErrorMessage = null;
+        InfoMessage = null;
         try
         {
-            await _workouts.MarkCompletedAsync(item.Program.Id);
+            await _workouts.RemindAsync(item.Program.Id);
+            InfoMessage = $"Στάλθηκε υπενθύμιση στον/στην {item.AthleteName} για το ασκησιολόγιο της {item.Program.TargetDate:dd/MM}.";
             await LoadAsync();
+        }
+        catch (WorkoutReminderException ex)
+        {
+            ErrorMessage = AthleteProfileViewModel.ReminderText(ex.Reason);
         }
         catch (Exception ex)
         {
@@ -75,14 +125,20 @@ public partial class WorkoutsViewModel : ViewModelBase
         {
             var athletes = await _athletes.GetAllAsync();
             var names = new Dictionary<Guid, string>();
-            foreach (var a in athletes) names[a.Id] = a.FullName;
+            var withLogin = new HashSet<Guid>();
+            foreach (var a in athletes)
+            {
+                names[a.Id] = a.FullName;
+                if (a.AuthUserId is not null) withLogin.Add(a.Id);
+            }
 
             var programs = await _workouts.GetAllAsync();
             WorkoutPrograms.Clear();
             foreach (var p in programs)
             {
                 var name = names.TryGetValue(p.AthleteId, out var n) ? n : "—";
-                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name, isCoach: _session.IsCoach));
+                WorkoutPrograms.Add(new WorkoutListItemViewModel(p, name, isCoach: _session.IsCoach,
+                    athleteHasLogin: withLogin.Contains(p.AthleteId)));
             }
         }
         catch (Exception ex)

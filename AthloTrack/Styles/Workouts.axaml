@@ -1,0 +1,89 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- A workout's answer buttons (profile and Προπονήσεις), and the week headers. -->
+
+    <Style Selector="Button.answer">
+        <Setter Property="Height" Value="38" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="CornerRadius" Value="19" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.answer PathIcon">
+        <Setter Property="Width" Value="18" />
+        <Setter Property="Height" Value="18" />
+    </Style>
+
+    <!-- «Δεν ολοκληρώθηκε»: outlined in red, next to the blue «Ολοκληρώθηκε». -->
+    <Style Selector="Button.answer.notdone">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Button.answer.notdone:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+
+    <!-- Small round icon button (the reminder bell on Προπονήσεις) -->
+    <Style Selector="Button.iconbutton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="9" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.iconbutton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+    </Style>
+    <Style Selector="Button.iconbutton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.iconbutton:disabled PathIcon">
+        <Setter Property="Opacity" Value="0.35" />
+    </Style>
+
+    <!-- The profile's icon buttons (bell during its hour of cooldown): no grey Fluent block. -->
+    <Style Selector="Button.icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.icon:disabled PathIcon">
+        <Setter Property="Opacity" Value="0.35" />
+    </Style>
+
+    <!-- «Εβδομάδα 2 · 8–14/10 (2)»: a week's header inside a month, opens/closes the week -->
+    <Style Selector="Button.week">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="6,6" />
+        <Setter Property="Margin" Value="12,4,0,0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="Button.week:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="Button.week PathIcon">
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+
+    <!-- The workout a tapped notification is about: tinted for a moment. -->
+    <Style Selector="Border.workoutitem">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.6" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.workoutitem.focused">
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+    </Style>
+</Styles>

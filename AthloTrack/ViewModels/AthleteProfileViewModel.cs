@@ -28,6 +28,10 @@ public partial class AthleteProfileViewModel : ViewModelBase
 
     private Athlete? _athlete;
     private Func<Task>? _pendingConfirm;
+    private readonly AthloTrack.Services.WorkoutAnswerSettings? _answerSettings;
+
+    /// <summary>Opened from a notification: the workout to show (its month opened, scrolled to).</summary>
+    private Guid? _focusWorkoutId;
 
     public AthleteProfileViewModel(
         Guid athleteId,
@@ -36,9 +40,13 @@ public partial class AthleteProfileViewModel : ViewModelBase
         IWorkoutRepository workouts,
         SessionState session,
         IAvatarService avatars,
-        CurrentUserViewModel? currentUser = null)
+        CurrentUserViewModel? currentUser = null,
+        AthloTrack.Services.WorkoutAnswerSettings? answerSettings = null,
+        Guid? focusWorkoutId = null)
     {
         _athleteId = athleteId;
+        _answerSettings = answerSettings;
+        _focusWorkoutId = focusWorkoutId;
         _athletes = athletes;
         _measurements = measurements;
         _workouts = workouts;
@@ -68,23 +76,83 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>Only the athlete changes their own photo — never the coach.</summary>
     public bool CanChangePhoto => IsOwnProfile;
 
-    /// <summary>Only the athlete marks their own workouts done (the coach is then notified).</summary>
+    /// <summary>Only the athlete answers their own workouts (the coach is then notified).</summary>
     public bool CanCompleteWorkouts => IsOwnProfile;
 
+    /// <summary>The coach can send reminders: the athlete has a login to receive them.</summary>
+    public bool CanRemind => CanEdit && _athlete?.AuthUserId is not null;
+
+    /// <summary>The workout a notification pointed at, once loaded (the view scrolls to it).</summary>
+    [ObservableProperty]
+    public partial WorkoutProgram? FocusedWorkout { get; set; }
+
+    /// <summary>A short confirmation, e.g. «Στάλθηκε υπενθύμιση».</summary>
+    [ObservableProperty]
+    public partial string? InfoMessage { get; set; }
+
     [RelayCommand]
-    private async Task CompleteWorkoutAsync(WorkoutProgram? workout)
+    private Task CompleteWorkoutAsync(WorkoutProgram? workout) =>
+        AnswerAsync(workout, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
+
+    [RelayCommand]
+    private Task NotCompleteWorkoutAsync(WorkoutProgram? workout) =>
+        AnswerAsync(workout, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
+
+    /// <summary>The athlete's answer is final: asked first, unless turned off in Ρυθμίσεις.</summary>
+    private async Task AnswerAsync(WorkoutProgram? workout, string button, Func<Guid, Task> send)
     {
-        if (workout is null || workout.IsCompleted || !CanCompleteWorkouts) return;
+        if (workout is null || workout.IsAnswered || !CanCompleteWorkouts) return;
+        async Task Run()
+        {
+            await send(workout.Id);
+            await LoadAsync();
+        }
+
+        if (_answerSettings?.ConfirmAnswers ?? true)
+        {
+            Ask(AthloTrack.Services.WorkoutAnswerSettings.ConfirmText, Run, button, danger: false);
+            return;
+        }
+
         try
         {
-            await _workouts.MarkCompletedAsync(workout.Id);
-            await LoadAsync();
+            await Run();
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
         }
     }
+
+    [RelayCommand]
+    private async Task RemindWorkoutAsync(WorkoutProgram? workout)
+    {
+        if (workout is null || !workout.CanBeReminded || !CanRemind) return;
+        ErrorMessage = null;
+        InfoMessage = null;
+        try
+        {
+            await _workouts.RemindAsync(workout.Id);
+            InfoMessage = $"Στάλθηκε υπενθύμιση στον/στην {FullName} για το ασκησιολόγιο της {workout.TargetDate:dd/MM}.";
+            await LoadAsync();
+        }
+        catch (WorkoutReminderException ex)
+        {
+            ErrorMessage = ReminderText(ex.Reason);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    internal static string ReminderText(ReminderRefusal reason) => reason switch
+    {
+        ReminderRefusal.TooSoon => "Έχει σταλεί υπενθύμιση την τελευταία ώρα. Δοκίμασε ξανά αργότερα.",
+        ReminderRefusal.AlreadyAnswered => "Ο αθλητής έχει ήδη απαντήσει γι' αυτό το ασκησιολόγιο.",
+        ReminderRefusal.NotAllowed => "Μόνο ο προπονητής του αθλητή μπορεί να στείλει υπενθύμιση.",
+        _ => "Οι υπενθυμίσεις δεν είναι ακόμα διαθέσιμες (λείπει το 012_workout_outcome_reminders.sql).",
+    };
 
     // Progress chart (weight + fat metrics over time). Plain data; the view draws it.
     [ObservableProperty]
@@ -138,6 +206,13 @@ public partial class AthleteProfileViewModel : ViewModelBase
     public partial string? ConfirmMessage { get; set; }
 
     public bool IsConfirming => ConfirmMessage is not null;
+
+    [ObservableProperty]
+    public partial string ConfirmButtonText { get; set; } = "Διαγραφή";
+
+    /// <summary>Deletes use the red button; answers the blue one.</summary>
+    [ObservableProperty]
+    public partial bool ConfirmIsDanger { get; set; } = true;
 
     /// <summary>Raised by the "+" menu — the shell opens the add-measurement dialog.</summary>
     public event Action<Guid>? AddMeasurementRequested;
@@ -266,9 +341,11 @@ public partial class AthleteProfileViewModel : ViewModelBase
         ConfirmMessage = null;
     }
 
-    private void Ask(string message, Func<Task> onConfirm)
+    private void Ask(string message, Func<Task> onConfirm, string button = "Διαγραφή", bool danger = true)
     {
         _pendingConfirm = onConfirm;
+        ConfirmButtonText = button;
+        ConfirmIsDanger = danger;
         ConfirmMessage = message;
     }
 
@@ -330,6 +407,23 @@ public partial class AthleteProfileViewModel : ViewModelBase
             // A reload (after an edit) keeps the months the user opened or closed.
             MeasurementGroups = MonthGroups.Build(Measurements, MeasurementGroups);
             WorkoutGroups = MonthGroups.Build(Workouts, WorkoutGroups);
+            OnPropertyChanged(nameof(CanRemind));
+
+            // Opened from a notification: open that workout's month and point the view at it.
+            if (_focusWorkoutId is { } focusId && Workouts.FirstOrDefault(w => w.Id == focusId) is { } focus)
+            {
+                _focusWorkoutId = null;
+                foreach (var month in WorkoutGroups)
+                {
+                    if (!month.Items.Contains(focus)) continue;
+                    month.IsExpanded = true;
+                    foreach (var week in month.Weeks)
+                    {
+                        if (week.Items.Contains(focus)) week.IsExpanded = true;
+                    }
+                }
+                FocusedWorkout = focus;
+            }
         }
         catch (Exception ex)
         {

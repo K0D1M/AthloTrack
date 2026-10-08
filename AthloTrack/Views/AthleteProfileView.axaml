@@ -9,6 +9,109 @@
              x:Class="AthloTrack.Views.AthleteProfileView"
              x:DataType="vm:AthleteProfileViewModel">
 
+    <UserControl.Resources>
+        <!-- One workout (inside a month's week). Commands go to the profile through
+             $parent[UserControl]: the nearest ItemsControl is the week's. -->
+        <DataTemplate x:Key="WorkoutItem" x:DataType="models:WorkoutProgram">
+            <!-- SeenTracker: on the athlete's own profile, counts as read once on screen -->
+            <Border Classes="workoutitem" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                    Padding="6,8" CornerRadius="8"
+                    controls:SeenTracker.Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).WorkoutSeenCommand}"
+                    controls:SeenTracker.CommandParameter="{Binding}">
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                    IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
+                            <!-- Reminder: ask the athlete whether it was done (open workouts only) -->
+                            <Button Classes="icon" ToolTip.Tip="Υπενθύμιση στον αθλητή"
+                                    IsEnabled="{Binding !ReminderRecentlySent}"
+                                    Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).RemindWorkoutCommand}"
+                                    CommandParameter="{Binding}">
+                                <Button.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="!IsAnswered" />
+                                        <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanRemind" />
+                                    </MultiBinding>
+                                </Button.IsVisible>
+                                <PathIcon Data="{StaticResource BellRingIcon}" />
+                            </Button>
+                            <Button Classes="icon" ToolTip.Tip="Επεξεργασία ασκησιολογίου"
+                                    Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).EditWorkoutCommand}"
+                                    CommandParameter="{Binding}">
+                                <PathIcon Data="{StaticResource PencilIcon}" />
+                            </Button>
+                            <Button Classes="icon danger" ToolTip.Tip="Διαγραφή ασκησιολογίου"
+                                    Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).DeleteWorkoutCommand}"
+                                    CommandParameter="{Binding}">
+                                <PathIcon Data="{StaticResource DeleteIcon}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <controls:CoachPresence Present="{Binding CoachPresent}" />
+                    <controls:WorkoutText Text="{Binding Content}" />
+                    <!-- the athlete's answer (everyone sees it) -->
+                    <TextBlock IsVisible="{Binding IsCompleted}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"
+                               Text="{Binding CompletedAtLocal, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
+                    <TextBlock IsVisible="{Binding IsNotCompleted}" Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold"
+                               Text="{Binding NotCompletedAtLocal, StringFormat='✗ Δεν ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
+                    <!-- reminder sent (coach only) -->
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ShowReminderSent" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
+                            </MultiBinding>
+                        </StackPanel.IsVisible>
+                        <PathIcon Data="{StaticResource BellRingIcon}" Width="14" Height="14"
+                                  Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding LastRemindedAtLocal, StringFormat='Υπενθύμιση στάλθηκε {0:dd/MM HH:mm}'}"
+                                   FontSize="12" Foreground="{DynamicResource BrandSupportBrush}"
+                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <!-- read receipt (coach only) -->
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="IsRead" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
+                            </MultiBinding>
+                        </StackPanel.IsVisible>
+                        <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
+                                  Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ReadAtLocal, StringFormat='Διαβάστηκε από τον αθλητή στις {0:dd/MM/yyyy HH:mm}'}"
+                                   FontSize="12" Foreground="{DynamicResource BrandSupportBrush}"
+                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <!-- the athlete answers their own open workout (final) -->
+                    <WrapPanel Margin="0,2,0,0">
+                        <WrapPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!IsAnswered" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanCompleteWorkouts" />
+                            </MultiBinding>
+                        </WrapPanel.IsVisible>
+                        <Button Classes="primary answer" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CompleteWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="answer notdone" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).NotCompleteWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <UserControl.Styles>
         <!-- Small round icon buttons (edit / delete / change photo) -->
         <Style Selector="Button.icon">
@@ -99,7 +202,7 @@
                         BoxShadow="0 6 18 0 #2A0D47A1">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                     <Panel Grid.Column="0" Width="76" Height="76" VerticalAlignment="Top">
-                        <controls:Avatar Width="72" Height="72"
+                        <controls:Avatar Width="72" Height="72" CanPreview="True"
                                          BorderBrush="White" BorderThickness="3"
                                          HorizontalAlignment="Left" VerticalAlignment="Top"
                                          Photo="{Binding Photo}" Initial="{Binding Initial}" />
@@ -138,6 +241,8 @@
 
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
                 <!-- Progress graph -->
                 <TextBlock Text="Πρόοδος" FontSize="18" FontWeight="SemiBold"
@@ -278,63 +383,26 @@
                                                    Foreground="{DynamicResource HeadingBrush}" />
                                     </StackPanel>
                                 </Button>
-                            <ItemsControl ItemsSource="{Binding Items}" Classes="fadeitems" IsVisible="{Binding IsExpanded}">
+                            <!-- Weeks of the month (days 1–7, 8–14, …), newest first -->
+                            <ItemsControl ItemsSource="{Binding Weeks}" Classes="fadeitems" IsVisible="{Binding IsExpanded}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:WorkoutProgram">
-                                        <!-- SeenTracker: on the athlete's own profile, counts as read once on screen -->
-                                        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="0,8"
-                                                controls:SeenTracker.Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).WorkoutSeenCommand}"
-                                                controls:SeenTracker.CommandParameter="{Binding}">
-                                            <StackPanel Spacing="4">
-                                                <Grid ColumnDefinitions="*,Auto">
-                                                    <TextBlock Grid.Column="0" Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
-                                                               FontWeight="SemiBold" VerticalAlignment="Center" />
-                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
-                                                                IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
-                                                        <Button Classes="icon" ToolTip.Tip="Επεξεργασία ασκησιολογίου"
-                                                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).EditWorkoutCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <PathIcon Data="{StaticResource PencilIcon}" />
-                                                        </Button>
-                                                        <Button Classes="icon danger" ToolTip.Tip="Διαγραφή ασκησιολογίου"
-                                                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).DeleteWorkoutCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <PathIcon Data="{StaticResource DeleteIcon}" />
-                                                        </Button>
-                                                    </StackPanel>
-                                                </Grid>
-                                                <controls:CoachPresence Present="{Binding CoachPresent}" />
-                                                <controls:WorkoutText Text="{Binding Content}" />
-                                                <!-- done marker (everyone) -->
-                                                <TextBlock IsVisible="{Binding IsCompleted}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"
-                                                           Text="{Binding CompletedAt, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
-                                                <!-- read receipt (coach only) -->
+                                    <DataTemplate x:DataType="vm:WorkoutWeek">
+                                        <StackPanel>
+                                            <!-- A week opens and closes like the month above it -->
+                                            <Button Classes="week" Command="{Binding ToggleCommand}">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <StackPanel.IsVisible>
-                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                                            <Binding Path="IsRead" />
-                                                            <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
-                                                        </MultiBinding>
-                                                    </StackPanel.IsVisible>
-                                                    <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
-                                                              Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding ReadAtLocal, StringFormat='Διαβάστηκε από τον αθλητή στις {0:dd/MM/yyyy HH:mm}'}"
-                                                               FontSize="12" Foreground="{DynamicResource BrandSupportBrush}"
-                                                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                    <Panel Width="16" Height="16" VerticalAlignment="Center">
+                                                        <PathIcon Data="{StaticResource ChevronDownIcon}" Width="16" Height="16"
+                                                                  IsVisible="{Binding IsExpanded}" />
+                                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="16" Height="16"
+                                                                  IsVisible="{Binding !IsExpanded}" />
+                                                    </Panel>
+                                                    <TextBlock Text="{Binding Header}" VerticalAlignment="Center" />
                                                 </StackPanel>
-                                                <!-- the athlete marks their own open workout done -->
-                                                <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
-                                                        Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CompleteWorkoutCommand}"
-                                                        CommandParameter="{Binding}">
-                                                    <Button.IsVisible>
-                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                                            <Binding Path="!IsCompleted" />
-                                                            <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanCompleteWorkouts" />
-                                                        </MultiBinding>
-                                                    </Button.IsVisible>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
+                                            </Button>
+                                            <ItemsControl ItemsSource="{Binding Items}" ItemTemplate="{StaticResource WorkoutItem}"
+                                                          Classes="fadeitems" IsVisible="{Binding IsExpanded}" Margin="12,0,0,0" />
+                                        </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -392,7 +460,8 @@
                     <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" FontSize="15" />
                     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
                         <Button Classes="dialog" Content="Άκυρο" Command="{Binding CancelConfirmCommand}" />
-                        <Button Classes="dialog danger" Content="Διαγραφή" Command="{Binding ConfirmCommand}" />
+                        <Button Classes="dialog" Classes.danger="{Binding ConfirmIsDanger}" Classes.primary="{Binding !ConfirmIsDanger}"
+                                Content="{Binding ConfirmButtonText}" Command="{Binding ConfirmCommand}" />
                     </StackPanel>
                 </StackPanel>
             </Border>

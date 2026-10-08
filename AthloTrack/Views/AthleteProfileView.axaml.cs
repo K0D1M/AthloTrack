@@ -10,9 +10,14 @@ namespace AthloTrack.Views;
 
 public partial class AthleteProfileView : UserControl, IHandlesBack
 {
-    /// <summary>Back with the "+" menu open closes the menu, like a native menu.</summary>
+    /// <summary>Back closes an open confirmation or the "+" menu first, like native dialogs and menus.</summary>
     public bool TryHandleBack()
     {
+        if (DataContext is AthleteProfileViewModel { IsConfirming: true } vm)
+        {
+            vm.CancelConfirmCommand.Execute(null);
+            return true;
+        }
         if (!AddMenu.IsVisible) return false;
         ShowAddMenu(false);
         return true;
@@ -33,12 +38,33 @@ public partial class AthleteProfileView : UserControl, IHandlesBack
                     {
                         BuildChart(vm.Chart);
                     }
+                    else if (e.PropertyName is nameof(AthleteProfileViewModel.FocusedWorkout) && vm.FocusedWorkout is { } focus)
+                    {
+                        ShowFocused(focus);
+                    }
                 };
                 BuildChart(vm.Chart);
+                if (vm.FocusedWorkout is { } focused) ShowFocused(focused); // loaded before the view existed
             }
         };
         // Light/Dark switched in Ρυθμίσεις: redraw the chart image in the new colours.
         ActualThemeVariantChanged += (_, _) => BuildChart((DataContext as AthleteProfileViewModel)?.Chart);
+    }
+
+    /// <summary>Opened from a notification: scroll to that workout and tint it for a moment.</summary>
+    private void ShowFocused(AthloTrack.Core.Models.WorkoutProgram workout)
+    {
+        // After the month has opened and been laid out.
+        Avalonia.Threading.DispatcherTimer.RunOnce(() =>
+        {
+            var item = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(this)
+                .OfType<Border>()
+                .FirstOrDefault(b => b.Classes.Contains("workoutitem") && ReferenceEquals(b.DataContext, workout));
+            if (item is null) return;
+            item.BringIntoView();
+            item.Classes.Add("focused");
+            Avalonia.Threading.DispatcherTimer.RunOnce(() => item.Classes.Remove("focused"), TimeSpan.FromSeconds(2));
+        }, TimeSpan.FromMilliseconds(350));
     }
 
     private void BuildChart(ProgressChart? chart)

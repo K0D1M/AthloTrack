@@ -48,6 +48,13 @@ public sealed class NotificationRepository : INotificationRepository
             .Update();
     }
 
+    public async Task<AppNotification?> GetByIdAsync(Guid notificationId)
+    {
+        var client = await _factory.GetClientAsync();
+        var row = await client.From<NotificationRow>().Where(x => x.Id == notificationId).Single();
+        return row is null ? null : Map(row);
+    }
+
     private static AppNotification Map(NotificationRow r) => new()
     {
         Id = r.Id,

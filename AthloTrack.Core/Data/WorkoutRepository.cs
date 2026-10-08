@@ -50,6 +50,41 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
+    public async Task MarkNotCompletedAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        await client.From<WorkoutProgramRow>()
+            .Where(x => x.Id == id)
+            .Set(x => x.NotCompletedAt!, DateTimeOffset.UtcNow)
+            .Update();
+    }
+
+    public async Task RemindAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        try
+        {
+            await client.Rpc("remind_workout", new Dictionary<string, object> { ["p_workout"] = id });
+        }
+        catch (global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+        {
+            var reason = ex.Message.Contains("too soon") ? ReminderRefusal.TooSoon
+                : ex.Message.Contains("already answered") ? ReminderRefusal.AlreadyAnswered
+                : ex.Message.Contains("not allowed") ? ReminderRefusal.NotAllowed
+                : ex.Message.Contains("PGRST202") ? ReminderRefusal.NotInstalled
+                : (ReminderRefusal?)null;
+            if (reason is null) throw;
+            throw new WorkoutReminderException(reason.Value, ex);
+        }
+    }
+
+    public async Task<WorkoutProgram?> GetByIdAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        var row = await client.From<WorkoutProgramRow>().Where(x => x.Id == id).Single();
+        return row is null ? null : Map(row);
+    }
+
     public async Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent)
     {
         var client = await _factory.GetClientAsync();
@@ -86,6 +121,8 @@ public sealed class WorkoutRepository : IWorkoutRepository
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
         CompletedAt = r.CompletedAt,
+        NotCompletedAt = r.NotCompletedAt,
+        LastRemindedAt = r.LastRemindedAt,
         ReadAt = r.ReadAt,
         CoachPresent = r.CoachPresent,
     };

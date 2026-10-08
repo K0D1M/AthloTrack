@@ -63,6 +63,9 @@ public sealed class WorkoutsViewModelTests
         await vm.LoadAsync();
 
         await vm.CompleteWorkoutCommand.ExecuteAsync(vm.WorkoutPrograms[0]);
+        Assert.True(vm.Confirm.IsOpen); // «Σίγουρα;» first (the default)
+        Assert.Empty(workouts.Completed);
+        await vm.Confirm.ConfirmCommand.ExecuteAsync(null);
 
         Assert.Equal(new[] { workouts.Items[0].Id }, workouts.Completed);
     }

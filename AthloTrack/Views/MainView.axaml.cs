@@ -50,7 +50,7 @@ public partial class MainView : ContentPage
     // Coaches and athletes. NotificationNavigation.WorkoutsSection relies on Προπονήσεις being 2.
     private Tab[] MemberTabs() =>
     [
-        new("Πρόσφατα", "TabRecentOutline", "TabRecentFilled", typeof(RecentViewModel), Resolve<RecentViewModel>),
+        new("Πρόσφατα", "TabRecentOutline", "TabRecentFilled", typeof(RecentViewModel), CreateRecentPage),
         new("Αθλητές", "TabAthletesOutline", "TabAthletesFilled", typeof(AthletesViewModel), CreateAthletesPage),
         // No outline dumbbell in MDI: the same shape, stroked instead of filled.
         new("Προπονήσεις", "DumbbellIcon", "DumbbellIcon", typeof(WorkoutsViewModel), Resolve<WorkoutsViewModel>,
@@ -151,6 +151,8 @@ public partial class MainView : ContentPage
         _topLevel = TopLevel.GetTopLevel(this);
         if (_topLevel is not null) _topLevel.BackRequested += OnBackRequested;
 
+        AthloTrack.Services.PhotoPreview.Requested += ShowPhoto;
+
         // A tapped phone notification opens its section (see MainActivity).
         AthloTrack.Services.NotificationNavigation.Requested += ApplyPendingSection;
         ApplyPendingSection();
@@ -159,6 +161,7 @@ public partial class MainView : ContentPage
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         AthloTrack.Services.NotificationNavigation.Requested -= ApplyPendingSection;
+        AthloTrack.Services.PhotoPreview.Requested -= ShowPhoto;
         if (_topLevel is not null) _topLevel.BackRequested -= OnBackRequested;
         _topLevel = null;
         base.OnDetachedFromVisualTree(e);
@@ -166,7 +169,12 @@ public partial class MainView : ContentPage
 
     private void OnBackRequested(object? sender, RoutedEventArgs e)
     {
-        if (CurrentPageHandledBack())
+        if (PhotoOverlay.IsVisible)
+        {
+            HidePhoto();
+            e.Handled = true;
+        }
+        else if (CurrentPageHandledBack())
         {
             e.Handled = true;
         }
@@ -181,6 +189,25 @@ public partial class MainView : ContentPage
             e.Handled = true;
         }
     }
+
+    /// <summary>A tapped photo, as large as fits (most of the width, part of the height).</summary>
+    private void ShowPhoto(byte[] photo)
+    {
+        if (Controls.Avatar.ToBitmap(photo) is not { } bitmap) return;
+        PhotoImage.Source = bitmap;
+        PhotoFrame.MaxWidth = Math.Max(120, Bounds.Width * 0.9);
+        PhotoFrame.MaxHeight = Math.Max(120, Bounds.Height * 0.7);
+        PhotoOverlay.IsVisible = true;
+        Motion.FadeInPage(PhotoOverlay);
+    }
+
+    private void HidePhoto()
+    {
+        PhotoOverlay.IsVisible = false;
+        PhotoImage.Source = null;
+    }
+
+    private void OnPhotoOverlayTapped(object? sender, Avalonia.Input.TappedEventArgs e) => HidePhoto();
 
     private void OnBackClick(object? sender, RoutedEventArgs e)
     {
@@ -209,7 +236,18 @@ public partial class MainView : ContentPage
         if (_isAdmin) return; // an admin's pushes (tests, announcements) have no section to open
         foreach (var notificationId in request.NotificationIds) _ = MarkNotificationReadAsync(notificationId);
 
-        var index = request.Section;
+        // One notification: open the workout it's about. Several (a group summary): Προπονήσεις.
+        if (request.NotificationIds.Count == 1)
+        {
+            _ = OpenNotificationTargetAsync(request.NotificationIds[0], request.Section);
+            return;
+        }
+
+        ShowSection(request.Section);
+    }
+
+    private void ShowSection(int index)
+    {
         if (TabBar.SelectedIndex != index)
         {
             TabBar.SelectedIndex = index; // SelectionChanged shows the page
@@ -218,6 +256,45 @@ public partial class MainView : ContentPage
         {
             UpdatePage(index); // reload it, and leave any sub-page
         }
+    }
+
+    /// <summary>A tapped push: look up its workout; without one, fall back to the section.</summary>
+    private async System.Threading.Tasks.Task OpenNotificationTargetAsync(Guid notificationId, int fallbackSection)
+    {
+        try
+        {
+            var notification = await Resolve<AthloTrack.Core.Data.INotificationRepository>().GetByIdAsync(notificationId);
+            if (notification?.RelatedWorkoutId is { } workoutId)
+            {
+                OpenWorkout(notification.AthleteId, workoutId);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] Opening the tapped notification failed: {ex.Message}");
+        }
+        ShowSection(fallbackSection);
+    }
+
+    /// <summary>The athlete's profile, scrolled to that workout; back leads to Πρόσφατα.</summary>
+    private void OpenWorkout(Guid athleteId, Guid workoutId) =>
+        ShowAthleteProfile(athleteId, back: GoHome, focusWorkoutId: workoutId);
+
+    private void GoHome()
+    {
+        if (TabBar.SelectedIndex != HomeTab) TabBar.SelectedIndex = HomeTab; // SelectionChanged shows it
+        else UpdatePage(HomeTab);
+    }
+
+    private RecentViewModel CreateRecentPage()
+    {
+        var vm = Resolve<RecentViewModel>();
+        vm.OpenNotificationRequested += n =>
+        {
+            if (n.RelatedWorkoutId is { } workoutId) OpenWorkout(n.AthleteId, workoutId);
+        };
+        return vm;
     }
 
     private void TabBar_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -310,9 +387,9 @@ public partial class MainView : ContentPage
     }
 
     /// <param name="back">Back to the page the profile was opened from (Αθλητές or Ημερολόγιο).</param>
-    private void ShowAthleteProfile(Guid athleteId, Action back)
+    private void ShowAthleteProfile(Guid athleteId, Action back, Guid? focusWorkoutId = null)
     {
-        var profile = Resolve<AthleteProfileViewModelFactory>().Create(athleteId);
+        var profile = Resolve<AthleteProfileViewModelFactory>().Create(athleteId, focusWorkoutId);
         void Return() => ShowAthleteProfile(athleteId, back);
         profile.AddMeasurementRequested += id => OnAddMeasurement(id, Return);
         profile.AddWorkoutRequested += (id, name) => OnAddWorkout(id, name, Return);

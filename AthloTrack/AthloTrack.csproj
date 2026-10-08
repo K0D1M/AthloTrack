@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <!-- Shown in Σχετικά. Keep it equal to ApplicationDisplayVersion in AthloTrack.Android.csproj. -->
-    <Version>1.12-alpha</Version>
+    <Version>1.13-alpha</Version>
   </PropertyGroup>
   
   <ItemGroup>

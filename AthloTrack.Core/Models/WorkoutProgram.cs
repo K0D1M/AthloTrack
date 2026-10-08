@@ -15,6 +15,30 @@ public sealed class WorkoutProgram
 
     public bool IsCompleted => CompletedAt is not null;
 
+    /// <summary>When the athlete answered «Δεν ολοκληρώθηκε»; null otherwise.</summary>
+    public DateTimeOffset? NotCompletedAt { get; set; }
+
+    public bool IsNotCompleted => NotCompletedAt is not null;
+
+    /// <summary>The athlete gave either answer; it's final.</summary>
+    public bool IsAnswered => CompletedAt is not null || NotCompletedAt is not null;
+
+    /// <summary>When the coach last sent a reminder (at most once an hour).</summary>
+    public DateTimeOffset? LastRemindedAt { get; set; }
+
+    /// <summary>A reminder went out less than an hour ago: the coach can't send another yet.</summary>
+    public bool ReminderRecentlySent => LastRemindedAt is { } at && DateTimeOffset.UtcNow - at < TimeSpan.FromHours(1);
+
+    /// <summary>The coach can ask the athlete about it: open, and not reminded in the last hour.</summary>
+    public bool CanBeReminded => !IsAnswered && !ReminderRecentlySent;
+
+    /// <summary>Show «Υπενθύμιση …» to the coach: a reminder was sent and there's no answer yet.</summary>
+    public bool ShowReminderSent => LastRemindedAt is not null && !IsAnswered;
+
+    public DateTimeOffset? LastRemindedAtLocal => LastRemindedAt?.ToLocalTime();
+    public DateTimeOffset? CompletedAtLocal => CompletedAt?.ToLocalTime();
+    public DateTimeOffset? NotCompletedAtLocal => NotCompletedAt?.ToLocalTime();
+
     /// <summary>The coach's word on being at this workout: true Παρών, false Απών, null not said.</summary>
     public bool? CoachPresent { get; set; }
 

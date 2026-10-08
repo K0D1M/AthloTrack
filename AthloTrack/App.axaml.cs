@@ -120,6 +120,7 @@ public partial class App : Application
         services.TryAddSingleton<IAppPreferences, InMemoryAppPreferences>();
 
         services.AddSingleton<IThemeService, Services.ThemeService>();
+        services.AddSingleton<Services.WorkoutAnswerSettings>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<RecentViewModel>();
         services.AddTransient<AthletesViewModel>();

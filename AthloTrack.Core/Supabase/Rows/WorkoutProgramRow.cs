@@ -33,6 +33,14 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("read_at")]
     public DateTimeOffset? ReadAt { get; set; }
 
+    // Read-only in the row model: written only through MarkNotCompletedAsync / remind_workout, so
+    // saving a whole row (UpdateAsync) never sends them (and works before 012_….sql is run).
+    [Column("not_completed_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset? NotCompletedAt { get; set; }
+
+    [Column("last_reminded_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset? LastRemindedAt { get; set; }
+
     // Set by the database: sending the model's default would store 0001-01-01.
     [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }

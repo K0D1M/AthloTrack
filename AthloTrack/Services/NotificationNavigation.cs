@@ -27,7 +27,7 @@ public static class NotificationNavigation
     /// </summary>
     public static void RequestFor(string? type, string? notificationIds = null)
     {
-        if (type is not ("new_workout" or "workout_updated" or "workout_completed")) return;
+        if (type is not ("new_workout" or "workout_updated" or "workout_completed" or "workout_not_completed" or "workout_reminder")) return;
         var ids = (notificationIds ?? string.Empty)
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(s => Guid.TryParse(s, out var id) ? id : (Guid?)null)

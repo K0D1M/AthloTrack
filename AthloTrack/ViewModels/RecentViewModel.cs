@@ -33,6 +33,17 @@ public partial class RecentViewModel : ViewModelBase
 
     public ObservableCollection<AppNotification> Notifications { get; } = new();
 
+    /// <summary>A notification card was tapped: the shell opens the workout it's about.</summary>
+    public event Action<AppNotification>? OpenNotificationRequested;
+
+    [RelayCommand]
+    private async Task OpenNotificationAsync(AppNotification? notification)
+    {
+        if (notification is null) return;
+        await MarkReadAsync(notification); // seen: it leaves the list
+        OpenNotificationRequested?.Invoke(notification);
+    }
+
     /// <summary>Web: a banner offering to turn on notifications, until they're on.</summary>
     public PushPromptViewModel Push { get; }
 

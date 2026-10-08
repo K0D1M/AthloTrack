@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:AthloTrack.ViewModels"
              xmlns:controls="using:AthloTrack.Views.Controls"
+             xmlns:views="using:AthloTrack.Views"
              mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
              x:Class="AthloTrack.Views.MainView"
              x:DataType="vm:MainViewModel"
@@ -186,7 +187,7 @@
                                 </Border.IsVisible>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                     <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center"
-                                                     IsVisible="{Binding HasRecentAthlete}"
+                                                     IsVisible="{Binding HasRecentAthlete}" CanPreview="True"
                                                      Photo="{Binding RecentAthletePhoto}"
                                                      Initial="{Binding RecentAthleteInitial}" />
                                     <StackPanel Grid.Column="1" Spacing="6">
@@ -204,7 +205,7 @@
                                     Background="{DynamicResource CardTintGradient}" CornerRadius="14" Padding="16"
                                     BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                                    <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center"
+                                    <controls:Avatar Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center" CanPreview="True"
                                                      Photo="{Binding CoachPhoto}" Initial="{Binding CoachInitial}" />
                                     <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                                         <TextBlock Text="Ο προπονητής σου" FontSize="12"
@@ -220,11 +221,21 @@
                                 <ItemsControl ItemsSource="{Binding Notifications}" Classes="fadeitems">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{DynamicResource NoticeBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                            <Border Background="{DynamicResource NoticeBrush}" CornerRadius="8" Padding="4" Margin="0,0,0,8">
                                                 <Grid ColumnDefinitions="*,Auto">
-                                                    <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap"
-                                                               VerticalAlignment="Center" />
-                                                    <Button Grid.Column="1" Content="✓"
+                                                    <!-- Tap: open the workout it's about (and mark it read) -->
+                                                    <Button Grid.Column="0" Background="Transparent" Padding="8"
+                                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                                            Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).OpenNotificationCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <StackPanel Spacing="2">
+                                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding CreatedAt, Converter={x:Static vm:TimeConverters.Stamp}}"
+                                                                       FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Grid.Column="1" Content="✓" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                            ToolTip.Tip="Αναγνώστηκε"
                                                             Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).MarkReadCommand}"
                                                             CommandParameter="{Binding}" />
                                                 </Grid>
@@ -343,6 +354,13 @@
                     </ContentPage.Icon>
                     <Grid>
                         <ScrollViewer>
+                            <StackPanel>
+                            <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                       Margin="16,12,16,0"
+                                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                                       Margin="16,12,16,0"
+                                       IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             <ItemsControl ItemsSource="{Binding WorkoutPrograms}" Margin="12" Classes="fadeitems">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
@@ -351,13 +369,33 @@
                                                 controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
                                                 controls:SeenTracker.CommandParameter="{Binding}">
                                             <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15" />
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15"
+                                                               VerticalAlignment="Center" />
+                                                    <!-- Coach: ask the athlete whether it was done -->
+                                                    <Button Grid.Column="1" Classes="iconbutton" ToolTip.Tip="Υπενθύμιση στον αθλητή"
+                                                            IsVisible="{Binding CanRemind}" IsEnabled="{Binding RemindEnabled}"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RemindWorkoutCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <PathIcon Data="{StaticResource BellRingIcon}" Width="18" Height="18"
+                                                                  Foreground="{DynamicResource BrandSupportBrush}" />
+                                                    </Button>
+                                                </Grid>
                                                 <TextBlock Text="{Binding TargetDateText}" FontSize="12"
                                                            Foreground="{DynamicResource BrandSupportBrush}" />
                                                 <controls:CoachPresence Present="{Binding Program.CoachPresent}" Margin="0,2,0,0" />
                                                 <controls:WorkoutText Text="{Binding Content}" Margin="0,4,0,0" />
                                                 <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
                                                            Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding NotCompletedText}" IsVisible="{Binding IsNotCompleted}"
+                                                           Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
+                                                            IsVisible="{Binding ShowReminderSent}">
+                                                    <PathIcon Data="{StaticResource BellRingIcon}" Width="14" Height="14"
+                                                              Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding ReminderText}" FontSize="12" TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
+                                                </StackPanel>
                                                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
                                                             IsVisible="{Binding ShowReadReceipt}">
                                                     <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
@@ -365,16 +403,29 @@
                                                     <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
                                                                Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
                                                 </StackPanel>
-                                                <!-- the athlete marks an open workout done (the coach is notified) -->
-                                                <Button Classes="primary" Content="Ολοκληρώθηκε" HorizontalAlignment="Left" Height="36"
-                                                        Margin="0,6,0,0" IsVisible="{Binding CanComplete}"
-                                                        Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}"
-                                                        CommandParameter="{Binding}" />
+                                                <!-- the athlete answers an open workout (final; the coach is notified) -->
+                                                <WrapPanel Margin="0,6,0,0" IsVisible="{Binding CanComplete}">
+                                                    <Button Classes="primary answer" Margin="0,0,8,6"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                            <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).NotCompleteWorkoutCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                            <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </WrapPanel>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            </StackPanel>
                         </ScrollViewer>
 
                         <!-- First load: cards shaped like the workouts -->
@@ -410,6 +461,7 @@
                             </TextBlock.IsVisible>
                         </TextBlock>
                         <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+                        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
                     </Grid>
                 </ContentPage>
             </DataTemplate>
@@ -689,7 +741,7 @@
                     <StackPanel Margin="16,24" Spacing="16" MaxWidth="360" HorizontalAlignment="Stretch" VerticalAlignment="Top">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                             <Panel Grid.Column="0" Width="68" Height="68">
-                                <controls:Avatar Width="64" Height="64" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                <controls:Avatar Width="64" Height="64" HorizontalAlignment="Left" VerticalAlignment="Top" CanPreview="True"
                                                  Photo="{Binding User.Photo}" Initial="{Binding User.Initial}" />
                                 <Button Classes="photobadge" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding User.CanChangePhoto}"
                                         Click="OnChangeOwnPhoto" ToolTip.Tip="Αλλαγή φωτογραφίας">
@@ -723,6 +775,20 @@
                                 <RadioButton GroupName="theme" Content="Ανοιχτό" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" />
                                 <RadioButton GroupName="theme" Content="Σκούρο" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
                             </StackPanel>
+                        </StackPanel>
+
+                        <!-- Athletes: ask before the (final) answer to a workout -->
+                        <StackPanel Spacing="4" IsVisible="{Binding IsAthlete}">
+                            <TextBlock Text="Ασκησιολόγια" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="Επιβεβαίωση ολοκλήρωσης" />
+                                    <TextBlock Text="«Σίγουρα;» πριν από το «Ολοκληρώθηκε» ή το «Δεν ολοκληρώθηκε»."
+                                               FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource BrandSupportBrush}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ConfirmAnswers, Mode=TwoWay}"
+                                              OnContent="" OffContent="" VerticalAlignment="Center" />
+                            </Grid>
                         </StackPanel>
 
                         <!-- Greek only until translations (.resx) exist; a live toggle would change nothing. -->
@@ -774,5 +840,14 @@
             <!-- Items: built in MainView.axaml.cs from the role's tabs (coach/athlete or admin). -->
         </ListBox>
     </Border>
+
+    <!-- A tapped photo, large (PhotoPreview). Tapping anywhere, or back, closes it. -->
+    <Grid x:Name="PhotoOverlay" Grid.RowSpan="3" IsVisible="False" Background="#D9000000"
+          Tapped="OnPhotoOverlayTapped" Cursor="Hand">
+        <Border x:Name="PhotoFrame" CornerRadius="16" ClipToBounds="True" HorizontalAlignment="Center"
+                VerticalAlignment="Center" BoxShadow="0 10 40 0 #66000000">
+            <Image x:Name="PhotoImage" Stretch="Uniform" />
+        </Border>
+    </Grid>
     </Grid>
 </ContentPage>
