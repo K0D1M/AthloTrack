@@ -6,9 +6,9 @@
     <Nullable>enable</Nullable>
     <ApplicationId>com.k0d1m.athlotrack</ApplicationId>
     <!-- Raise ApplicationVersion for every APK you hand out, or phones refuse it as an update. -->
-    <ApplicationVersion>14</ApplicationVersion>
+    <ApplicationVersion>15</ApplicationVersion>
     <!-- Keep ApplicationDisplayVersion equal to <Version> in AthloTrack.csproj (shown in Σχετικά). -->
-    <ApplicationDisplayVersion>1.13-alpha</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>1.14-alpha</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>

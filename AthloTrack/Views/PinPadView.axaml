@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="760"
+             x:Class="AthloTrack.Views.PinPadView"
+             x:DataType="vm:PinPadViewModel"
+             Focusable="True">
+    <!-- The PIN lock: six dots and a keypad on the brand gradient. Buttons, not a text box, so
+         the phone's keyboard never opens; on desktop/web the number keys work too (code-behind). -->
+
+    <UserControl.Styles>
+        <Style Selector="Button.key">
+            <Setter Property="Width" Value="72" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="Margin" Value="10,7" />
+            <Setter Property="CornerRadius" Value="36" />
+            <Setter Property="Background" Value="#26FFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <Style Selector="Button.key:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#40FFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.key:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#66FFFFFF" />
+        </Style>
+        <Style Selector="Button.key.plain">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.key.plain:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1AFFFFFF" />
+        </Style>
+
+        <Style Selector="Ellipse.dot">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Margin" Value="8,0" />
+            <Setter Property="Stroke" Value="White" />
+            <Setter Property="StrokeThickness" Value="2" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Fill" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Ellipse.dot.on">
+            <Setter Property="Fill" Value="White" />
+        </Style>
+
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1AFFFFFF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="{StaticResource BrandHeroGradient}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16,32" Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                <Border Width="64" Height="64" CornerRadius="20" HorizontalAlignment="Center"
+                        Background="{StaticResource BrandLogoGradient}" BoxShadow="0 8 24 0 #40000000">
+                    <PathIcon Data="{StaticResource LockIcon}" Width="30" Height="30"
+                              Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                </Border>
+
+                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold" Foreground="White"
+                               HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="320" />
+                    <TextBlock Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" FontSize="14"
+                               Foreground="#CFE3FF" HorizontalAlignment="Center" TextAlignment="Center" />
+                </StackPanel>
+
+                <!-- Six dots; shaken on a wrong PIN -->
+                <StackPanel x:Name="Dots" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <StackPanel.RenderTransform>
+                        <TranslateTransform />
+                    </StackPanel.RenderTransform>
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot1}" />
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot2}" />
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot3}" />
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot4}" />
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot5}" />
+                    <Ellipse Classes="dot" Classes.on="{Binding Dot6}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding Error}" Foreground="#FFD6D6" FontSize="13" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="320"
+                           MinHeight="18" />
+
+                <!-- Keypad -->
+                <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" HorizontalAlignment="Center">
+                    <Button Grid.Row="0" Grid.Column="0" Classes="key" Content="1" Command="{Binding DigitCommand}" CommandParameter="1" />
+                    <Button Grid.Row="0" Grid.Column="1" Classes="key" Content="2" Command="{Binding DigitCommand}" CommandParameter="2" />
+                    <Button Grid.Row="0" Grid.Column="2" Classes="key" Content="3" Command="{Binding DigitCommand}" CommandParameter="3" />
+                    <Button Grid.Row="1" Grid.Column="0" Classes="key" Content="4" Command="{Binding DigitCommand}" CommandParameter="4" />
+                    <Button Grid.Row="1" Grid.Column="1" Classes="key" Content="5" Command="{Binding DigitCommand}" CommandParameter="5" />
+                    <Button Grid.Row="1" Grid.Column="2" Classes="key" Content="6" Command="{Binding DigitCommand}" CommandParameter="6" />
+                    <Button Grid.Row="2" Grid.Column="0" Classes="key" Content="7" Command="{Binding DigitCommand}" CommandParameter="7" />
+                    <Button Grid.Row="2" Grid.Column="1" Classes="key" Content="8" Command="{Binding DigitCommand}" CommandParameter="8" />
+                    <Button Grid.Row="2" Grid.Column="2" Classes="key" Content="9" Command="{Binding DigitCommand}" CommandParameter="9" />
+                    <Button Grid.Row="3" Grid.Column="1" Classes="key" Content="0" Command="{Binding DigitCommand}" CommandParameter="0" />
+                    <Button Grid.Row="3" Grid.Column="2" Classes="key plain" Command="{Binding BackspaceCommand}"
+                            ToolTip.Tip="Διαγραφή ψηφίου">
+                        <PathIcon Data="{StaticResource BackspaceIcon}" Width="28" Height="28" Foreground="White" />
+                    </Button>
+                </Grid>
+
+                <Button Classes="link" Content="Ξέχασα το PIN — σύνδεση με κωδικό"
+                        IsVisible="{Binding ShowForgot}" Command="{Binding ForgotCommand}" />
+                <Button Classes="link" Content="Άκυρο" IsVisible="{Binding CanCancel}" Command="{Binding CancelCommand}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

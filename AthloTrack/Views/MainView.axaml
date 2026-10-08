@@ -777,6 +777,24 @@
                             </StackPanel>
                         </StackPanel>
 
+                        <!-- Everyone: unlock this device with a PIN -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Ασφάλεια" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="Κλείδωμα με PIN" />
+                                    <TextBlock Text="Ζητά 6ψήφιο PIN όταν ανοίγεις την εφαρμογή σε αυτή τη συσκευή."
+                                               FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource BrandSupportBrush}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding PinEnabled, Mode=TwoWay}"
+                                              OnContent="" OffContent="" VerticalAlignment="Center" />
+                            </Grid>
+                            <Button Content="Αλλαγή PIN" IsVisible="{Binding PinEnabled}" Command="{Binding ChangePinCommand}"
+                                    Background="{DynamicResource TintBrush}" CornerRadius="10" Padding="12,8" />
+                            <TextBlock Text="{Binding PinMessage}" FontSize="12" Foreground="{DynamicResource SuccessBrush}"
+                                       IsVisible="{Binding PinMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+
                         <!-- Athletes: ask before the (final) answer to a workout -->
                         <StackPanel Spacing="4" IsVisible="{Binding IsAthlete}">
                             <TextBlock Text="Ασκησιολόγια" FontWeight="SemiBold" />

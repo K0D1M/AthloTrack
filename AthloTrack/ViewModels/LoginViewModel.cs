@@ -70,6 +70,9 @@ public partial class LoginViewModel : ObservableValidator
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
+    /// <summary>The sign-in came from the saved session, not a typed password: the PIN lock applies.</summary>
+    public bool LastLoginWasRestored { get; private set; }
+
     /// <summary>
     /// Signs back in from the stored session (the app remembers the login until the user logs
     /// out). The role isn't stored: RLS only lets a user's token see their own admins/coaches/
@@ -100,6 +103,7 @@ public partial class LoginViewModel : ObservableValidator
 
                 if (found)
                 {
+                    LastLoginWasRestored = true; // the app may ask for the PIN (PinLock)
                     LoginSucceeded?.Invoke(role);
                     return;
                 }

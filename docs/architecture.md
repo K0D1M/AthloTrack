@@ -155,6 +155,13 @@ Animations are subtle (about 200 ms), because the web build has one UI thread an
 - **Weeks:** `WorkoutMonth.Weeks` (`MonthGroups.Weeks`): fixed 7-day blocks of the month, newest first. Each `WorkoutWeek` opens and closes like a month (`IsExpanded`, `Toggle`); the newest week of the newest month starts open, and a rebuild keeps each week's state by `Key` ("yyyy-MM-wN").
 - **Photo preview:** `Avatar.CanPreview` raises `Services/PhotoPreview`; `MainView` shows the overlay (`PhotoOverlay`), closed by a tap or back.
 
+## PIN lock
+A per-device unlock PIN (`Services/PinLock`), not a server credential.
+- **Storage:** `IAppPreferences` keys `pin.user` (the login it belongs to; another login clears it), `pin.salt`, `pin.hash` (PBKDF2-SHA256, `pin.iter` iterations), `pin.failures`. The 5th wrong PIN in a row clears it (`LockedOut`). Logout clears it too.
+- **When:** `App.OnLoginSucceeded` locks after a *restored* session (`LoginViewModel.LastLoginWasRestored`), never after a typed password. On return from the background after more than `PinLock.LockAfter` (1 minute): Android and the browser through `IActivatableLifetime` (`ActivationKind.Background`), desktop through the window's `Deactivated`/`Activated`.
+- **Layering:** every head shows `App._shell`, a `Grid` of `_root` (login / main shell) and `_lockLayer` above it, so locking keeps the app as it was. `PinPadView`/`PinPadViewModel` (modes Unlock, Create, ConfirmCurrent) is the keypad. Ρυθμίσεις asks for it through `Services/PinPrompt`. While it shows, `MainView` gives Android's back to `App.TryCancelPinPad` (a prompt is cancelled; the lock itself is never skipped).
+- **Security note:** it keeps someone who picks up an unlocked device out. It isn't encryption: the session tokens stay in the platform credential store (plain localStorage in the browser), and a 6-digit PIN's hash can be brute-forced by someone who can read the device storage.
+
 ## Roles in the UI
 The login screen has two steps. First the user picks **Προπονητής** or **Αθλητής** (or creates an athlete account). That choice decides which profile table `SessionInitializer` checks the login against. `LoginViewModel` remembers the role of the last successful login (`IAppPreferences`, key `login.last_role`) and opens that form directly next time.
 

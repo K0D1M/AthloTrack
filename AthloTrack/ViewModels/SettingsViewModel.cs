@@ -15,11 +15,20 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly AthloTrack.Core.Push.PushRegistrationService _push;
     private readonly IThemeService? _theme;
     private readonly AthloTrack.Services.WorkoutAnswerSettings? _answers;
+    private readonly AthloTrack.Services.PinLock? _pin;
+    private readonly AthloTrack.Services.PinPrompt? _pinPrompt;
+    private bool _syncingPin;
 
     public SettingsViewModel(IAuthService authService, SessionState session, CurrentUserViewModel user,
         AthloTrack.Core.Push.PushRegistrationService push, PushPromptViewModel pushPrompt, IThemeService? theme = null,
-        AthloTrack.Services.WorkoutAnswerSettings? answers = null)
+        AthloTrack.Services.WorkoutAnswerSettings? answers = null, AthloTrack.Services.PinLock? pin = null,
+        AthloTrack.Services.PinPrompt? pinPrompt = null)
     {
+        _pin = pin;
+        _pinPrompt = pinPrompt;
+        _syncingPin = true;
+        PinEnabled = pin?.IsEnabledFor(session.AuthUserId) ?? false;
+        _syncingPin = false;
         _push = push;
         ConfirmAnswers = answers?.ConfirmAnswers ?? true;
         _answers = answers;
@@ -70,9 +79,80 @@ public partial class SettingsViewModel : ViewModelBase
         if (_answers is not null) _answers.ConfirmAnswers = value;
     }
 
+    // ---- Ασφάλεια: «Κλείδωμα με PIN» ----
+
+    /// <summary>A 6-digit PIN unlocks the app on this device (asked on start and after a minute away).</summary>
+    [ObservableProperty]
+    public partial bool PinEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? PinMessage { get; set; }
+
+    partial void OnPinEnabledChanged(bool value)
+    {
+        if (_syncingPin) return;
+        _ = value ? EnablePinAsync() : DisablePinAsync();
+    }
+
+    /// <summary>Turned on: choose the PIN (typed twice); cancelled leaves it off.</summary>
+    private async Task EnablePinAsync()
+    {
+        PinMessage = null;
+        var pin = await PromptAsync(ViewModels.PinPadMode.Create);
+        if (pin is not null && _pin is not null && _session.AuthUserId is { } userId)
+        {
+            _pin.Set(userId, pin);
+            PinMessage = "Το PIN ορίστηκε.";
+        }
+        else
+        {
+            SyncPin(false);
+        }
+    }
+
+    /// <summary>Turned off: only with the current PIN.</summary>
+    private async Task DisablePinAsync()
+    {
+        PinMessage = null;
+        if (await PromptAsync(ViewModels.PinPadMode.ConfirmCurrent) is not null)
+        {
+            _pin?.Clear();
+            PinMessage = "Το κλείδωμα με PIN απενεργοποιήθηκε.";
+        }
+        else
+        {
+            SyncPin(_pin?.IsEnabledFor(_session.AuthUserId) ?? false);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ChangePinAsync()
+    {
+        PinMessage = null;
+        if (await PromptAsync(ViewModels.PinPadMode.ConfirmCurrent) is null) return;
+        var pin = await PromptAsync(ViewModels.PinPadMode.Create);
+        if (pin is not null && _pin is not null && _session.AuthUserId is { } userId)
+        {
+            _pin.Set(userId, pin);
+            PinMessage = "Το PIN άλλαξε.";
+        }
+        SyncPin(_pin?.IsEnabledFor(_session.AuthUserId) ?? false);
+    }
+
+    private Task<string?> PromptAsync(ViewModels.PinPadMode mode) =>
+        _pinPrompt?.ShowAsync(mode) ?? Task.FromResult<string?>(null);
+
+    private void SyncPin(bool value)
+    {
+        _syncingPin = true;
+        PinEnabled = value;
+        _syncingPin = false;
+    }
+
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        _pin?.Clear(); // a PIN never outlives its login on this device
         await _push.UnregisterAsync();
         await _authService.SignOutAsync();
         _session.Clear();

@@ -16,7 +16,8 @@ public class LoginViewModelTests
         public Task<AuthResult> SignInAsync(string email, string password) =>
             Task.FromResult(password == "secret1" ? AuthResult.Ok(UserId, "a", "r") : AuthResult.Fail("wrong"));
 
-        public Task<AuthResult> RestoreSessionAsync() => Task.FromResult(AuthResult.Fail("none"));
+        public AuthResult RestoreResult { get; set; } = AuthResult.Fail("none");
+        public Task<AuthResult> RestoreSessionAsync() => Task.FromResult(RestoreResult);
         public Task<AuthResult> SignUpAsync(string email, string password) => Task.FromResult(SignUpResult);
         public Task<AuthResult> UpdatePasswordAsync(string newPassword) => Task.FromResult(AuthResult.Fail("n/a"));
 
@@ -166,5 +167,21 @@ public class LoginViewModelTests
         var vm = Create(prefs, UserRole.Admin);
 
         Assert.Equal(LoginStep.Coach, vm.Step);
+    }
+
+    [Fact]
+    public async Task A_restored_session_is_marked_for_the_pin_lock_and_a_typed_password_is_not()
+    {
+        var auth = new FakeAuth { RestoreResult = AuthResult.Ok(UserId, "a", "r") };
+        var restored = Create(new InMemoryAppPreferences(), UserRole.Coach, auth);
+        await restored.TryRestoreSessionAsync();
+        Assert.True(restored.LastLoginWasRestored);
+
+        var typed = Create(new InMemoryAppPreferences(), UserRole.Coach);
+        typed.ChooseCoachCommand.Execute(null);
+        typed.Email = "coach@example.com";
+        typed.Password = "secret1";
+        await typed.SubmitCommand.ExecuteAsync(null);
+        Assert.False(typed.LastLoginWasRestored);
     }
 }

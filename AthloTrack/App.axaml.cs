@@ -41,15 +41,24 @@ public partial class App : Application
         // One permanent root on every head; screens change by swapping its content. Android
         // reads MainViewFactory only when the activity is created, so replacing the factory
         // after sign-in never showed the next screen there.
+        // The PIN lock sits over the root: the app underneath stays as it was while locked.
+        _shell.Children.Add(_root);
+        _shell.Children.Add(_lockLayer);
+        Services.GetRequiredService<AthloTrack.Services.PinPrompt>().Host = ShowPinPromptAsync;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new Window
+            var window = new Window
             {
                 Title = "AthloTrack",
                 Width = 420,
                 Height = 720,
-                Content = _root,
+                Content = _shell,
             };
+            // Desktop has no background/foreground events: losing focus counts as away.
+            window.Deactivated += (_, _) => OnAppBackground();
+            window.Activated += (_, _) => OnAppForeground();
+            desktop.MainWindow = window;
         }
         else if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
@@ -62,12 +71,19 @@ public partial class App : Application
                 {
                     _root.Content = CreateMainShell();
                 }
-                return _root;
+                return _shell;
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
-            singleView.MainView = _root;
+            singleView.MainView = _shell;
+        }
+
+        // Android and the browser: the app went to the background / came back.
+        if (TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime activatable)
+        {
+            activatable.Deactivated += (_, e) => { if (e.Kind == ActivationKind.Background) OnAppBackground(); };
+            activatable.Activated += (_, e) => { if (e.Kind == ActivationKind.Background) OnAppForeground(); };
         }
 
         SetRoot(CreateLoginView());
@@ -100,7 +116,12 @@ public partial class App : Application
     private Control CreateLoginView()
     {
         var loginVm = Services.GetRequiredService<LoginViewModel>();
-        loginVm.LoginSucceeded += OnLoginSucceeded;
+        loginVm.LoginSucceeded += role => OnLoginSucceeded(role, loginVm.LastLoginWasRestored);
+        if (_loginNotice is not null)
+        {
+            loginVm.ErrorMessage = _loginNotice;
+            _loginNotice = null;
+        }
         // Deferred so the window/root view exists before a restored session navigates away.
         Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = loginVm.TryRestoreSessionAsync());
         return new LoginView { DataContext = loginVm };
@@ -121,6 +142,8 @@ public partial class App : Application
 
         services.AddSingleton<IThemeService, Services.ThemeService>();
         services.AddSingleton<Services.WorkoutAnswerSettings>();
+        services.AddSingleton<Services.PinLock>();
+        services.AddSingleton<Services.PinPrompt>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<RecentViewModel>();
         services.AddTransient<AthletesViewModel>();
@@ -144,7 +167,7 @@ public partial class App : Application
         Services = services.BuildServiceProvider();
     }
 
-    private void OnLoginSucceeded(UserRole role)
+    private void OnLoginSucceeded(UserRole role, bool restored)
     {
         // A coach still on the password the admin issued chooses their own first.
         if (Services.GetRequiredService<SessionState>().MustSetPassword)
@@ -154,6 +177,107 @@ public partial class App : Application
         }
 
         ShowMain();
+        // Opened with the saved session: the PIN unlocks it (a typed password doesn't need one).
+        if (restored) ShowLockIfEnabled();
+    }
+
+    // ---- PIN lock ----
+
+    /// <summary>The PIN keypad over everything (unlock, or a prompt from Ρυθμίσεις).</summary>
+    private readonly ContentControl _lockLayer = new() { IsVisible = false };
+
+    /// <summary>What every head shows: the root, and the lock layer above it.</summary>
+    private readonly Grid _shell = new();
+
+    private PinPadViewModel? _pad;
+
+    /// <summary>Shown on the next login screen (e.g. after too many wrong PINs).</summary>
+    private string? _loginNotice;
+
+    /// <summary>The keypad is showing; MainView then leaves Android's back to <see cref="TryCancelPinPad"/>.</summary>
+    public bool IsPinPadShowing => _lockLayer.IsVisible;
+
+    /// <summary>Back on the keypad: cancels a Ρυθμίσεις prompt; on the lock itself it does nothing here.</summary>
+    public bool TryCancelPinPad()
+    {
+        if (_pad is not { CanCancel: true } pad) return false;
+        pad.CancelCommand.Execute(null);
+        return true;
+    }
+
+    private bool IsSignedInToMain =>
+        _root.Content is PageNavigationHost && Services.GetRequiredService<SessionState>().AuthUserId is not null;
+
+    private void OnAppBackground() => Services.GetRequiredService<AthloTrack.Services.PinLock>().NoteBackground(DateTimeOffset.UtcNow);
+
+    private void OnAppForeground()
+    {
+        if (Services.GetRequiredService<AthloTrack.Services.PinLock>().ShouldLockOnReturn(DateTimeOffset.UtcNow))
+        {
+            ShowLockIfEnabled();
+        }
+    }
+
+    private void ShowLockIfEnabled()
+    {
+        var session = Services.GetRequiredService<SessionState>();
+        var pin = Services.GetRequiredService<AthloTrack.Services.PinLock>();
+        if (!IsSignedInToMain || _pad is { Mode: PinPadMode.Unlock } || !pin.IsEnabledFor(session.AuthUserId)) return;
+
+        var pad = new PinPadViewModel(pin, PinPadMode.Unlock, session.DisplayName);
+        pad.Unlocked += HidePinPad;
+        pad.SignOutRequested += lockedOut => _ = SignOutFromPinAsync(lockedOut);
+        ShowPinPad(pad);
+    }
+
+    /// <summary>Ρυθμίσεις: create a PIN or confirm the current one, over the app.</summary>
+    private System.Threading.Tasks.Task<string?> ShowPinPromptAsync(PinPadMode mode)
+    {
+        var done = new System.Threading.Tasks.TaskCompletionSource<string?>();
+        var pin = Services.GetRequiredService<AthloTrack.Services.PinLock>();
+        var pad = new PinPadViewModel(pin, mode, Services.GetRequiredService<SessionState>().DisplayName);
+        pad.Created += value => { HidePinPad(); done.TrySetResult(value); };
+        pad.Unlocked += () => { HidePinPad(); done.TrySetResult("ok"); };
+        pad.Cancelled += () => { HidePinPad(); done.TrySetResult(null); };
+        pad.SignOutRequested += lockedOut => { done.TrySetResult(null); _ = SignOutFromPinAsync(lockedOut); };
+        ShowPinPad(pad);
+        return done.Task;
+    }
+
+    private void ShowPinPad(PinPadViewModel pad)
+    {
+        _pad = pad;
+        _lockLayer.Content = new PinPadView { DataContext = pad };
+        _lockLayer.IsVisible = true;
+        Views.Motion.FadeInRoot(_lockLayer);
+    }
+
+    private void HidePinPad()
+    {
+        _lockLayer.IsVisible = false;
+        _lockLayer.Content = null;
+        _pad = null;
+    }
+
+    /// <summary>«Ξέχασα το PIN» or 5 wrong PINs: sign out; the password is needed again.</summary>
+    private async System.Threading.Tasks.Task SignOutFromPinAsync(bool lockedOut)
+    {
+        Services.GetRequiredService<AthloTrack.Services.PinLock>().Clear();
+        try
+        {
+            await Services.GetRequiredService<AthloTrack.Core.Push.PushRegistrationService>().UnregisterAsync();
+            await Services.GetRequiredService<IAuthService>().SignOutAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] Sign-out from the PIN lock failed: {ex.Message}");
+        }
+        Services.GetRequiredService<SessionState>().Clear();
+        HidePinPad();
+        _loginNotice = lockedOut
+            ? "Πολλές λάθος προσπάθειες με το PIN. Συνδέσου με email και κωδικό."
+            : "Συνδέσου με email και κωδικό. Μετά μπορείς να ορίσεις νέο PIN στις Ρυθμίσεις.";
+        NavigateToLogin();
     }
 
     private void ShowSetPassword()

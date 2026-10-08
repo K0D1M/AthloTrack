@@ -169,6 +169,14 @@ public partial class MainView : ContentPage
 
     private void OnBackRequested(object? sender, RoutedEventArgs e)
     {
+        // The PIN keypad is over the app: back cancels a Ρυθμίσεις prompt, and never gets past
+        // the lock (left unhandled, Android sends the app to the background).
+        if (App.Instance is { IsPinPadShowing: true } app)
+        {
+            e.Handled = app.TryCancelPinPad();
+            return;
+        }
+
         if (PhotoOverlay.IsVisible)
         {
             HidePhoto();

@@ -20,8 +20,12 @@ public partial class SetPasswordViewModel : ObservableValidator
 
     private readonly AthloTrack.Core.Push.PushRegistrationService _push;
 
-    public SetPasswordViewModel(IAuthService auth, ICoachRepository coaches, SessionState session, AthloTrack.Core.Push.PushRegistrationService push)
+    private readonly AthloTrack.Services.PinLock? _pin;
+
+    public SetPasswordViewModel(IAuthService auth, ICoachRepository coaches, SessionState session, AthloTrack.Core.Push.PushRegistrationService push,
+        AthloTrack.Services.PinLock? pin = null)
     {
+        _pin = pin;
         _push = push;
         _auth = auth;
         _coaches = coaches;
@@ -97,6 +101,7 @@ public partial class SetPasswordViewModel : ObservableValidator
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        _pin?.Clear(); // a PIN never outlives its login on this device
         await _push.UnregisterAsync();
         await _auth.SignOutAsync();
         _session.Clear();
