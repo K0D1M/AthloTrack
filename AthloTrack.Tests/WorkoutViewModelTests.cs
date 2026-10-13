@@ -13,6 +13,7 @@ public sealed class WorkoutListItemTests
         TargetDate = new DateOnly(2026, 10, 1),
         ReadAt = read,
         CompletedAt = completed,
+        AcceptedAt = DateTimeOffset.UtcNow, // the athlete said «Θα το κάνω»
     };
 
     [Fact]
@@ -58,7 +59,8 @@ public sealed class WorkoutsViewModelTests
     {
         var athleteId = Guid.NewGuid();
         var workouts = new FakeWorkouts();
-        workouts.Items.Add(new WorkoutProgram { Id = Guid.NewGuid(), AthleteId = athleteId, Content = "run", TargetDate = new DateOnly(2026, 10, 1) });
+        workouts.Items.Add(new WorkoutProgram { Id = Guid.NewGuid(), AthleteId = athleteId, Content = "run", TargetDate = new DateOnly(2026, 10, 1),
+            AcceptedAt = DateTimeOffset.UtcNow });
         var vm = new WorkoutsViewModel(workouts, new FakeAthletes(), Sessions.Athlete(athleteId, Guid.NewGuid()));
         await vm.LoadAsync();
 

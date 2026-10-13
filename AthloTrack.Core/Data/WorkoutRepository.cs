@@ -59,6 +59,48 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
+    public async Task AcceptAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        await client.From<WorkoutProgramRow>()
+            .Where(x => x.Id == id)
+            .Set(x => x.AcceptedAt!, DateTimeOffset.UtcNow)
+            .Update();
+    }
+
+    public async Task DeclineAsync(Guid id, string? reason)
+    {
+        var client = await _factory.GetClientAsync();
+        reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        var update = client.From<WorkoutProgramRow>()
+            .Where(x => x.Id == id)
+            .Set(x => x.DeclinedAt!, DateTimeOffset.UtcNow);
+        if (reason is not null) update = update.Set(x => x.DeclineReason!, reason);
+        await update.Update();
+    }
+
+    public Task CancelAsync(Guid id) => CancelRpcAsync("cancel_workout", id);
+
+    public Task RestoreAsync(Guid id) => CancelRpcAsync("restore_workout", id);
+
+    private async Task CancelRpcAsync(string function, Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        try
+        {
+            await client.Rpc(function, new Dictionary<string, object> { ["p_workout"] = id });
+        }
+        catch (global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+        {
+            var reason = ex.Message.Contains("already answered") ? CancelRefusal.AlreadyAnswered
+                : ex.Message.Contains("not allowed") ? CancelRefusal.NotAllowed
+                : ex.Message.Contains("PGRST202") ? CancelRefusal.NotInstalled
+                : (CancelRefusal?)null;
+            if (reason is null) throw;
+            throw new WorkoutCancelException(reason.Value, ex);
+        }
+    }
+
     public async Task RemindAsync(Guid id)
     {
         var client = await _factory.GetClientAsync();
@@ -123,6 +165,10 @@ public sealed class WorkoutRepository : IWorkoutRepository
         CompletedAt = r.CompletedAt,
         NotCompletedAt = r.NotCompletedAt,
         LastRemindedAt = r.LastRemindedAt,
+        AcceptedAt = r.AcceptedAt,
+        DeclinedAt = r.DeclinedAt,
+        DeclineReason = r.DeclineReason,
+        CancelledAt = r.CancelledAt,
         ReadAt = r.ReadAt,
         CoachPresent = r.CoachPresent,
     };

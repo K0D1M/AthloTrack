@@ -14,7 +14,8 @@
              $parent[UserControl]: the nearest ItemsControl is the week's. -->
         <DataTemplate x:Key="WorkoutItem" x:DataType="models:WorkoutProgram">
             <!-- SeenTracker: on the athlete's own profile, counts as read once on screen -->
-            <Border Classes="workoutitem" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+            <Border Classes="workoutitem" Classes.cancelled="{Binding IsCancelled}"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
                     Padding="6,8" CornerRadius="8"
                     controls:SeenTracker.Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).WorkoutSeenCommand}"
                     controls:SeenTracker.CommandParameter="{Binding}">
@@ -24,18 +25,29 @@
                                    FontWeight="SemiBold" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
                                     IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
-                            <!-- Reminder: ask the athlete whether it was done (open workouts only) -->
+                            <!-- Reminder: ask the athlete to choose / whether it was done (open workouts only) -->
                             <Button Classes="icon" ToolTip.Tip="Υπενθύμιση στον αθλητή"
                                     IsEnabled="{Binding !ReminderRecentlySent}"
                                     Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).RemindWorkoutCommand}"
                                     CommandParameter="{Binding}">
                                 <Button.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                        <Binding Path="!IsAnswered" />
+                                        <Binding Path="!IsClosed" />
                                         <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanRemind" />
                                     </MultiBinding>
                                 </Button.IsVisible>
                                 <PathIcon Data="{StaticResource BellRingIcon}" />
+                            </Button>
+                            <!-- Cancel (stays in the list, dimmed; the athlete is notified) / undo it -->
+                            <Button Classes="icon" ToolTip.Tip="Ακύρωση ασκησιολογίου" IsVisible="{Binding CanBeCancelled}"
+                                    Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CancelWorkoutCommand}"
+                                    CommandParameter="{Binding}">
+                                <PathIcon Data="{StaticResource CancelIcon}" />
+                            </Button>
+                            <Button Classes="icon" ToolTip.Tip="Επαναφορά ασκησιολογίου" IsVisible="{Binding IsCancelled}"
+                                    Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).RestoreWorkoutCommand}"
+                                    CommandParameter="{Binding}">
+                                <PathIcon Data="{StaticResource RestoreIcon}" />
                             </Button>
                             <Button Classes="icon" ToolTip.Tip="Επεξεργασία ασκησιολογίου"
                                     Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).EditWorkoutCommand}"
@@ -51,6 +63,29 @@
                     </Grid>
                     <controls:CoachPresence Present="{Binding CoachPresent}" />
                     <controls:WorkoutText Text="{Binding Content}" />
+                    <!-- cancelled by the coach / the athlete's choice (everyone sees it) -->
+                    <StackPanel IsVisible="{Binding IsCancelled}" Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource CancelIcon}" Width="14" Height="14"
+                                  Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center" />
+                        <TextBlock Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Text="{Binding CancelledAtLocal, StringFormat='Ακυρώθηκε {0:dd/MM}'}" />
+                    </StackPanel>
+                    <TextBlock IsVisible="{Binding ShowAccepted}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"
+                               Text="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).AcceptedLabel}" />
+                    <StackPanel IsVisible="{Binding IsDeclined}" Spacing="2">
+                        <TextBlock Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold"
+                                   Text="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).DeclinedLabel}" />
+                        <TextBlock IsVisible="{Binding HasDeclineReason}" TextWrapping="Wrap" FontSize="13"
+                                   Text="{Binding DeclineReason, StringFormat='Λόγος: {0}'}" />
+                    </StackPanel>
+                    <TextBlock Text="Αναμένει απάντηση" FontSize="12" Foreground="{DynamicResource BrandSupportBrush}">
+                        <TextBlock.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="IsPending" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
+                            </MultiBinding>
+                        </TextBlock.IsVisible>
+                    </TextBlock>
                     <!-- the athlete's answer (everyone sees it) -->
                     <TextBlock IsVisible="{Binding IsCompleted}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"
                                Text="{Binding CompletedAtLocal, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
@@ -84,11 +119,34 @@
                                    FontSize="12" Foreground="{DynamicResource BrandSupportBrush}"
                                    TextWrapping="Wrap" VerticalAlignment="Center" />
                     </StackPanel>
-                    <!-- the athlete answers their own open workout (final) -->
+                    <!-- the athlete chooses on a new workout (final; the coach is notified) -->
                     <WrapPanel Margin="0,2,0,0">
                         <WrapPanel.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="!IsAnswered" />
+                                <Binding Path="IsPending" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanCompleteWorkouts" />
+                            </MultiBinding>
+                        </WrapPanel.IsVisible>
+                        <Button Classes="primary answer" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).AcceptWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                <TextBlock Text="Θα το κάνω" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="answer notdone" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).DeclineWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <!-- the athlete answers their own accepted workout (final) -->
+                    <WrapPanel Margin="0,2,0,0">
+                        <WrapPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="CanAnswerOutcome" />
                                 <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanCompleteWorkouts" />
                             </MultiBinding>
                         </WrapPanel.IsVisible>
@@ -114,6 +172,10 @@
 
     <UserControl.Styles>
         <!-- Small round icon buttons (edit / delete / change photo) -->
+        <!-- A cancelled workout stays in the list, dimmed -->
+        <Style Selector="Border.workoutitem.cancelled">
+            <Setter Property="Opacity" Value="0.55" />
+        </Style>
         <Style Selector="Button.icon">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Width" Value="36" />
@@ -458,6 +520,8 @@
                     MaxWidth="380" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel Spacing="18">
                     <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" FontSize="15" />
+                    <TextBox IsVisible="{Binding ConfirmWantsReason}" Text="{Binding ConfirmReason}"
+                             Watermark="Λόγος (προαιρετικό)" MaxLength="200" TextWrapping="Wrap" AcceptsReturn="False" />
                     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
                         <Button Classes="dialog" Content="Άκυρο" Command="{Binding CancelConfirmCommand}" />
                         <Button Classes="dialog" Classes.danger="{Binding ConfirmIsDanger}" Classes.primary="{Binding !ConfirmIsDanger}"

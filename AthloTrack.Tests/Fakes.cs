@@ -44,6 +44,43 @@ internal sealed class FakeWorkouts : IWorkoutRepository
         return Task.CompletedTask;
     }
 
+    public List<Guid> Accepted { get; } = new();
+    public List<(Guid Id, string? Reason)> Declined { get; } = new();
+    public List<Guid> Cancelled { get; } = new();
+    public List<Guid> Restored { get; } = new();
+
+    /// <summary>The server refuses the next cancels with this reason.</summary>
+    public CancelRefusal? CancelRefusal { get; set; }
+
+    public Task AcceptAsync(Guid id)
+    {
+        Accepted.Add(id);
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) w.AcceptedAt = DateTimeOffset.UtcNow;
+        return Task.CompletedTask;
+    }
+
+    public Task DeclineAsync(Guid id, string? reason)
+    {
+        Declined.Add((id, reason));
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) { w.DeclinedAt = DateTimeOffset.UtcNow; w.DeclineReason = reason; }
+        return Task.CompletedTask;
+    }
+
+    public Task CancelAsync(Guid id)
+    {
+        if (CancelRefusal is { } reason) throw new WorkoutCancelException(reason);
+        Cancelled.Add(id);
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) w.CancelledAt = DateTimeOffset.UtcNow;
+        return Task.CompletedTask;
+    }
+
+    public Task RestoreAsync(Guid id)
+    {
+        Restored.Add(id);
+        if (Items.FirstOrDefault(w => w.Id == id) is { } w) w.CancelledAt = null;
+        return Task.CompletedTask;
+    }
+
     public Task RemindAsync(Guid id)
     {
         if (RemindRefusal is { } reason) throw new WorkoutReminderException(reason);

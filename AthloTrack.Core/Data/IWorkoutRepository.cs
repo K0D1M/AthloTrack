@@ -21,12 +21,41 @@ public sealed class WorkoutReminderException : Exception
     public ReminderRefusal Reason { get; }
 }
 
+/// <summary>Why the server refused to cancel or restore a workout.</summary>
+public enum CancelRefusal
+{
+    AlreadyAnswered,
+    NotAllowed,
+    NotInstalled,
+}
+
+public sealed class WorkoutCancelException : Exception
+{
+    public WorkoutCancelException(CancelRefusal reason, Exception? inner = null) : base(reason.ToString(), inner)
+    {
+        Reason = reason;
+    }
+
+    public CancelRefusal Reason { get; }
+}
+
 public interface IWorkoutRepository
 {
     /// <summary>All workout programs the current user can see (RLS-scoped).</summary>
     Task<IReadOnlyList<WorkoutProgram>> GetAllAsync();
     Task<IReadOnlyList<WorkoutProgram>> GetForAthleteAsync(Guid athleteId);
     Task<WorkoutProgram> AddAsync(WorkoutProgram program);
+    /// <summary>The athlete's «Θα το κάνω» (final); the DB then notifies the coach.</summary>
+    Task AcceptAsync(Guid id);
+    /// <summary>The athlete's «Δεν θα το κάνω» with an optional reason (final); the DB notifies the coach.</summary>
+    Task DeclineAsync(Guid id, string? reason);
+    /// <summary>
+    /// The coach cancels it (the athlete is notified). Throws <see cref="WorkoutCancelException"/>
+    /// when the server refuses (already answered or declined, not theirs, 013 not run).
+    /// </summary>
+    Task CancelAsync(Guid id);
+    /// <summary>The coach undoes a cancel (the athlete is notified).</summary>
+    Task RestoreAsync(Guid id);
     /// <summary>The athlete marks the program done; the DB then notifies the coach.</summary>
     Task MarkCompletedAsync(Guid id);
     /// <summary>The athlete answers «Δεν ολοκληρώθηκε» (final); the DB then notifies the coach.</summary>

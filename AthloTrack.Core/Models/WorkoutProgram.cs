@@ -10,6 +10,40 @@ public sealed class WorkoutProgram
     public Guid? CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>The athlete's «Θα το κάνω»; null until they choose (013 backfills older workouts).</summary>
+    public DateTimeOffset? AcceptedAt { get; set; }
+
+    /// <summary>The athlete's «Δεν θα το κάνω» (final); null otherwise.</summary>
+    public DateTimeOffset? DeclinedAt { get; set; }
+
+    /// <summary>The athlete's optional reason for declining.</summary>
+    public string? DeclineReason { get; set; }
+
+    /// <summary>When the coach cancelled it; null while it stands (the coach can restore it).</summary>
+    public DateTimeOffset? CancelledAt { get; set; }
+
+    public bool IsAccepted => AcceptedAt is not null;
+    public bool IsDeclined => DeclinedAt is not null;
+    public bool IsCancelled => CancelledAt is not null;
+    public bool HasDeclineReason => IsDeclined && !string.IsNullOrWhiteSpace(DeclineReason);
+
+    /// <summary>Waiting for the athlete's «Θα το κάνω / Δεν θα το κάνω».</summary>
+    public bool IsPending => !IsAccepted && !IsDeclined && !IsCancelled;
+
+    /// <summary>Accepted and open: the athlete can give the final «Ολοκληρώθηκε / Δεν ολοκληρώθηκε».</summary>
+    public bool CanAnswerOutcome => IsAccepted && !IsDeclined && !IsCancelled && !IsAnswered;
+
+    /// <summary>Nothing more is expected of the athlete: cancelled, declined or answered.</summary>
+    public bool IsClosed => IsCancelled || IsDeclined || IsAnswered;
+
+    /// <summary>The coach can cancel it: not already cancelled, declined or answered.</summary>
+    public bool CanBeCancelled => !IsClosed;
+
+    /// <summary>Accepted and still open (the «✓ Θα το κάνει» line).</summary>
+    public bool ShowAccepted => IsAccepted && !IsCancelled && !IsAnswered;
+
+    public DateTimeOffset? CancelledAtLocal => CancelledAt?.ToLocalTime();
+
     /// <summary>When the athlete marked it done; null while open.</summary>
     public DateTimeOffset? CompletedAt { get; set; }
 
@@ -29,11 +63,11 @@ public sealed class WorkoutProgram
     /// <summary>A reminder went out less than an hour ago: the coach can't send another yet.</summary>
     public bool ReminderRecentlySent => LastRemindedAt is { } at && DateTimeOffset.UtcNow - at < TimeSpan.FromHours(1);
 
-    /// <summary>The coach can ask the athlete about it: open, and not reminded in the last hour.</summary>
-    public bool CanBeReminded => !IsAnswered && !ReminderRecentlySent;
+    /// <summary>The coach can ask the athlete about it: not closed, and not reminded in the last hour.</summary>
+    public bool CanBeReminded => !IsClosed && !ReminderRecentlySent;
 
-    /// <summary>Show «Υπενθύμιση …» to the coach: a reminder was sent and there's no answer yet.</summary>
-    public bool ShowReminderSent => LastRemindedAt is not null && !IsAnswered;
+    /// <summary>Show «Υπενθύμιση …» to the coach: a reminder was sent and it isn't closed yet.</summary>
+    public bool ShowReminderSent => LastRemindedAt is not null && !IsClosed;
 
     public DateTimeOffset? LastRemindedAtLocal => LastRemindedAt?.ToLocalTime();
     public DateTimeOffset? CompletedAtLocal => CompletedAt?.ToLocalTime();

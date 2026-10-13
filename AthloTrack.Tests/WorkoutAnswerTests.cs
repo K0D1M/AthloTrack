@@ -21,7 +21,9 @@ public sealed class WorkoutAnswerTests
 
     private WorkoutProgram Add(int day, int month = 10, Action<WorkoutProgram>? setup = null)
     {
-        var w = new WorkoutProgram { Id = Guid.NewGuid(), AthleteId = _athleteId, Content = $"w{day}", TargetDate = new DateOnly(2026, month, day) };
+        // Accepted («Θα το κάνω») unless the setup says otherwise: these tests are about the final answer.
+        var w = new WorkoutProgram { Id = Guid.NewGuid(), AthleteId = _athleteId, Content = $"w{day}", TargetDate = new DateOnly(2026, month, day),
+            AcceptedAt = DateTimeOffset.UtcNow };
         setup?.Invoke(w);
         _workouts.Items.Add(w);
         return w;
@@ -189,7 +191,7 @@ public sealed class WorkoutAnswerTests
     [Fact]
     public void The_athlete_never_gets_the_bell()
     {
-        var item = new WorkoutListItemViewModel(new WorkoutProgram { TargetDate = new DateOnly(2026, 10, 5) }, "Γ",
+        var item = new WorkoutListItemViewModel(new WorkoutProgram { TargetDate = new DateOnly(2026, 10, 5), AcceptedAt = DateTimeOffset.UtcNow }, "Γ",
             isCoach: false, athleteHasLogin: true);
 
         Assert.False(item.CanRemind);

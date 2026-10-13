@@ -366,25 +366,55 @@
                                     <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
                                         <!-- SeenTracker: an athlete's workout counts as read once on screen -->
                                         <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="4,10"
+                                                Opacity="{Binding CardOpacity}"
                                                 controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
                                                 controls:SeenTracker.CommandParameter="{Binding}">
                                             <StackPanel Spacing="2">
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15"
                                                                VerticalAlignment="Center" />
-                                                    <!-- Coach: ask the athlete whether it was done -->
-                                                    <Button Grid.Column="1" Classes="iconbutton" ToolTip.Tip="Υπενθύμιση στον αθλητή"
-                                                            IsVisible="{Binding CanRemind}" IsEnabled="{Binding RemindEnabled}"
-                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RemindWorkoutCommand}"
-                                                            CommandParameter="{Binding}">
-                                                        <PathIcon Data="{StaticResource BellRingIcon}" Width="18" Height="18"
-                                                                  Foreground="{DynamicResource BrandSupportBrush}" />
-                                                    </Button>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                        <!-- Coach: ask the athlete to choose / whether it was done -->
+                                                        <Button Classes="iconbutton" ToolTip.Tip="Υπενθύμιση στον αθλητή"
+                                                                IsVisible="{Binding CanRemind}" IsEnabled="{Binding RemindEnabled}"
+                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RemindWorkoutCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <PathIcon Data="{StaticResource BellRingIcon}" Width="18" Height="18"
+                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
+                                                        </Button>
+                                                        <!-- Coach: cancel (stays, dimmed; the athlete is notified) / undo it -->
+                                                        <Button Classes="iconbutton" ToolTip.Tip="Ακύρωση ασκησιολογίου"
+                                                                IsVisible="{Binding CanCancel}"
+                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CancelWorkoutCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <PathIcon Data="{StaticResource CancelIcon}" Width="18" Height="18"
+                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
+                                                        </Button>
+                                                        <Button Classes="iconbutton" ToolTip.Tip="Επαναφορά ασκησιολογίου"
+                                                                IsVisible="{Binding CanRestore}"
+                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RestoreWorkoutCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <PathIcon Data="{StaticResource RestoreIcon}" Width="18" Height="18"
+                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
+                                                        </Button>
+                                                    </StackPanel>
                                                 </Grid>
                                                 <TextBlock Text="{Binding TargetDateText}" FontSize="12"
                                                            Foreground="{DynamicResource BrandSupportBrush}" />
                                                 <controls:CoachPresence Present="{Binding Program.CoachPresent}" Margin="0,2,0,0" />
                                                 <controls:WorkoutText Text="{Binding Content}" Margin="0,4,0,0" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0" IsVisible="{Binding IsCancelled}">
+                                                    <PathIcon Data="{StaticResource CancelIcon}" Width="14" Height="14"
+                                                              Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding CancelledText}" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding AcceptedText}" IsVisible="{Binding ShowAccepted}"
+                                                           Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding DeclinedText}" IsVisible="{Binding IsDeclined}" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
+                                                <TextBlock Text="Αναμένει απάντηση" IsVisible="{Binding ShowPending}" FontSize="12"
+                                                           Foreground="{DynamicResource BrandSupportBrush}" Margin="0,2,0,0" />
                                                 <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
                                                            Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
                                                 <TextBlock Text="{Binding NotCompletedText}" IsVisible="{Binding IsNotCompleted}"
@@ -403,7 +433,24 @@
                                                     <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
                                                                Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
                                                 </StackPanel>
-                                                <!-- the athlete answers an open workout (final; the coach is notified) -->
+                                                <!-- the athlete chooses on a new workout (final; the coach is notified) -->
+                                                <WrapPanel Margin="0,6,0,0" IsVisible="{Binding CanAccept}">
+                                                    <Button Classes="primary answer" Margin="0,0,8,6"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).AcceptWorkoutCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                            <TextBlock Text="Θα το κάνω" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).DeclineWorkoutCommand}" CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                            <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </WrapPanel>
+                                                <!-- the athlete answers an accepted workout (final; the coach is notified) -->
                                                 <WrapPanel Margin="0,6,0,0" IsVisible="{Binding CanComplete}">
                                                     <Button Classes="primary answer" Margin="0,0,8,6"
                                                             Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}" CommandParameter="{Binding}">

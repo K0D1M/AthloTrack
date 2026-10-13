@@ -79,6 +79,11 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>Only the athlete answers their own workouts (the coach is then notified).</summary>
     public bool CanCompleteWorkouts => IsOwnProfile;
 
+    /// <summary>«✓ Θα το κάνει» for the coach, «✓ Θα το κάνεις» for the athlete.</summary>
+    public string AcceptedLabel => CanEdit ? "✓ Θα το κάνει" : "✓ Θα το κάνεις";
+
+    public string DeclinedLabel => CanEdit ? "✗ Δεν θα το κάνει" : "✗ Δεν θα το κάνεις";
+
     /// <summary>The coach can send reminders: the athlete has a login to receive them.</summary>
     public bool CanRemind => CanEdit && _athlete?.AuthUserId is not null;
 
@@ -92,16 +97,85 @@ public partial class AthleteProfileViewModel : ViewModelBase
 
     [RelayCommand]
     private Task CompleteWorkoutAsync(WorkoutProgram? workout) =>
-        AnswerAsync(workout, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
+        AnswerAsync(workout, w => w.CanAnswerOutcome, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
 
     [RelayCommand]
     private Task NotCompleteWorkoutAsync(WorkoutProgram? workout) =>
-        AnswerAsync(workout, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
+        AnswerAsync(workout, w => w.CanAnswerOutcome, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
 
-    /// <summary>The athlete's answer is final: asked first, unless turned off in Ρυθμίσεις.</summary>
-    private async Task AnswerAsync(WorkoutProgram? workout, string button, Func<Guid, Task> send)
+    /// <summary>The athlete's «Θα το κάνω» on a new workout; the DB then notifies the coach.</summary>
+    [RelayCommand]
+    private Task AcceptWorkoutAsync(WorkoutProgram? workout) =>
+        AnswerAsync(workout, w => w.IsPending, "Θα το κάνω", id => _workouts.AcceptAsync(id));
+
+    /// <summary>
+    /// The athlete's «Δεν θα το κάνω» (final). Always asked, whatever the setting: it carries the
+    /// optional reason for the coach.
+    /// </summary>
+    [RelayCommand]
+    private void DeclineWorkout(WorkoutProgram? workout)
     {
-        if (workout is null || workout.IsAnswered || !CanCompleteWorkouts) return;
+        if (workout is null || !workout.IsPending || !CanCompleteWorkouts) return;
+        Ask(DeclineText, async () =>
+            {
+                await _workouts.DeclineAsync(workout.Id, ConfirmPrompt.CleanReason(ConfirmReason));
+                await LoadAsync();
+            },
+            "Δεν θα το κάνω", danger: true, wantsReason: true);
+    }
+
+    internal const string DeclineText = "Δεν θα κάνεις αυτό το ασκησιολόγιο; Ο προπονητής θα ειδοποιηθεί. Αυτό δεν μπορεί να αναιρεθεί.";
+
+    /// <summary>The coach cancels a workout (it stays, dimmed); the athlete is notified.</summary>
+    [RelayCommand]
+    private void CancelWorkout(WorkoutProgram? workout)
+    {
+        if (workout is null || !workout.CanBeCancelled || !CanEdit) return;
+        Ask(CancelText(workout.TargetDate), () => CancelOrRestoreAsync(() => _workouts.CancelAsync(workout.Id)),
+            "Ναι, ακύρωση");
+    }
+
+    internal static string CancelText(DateOnly date) =>
+        $"Ακύρωση του ασκησιολογίου της {date:dd/MM}; Ο αθλητής θα ειδοποιηθεί.";
+
+    /// <summary>The coach undoes a cancel; the athlete is notified.</summary>
+    [RelayCommand]
+    private Task RestoreWorkoutAsync(WorkoutProgram? workout)
+    {
+        if (workout is null || !workout.IsCancelled || !CanEdit) return Task.CompletedTask;
+        return CancelOrRestoreAsync(() => _workouts.RestoreAsync(workout.Id));
+    }
+
+    private async Task CancelOrRestoreAsync(Func<Task> send)
+    {
+        ErrorMessage = null;
+        InfoMessage = null;
+        try
+        {
+            await send();
+            await LoadAsync();
+        }
+        catch (WorkoutCancelException ex)
+        {
+            ErrorMessage = CancelRefusalText(ex.Reason);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    internal static string CancelRefusalText(CancelRefusal reason) => reason switch
+    {
+        CancelRefusal.AlreadyAnswered => "Ο αθλητής έχει ήδη απαντήσει γι' αυτό το ασκησιολόγιο.",
+        CancelRefusal.NotAllowed => "Μόνο ο προπονητής του αθλητή μπορεί να το ακυρώσει.",
+        _ => "Η ακύρωση δεν είναι ακόμα διαθέσιμη (λείπει το 013_workout_accept_cancel.sql).",
+    };
+
+    /// <summary>The athlete's choice and answer are final: asked first, unless turned off in Ρυθμίσεις.</summary>
+    private async Task AnswerAsync(WorkoutProgram? workout, Func<WorkoutProgram, bool> allowed, string button, Func<Guid, Task> send)
+    {
+        if (workout is null || !allowed(workout) || !CanCompleteWorkouts) return;
         async Task Run()
         {
             await send(workout.Id);
@@ -213,6 +287,13 @@ public partial class AthleteProfileViewModel : ViewModelBase
     /// <summary>Deletes use the red button; answers the blue one.</summary>
     [ObservableProperty]
     public partial bool ConfirmIsDanger { get; set; } = true;
+
+    /// <summary>The dialog also asks for an optional reason («Δεν θα το κάνω»).</summary>
+    [ObservableProperty]
+    public partial bool ConfirmWantsReason { get; set; }
+
+    [ObservableProperty]
+    public partial string ConfirmReason { get; set; } = string.Empty;
 
     /// <summary>Raised by the "+" menu — the shell opens the add-measurement dialog.</summary>
     public event Action<Guid>? AddMeasurementRequested;
@@ -341,11 +422,13 @@ public partial class AthleteProfileViewModel : ViewModelBase
         ConfirmMessage = null;
     }
 
-    private void Ask(string message, Func<Task> onConfirm, string button = "Διαγραφή", bool danger = true)
+    private void Ask(string message, Func<Task> onConfirm, string button = "Διαγραφή", bool danger = true, bool wantsReason = false)
     {
         _pendingConfirm = onConfirm;
         ConfirmButtonText = button;
         ConfirmIsDanger = danger;
+        ConfirmReason = string.Empty;
+        ConfirmWantsReason = wantsReason;
         ConfirmMessage = message;
     }
 

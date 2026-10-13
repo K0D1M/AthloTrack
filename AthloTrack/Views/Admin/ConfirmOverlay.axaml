@@ -14,6 +14,8 @@
                     <TextBlock Text="{Binding TextHint}" Classes="admin-hint" />
                     <TextBox Text="{Binding Input}" />
                 </StackPanel>
+                <TextBox IsVisible="{Binding WantsReason}" Text="{Binding Reason}"
+                         Watermark="Λόγος (προαιρετικό)" MaxLength="200" TextWrapping="Wrap" AcceptsReturn="False" />
                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
                     <Button Classes="admin-dialog" Content="Άκυρο" Command="{Binding CancelCommand}" />
                     <Button Classes="admin-dialog" Classes.danger="{Binding IsDanger}"

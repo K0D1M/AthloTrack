@@ -53,16 +53,76 @@ public partial class WorkoutsViewModel : ViewModelBase
     /// <summary>The athlete marks an open workout done; the DB then notifies the coach.</summary>
     [RelayCommand]
     private Task CompleteWorkoutAsync(WorkoutListItemViewModel? item) =>
-        AnswerAsync(item, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
+        AnswerAsync(item, i => i.CanComplete, "Ολοκληρώθηκε", id => _workouts.MarkCompletedAsync(id));
 
     /// <summary>The athlete answers «Δεν ολοκληρώθηκε»; the DB then notifies the coach.</summary>
     [RelayCommand]
     private Task NotCompleteWorkoutAsync(WorkoutListItemViewModel? item) =>
-        AnswerAsync(item, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
+        AnswerAsync(item, i => i.CanComplete, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
 
-    private async Task AnswerAsync(WorkoutListItemViewModel? item, string button, Func<Guid, Task> send)
+    /// <summary>The athlete's «Θα το κάνω» on a new workout; the DB then notifies the coach.</summary>
+    [RelayCommand]
+    private Task AcceptWorkoutAsync(WorkoutListItemViewModel? item) =>
+        AnswerAsync(item, i => i.CanAccept, "Θα το κάνω", id => _workouts.AcceptAsync(id));
+
+    /// <summary>«Δεν θα το κάνω» (final), always asked: it carries the optional reason.</summary>
+    [RelayCommand]
+    private void DeclineWorkout(WorkoutListItemViewModel? item)
     {
-        if (item is null || !item.CanComplete) return;
+        if (item is null || !item.CanAccept) return;
+        Confirm.AskWithReason(AthleteProfileViewModel.DeclineText, "Δεν θα το κάνω", async reason =>
+        {
+            try
+            {
+                await _workouts.DeclineAsync(item.Program.Id, reason);
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+        });
+    }
+
+    /// <summary>The coach cancels a workout (it stays, dimmed); the athlete is notified.</summary>
+    [RelayCommand]
+    private void CancelWorkout(WorkoutListItemViewModel? item)
+    {
+        if (item is null || !item.CanCancel) return;
+        Confirm.Ask(AthleteProfileViewModel.CancelText(item.Program.TargetDate), "Ναι, ακύρωση",
+            () => CancelOrRestoreAsync(() => _workouts.CancelAsync(item.Program.Id)), danger: true);
+    }
+
+    /// <summary>The coach undoes a cancel; the athlete is notified.</summary>
+    [RelayCommand]
+    private Task RestoreWorkoutAsync(WorkoutListItemViewModel? item) =>
+        item is null || !item.CanRestore
+            ? Task.CompletedTask
+            : CancelOrRestoreAsync(() => _workouts.RestoreAsync(item.Program.Id));
+
+    private async Task CancelOrRestoreAsync(Func<Task> send)
+    {
+        ErrorMessage = null;
+        InfoMessage = null;
+        try
+        {
+            await send();
+            await LoadAsync();
+        }
+        catch (WorkoutCancelException ex)
+        {
+            ErrorMessage = AthleteProfileViewModel.CancelRefusalText(ex.Reason);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task AnswerAsync(WorkoutListItemViewModel? item, Func<WorkoutListItemViewModel, bool> allowed,
+        string button, Func<Guid, Task> send)
+    {
+        if (item is null || !allowed(item)) return;
         async Task Run()
         {
             try

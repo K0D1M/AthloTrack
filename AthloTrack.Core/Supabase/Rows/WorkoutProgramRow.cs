@@ -41,6 +41,19 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("last_reminded_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset? LastRemindedAt { get; set; }
 
+    // 013: written only through AcceptAsync / DeclineAsync / cancel_workout / restore_workout.
+    [Column("accepted_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset? AcceptedAt { get; set; }
+
+    [Column("declined_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset? DeclinedAt { get; set; }
+
+    [Column("decline_reason", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public string? DeclineReason { get; set; }
+
+    [Column("cancelled_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset? CancelledAt { get; set; }
+
     // Set by the database: sending the model's default would store 0001-01-01.
     [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }
