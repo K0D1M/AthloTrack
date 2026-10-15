@@ -21,6 +21,10 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("target_date")]
     public DateTime TargetDate { get; set; }
 
+    // 014: Postgres "time" as text ("18:30:00"); null = no time.
+    [Column("start_time")]
+    public string? StartTime { get; set; }
+
     [Column("created_by")]
     public Guid? CreatedBy { get; set; }
 

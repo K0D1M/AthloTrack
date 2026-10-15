@@ -7,6 +7,17 @@ public sealed class WorkoutProgram
     public string? Title { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateOnly TargetDate { get; set; }
+
+    /// <summary>Optional time of day on <see cref="TargetDate"/> (014); null shows the date only.</summary>
+    public TimeOnly? StartTime { get; set; }
+
+    /// <summary>«21/10/2026 · 18:30», or just the date without a time.</summary>
+    public string WhenText => FormatWhen(TargetDate, StartTime);
+
+    public static string FormatWhen(DateOnly date, TimeOnly? time, string dateFormat = "dd/MM/yyyy") =>
+        time is { } t
+            ? $"{date.ToString(dateFormat, System.Globalization.CultureInfo.InvariantCulture)} · {t.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)}"
+            : date.ToString(dateFormat, System.Globalization.CultureInfo.InvariantCulture);
     public Guid? CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 

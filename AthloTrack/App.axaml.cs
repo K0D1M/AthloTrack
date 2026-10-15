@@ -44,6 +44,7 @@ public partial class App : Application
         // The PIN lock sits over the root: the app underneath stays as it was while locked.
         _shell.Children.Add(_root);
         _shell.Children.Add(_lockLayer);
+        _shell.AttachedToVisualTree += (_, _) => WatchSafeArea();
         Services.GetRequiredService<AthloTrack.Services.PinPrompt>().Host = ShowPinPromptAsync;
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -292,6 +293,41 @@ public partial class App : Application
     private readonly ContentControl _root = new();
 
     /// <summary>Shows a screen (login, set-password, main shell) on every head.</summary>
+    private Avalonia.Controls.Platform.IInsetsManager? _insets;
+
+    /// <summary>
+    /// Keeps every screen clear of the Android status and navigation bars (edge-to-edge since
+    /// Android 15). PageNavigationHost only does this when it is the top level's own content, and
+    /// the root is <see cref="_shell"/> (root + PIN layer), so the insets are applied here instead.
+    /// </summary>
+    private void WatchSafeArea()
+    {
+        var topLevel = TopLevel.GetTopLevel(_shell);
+        var insets = topLevel?.InsetsManager;
+        if (topLevel is null || insets is null || ReferenceEquals(insets, _insets)) return;
+        if (_insets is not null) _insets.SafeAreaChanged -= OnSafeAreaChanged;
+        _insets = insets;
+        _insets.SafeAreaChanged += OnSafeAreaChanged;
+        // On Android the first SafeAreaChanged comes before the top level knows its scaling, with
+        // physical pixels (136 instead of 52 at 2.625) and no event after it; the property is right
+        // once the scaling is known, so it's read again then (and on resize / rotation).
+        topLevel.ScalingChanged += (_, _) => ApplySafeArea();
+        _shell.SizeChanged += (_, _) => ApplySafeArea();
+        ApplySafeArea();
+    }
+
+    private void OnSafeAreaChanged(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => ApplySafeArea();
+
+    private void ApplySafeArea()
+    {
+        if (_insets is null) return;
+        var padding = _insets.SafeAreaPadding;
+        _root.Padding = padding;
+        _lockLayer.Padding = padding;
+        // The strips behind the bars take the root's colour (the PIN screen covers the app under it).
+        _lockLayer.Background = _root.Background;
+    }
+
     private void SetRoot(Control view)
     {
         // On phones the shell is inset below the status bar; the root's colour fills that gap,

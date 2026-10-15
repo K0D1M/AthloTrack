@@ -90,7 +90,13 @@ internal sealed class FakeWorkouts : IWorkoutRepository
     }
 
     public Task<WorkoutProgram?> GetByIdAsync(Guid id) => Task.FromResult(Items.FirstOrDefault(w => w.Id == id));
-    public Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent) { Updated.Add((id, content, targetDate, coachPresent)); return Task.CompletedTask; }
+    public List<TimeOnly?> UpdatedTimes { get; } = new();
+    public Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent, TimeOnly? startTime = null)
+    {
+        Updated.Add((id, content, targetDate, coachPresent));
+        UpdatedTimes.Add(startTime);
+        return Task.CompletedTask;
+    }
     /// <summary>When set, MarkReadAsync waits for it: a save that is still in flight.</summary>
     public TaskCompletionSource? ReadGate { get; set; }
 

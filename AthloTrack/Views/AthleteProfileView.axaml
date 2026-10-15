@@ -21,7 +21,7 @@
                     controls:SeenTracker.CommandParameter="{Binding}">
                 <StackPanel Spacing="4">
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="{Binding TargetDate, StringFormat='Ημ. στόχος: {0:dd/MM/yyyy}'}"
+                        <TextBlock Grid.Column="0" Text="{Binding WhenText, StringFormat='Ημ. στόχος: {0}'}"
                                    FontWeight="SemiBold" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
                                     IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">

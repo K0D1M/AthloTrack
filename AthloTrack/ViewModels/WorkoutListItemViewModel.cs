@@ -10,7 +10,7 @@ public sealed class WorkoutListItemViewModel
     {
         Program = program;
         AthleteName = athleteName;
-        TargetDateText = $"Ημ. στόχος: {program.TargetDate:dd/MM/yyyy}";
+        TargetDateText = $"Ημ. στόχος: {program.WhenText}";
         Content = program.Content;
         IsCompleted = program.IsCompleted;
         CompletedText = program.CompletedAt is { } done ? $"✓ Ολοκληρώθηκε {done.ToLocalTime():dd/MM/yyyy}" : string.Empty;

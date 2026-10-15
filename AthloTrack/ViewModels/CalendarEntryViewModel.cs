@@ -11,10 +11,13 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
     {
     }
 
-    public CalendarEntryViewModel(DateOnly date, Guid athleteId, string athleteName, string? profileImagePath, string content)
+    public CalendarEntryViewModel(DateOnly date, Guid athleteId, string athleteName, string? profileImagePath, string content,
+        TimeOnly? startTime = null)
     {
         Date = date;
-        DateText = date.ToString("dddd dd/MM/yyyy", new System.Globalization.CultureInfo("el-GR"));
+        StartTime = startTime;
+        DateText = date.ToString("dddd dd/MM/yyyy", new System.Globalization.CultureInfo("el-GR"))
+                   + (startTime is { } t ? $" · {t:HH:mm}" : string.Empty);
         AthleteId = athleteId;
         AthleteName = athleteName;
         ProfileImagePath = profileImagePath;
@@ -22,6 +25,9 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
     }
 
     public DateOnly Date { get; }
+
+    /// <summary>The workout's optional start time (shown after the date).</summary>
+    public TimeOnly? StartTime { get; }
     public string DateText { get; }
     public Guid AthleteId { get; }
     public string AthleteName { get; }

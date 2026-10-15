@@ -19,6 +19,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         var client = await _factory.GetClientAsync();
         var response = await client.From<WorkoutProgramRow>()
             .Order(x => x.TargetDate, Constants.Ordering.Ascending)
+            .Order(x => x.StartTime!, Constants.Ordering.Ascending) // same day: by time, untimed last
             .Get();
         return response.Models.Select(Map).ToList();
     }
@@ -29,6 +30,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         var response = await client.From<WorkoutProgramRow>()
             .Where(x => x.AthleteId == athleteId)
             .Order(x => x.TargetDate, Constants.Ordering.Ascending)
+            .Order(x => x.StartTime!, Constants.Ordering.Ascending) // same day: by time, untimed last
             .Get();
         return response.Models.Select(Map).ToList();
     }
@@ -127,7 +129,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         return row is null ? null : Map(row);
     }
 
-    public async Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent)
+    public async Task UpdateAsync(Guid id, string content, DateOnly targetDate, bool? coachPresent, TimeOnly? startTime = null)
     {
         var client = await _factory.GetClientAsync();
         // Update the whole row model, like AddAsync. Set(x => x.TargetDate, date) serialized the
@@ -137,6 +139,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         row.Content = content;
         row.TargetDate = targetDate.ToDateTime(TimeOnly.MinValue);
         row.CoachPresent = coachPresent;
+        row.StartTime = TimeText(startTime);
         await row.Update<WorkoutProgramRow>();
     }
 
@@ -153,6 +156,12 @@ public sealed class WorkoutRepository : IWorkoutRepository
         await client.From<WorkoutProgramRow>().Where(x => x.Id == id).Delete();
     }
 
+    internal static string? TimeText(TimeOnly? time) =>
+        time?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+
+    internal static TimeOnly? ParseTime(string? text) =>
+        TimeOnly.TryParse(text, System.Globalization.CultureInfo.InvariantCulture, out var t) ? t : null;
+
     private static WorkoutProgram Map(WorkoutProgramRow r) => new()
     {
         Id = r.Id,
@@ -160,6 +169,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         Title = r.Title,
         Content = r.Content,
         TargetDate = DateOnly.FromDateTime(r.TargetDate),
+        StartTime = ParseTime(r.StartTime),
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
         CompletedAt = r.CompletedAt,
@@ -180,6 +190,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         Title = w.Title,
         Content = w.Content,
         TargetDate = w.TargetDate.ToDateTime(TimeOnly.MinValue),
+        StartTime = TimeText(w.StartTime),
         CreatedBy = w.CreatedBy,
         CreatedAt = w.CreatedAt,
         CoachPresent = w.CoachPresent,

@@ -1,6 +1,6 @@
 # Database (Supabase)
 
-The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–013) are safe to run again.
+The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–014) are safe to run again.
 
 | File | Adds |
 |---|---|
@@ -15,6 +15,7 @@ The schema lives in `supabase/`. On a fresh project, run the files **in order** 
 | `009_workout_templates.sql` | Table `workout_templates`: the coach's saved workout texts («Πρότυπα» in the editor) |
 | `010_fix_created_at.sql` | Data repair: before 1.6 the app stored `created_at` (and a new athlete's `updated_at`) as 0001-01-01; this sets real values. The row models now leave `created_at` to the database (`ignoreOnInsert`) |
 | `011_admin.sql` | Administrators: tables `admins` and `admin_audit`, `is_admin()`, and the admin dashboard's functions (`admin_overview`, `admin_activity`, `admin_health`, `admin_coaches`, `admin_athletes`, `admin_devices`, `admin_audit_log`, `admin_force_password_change`, `admin_move_athlete`, `admin_delete_athlete`) |
+| `014_workout_start_time.sql` | `workout_programs.start_time` (optional time of day); the athlete can't change it; a coach's change clears `read_at` and sends `workout_updated` like a date change |
 | `013_workout_accept_cancel.sql` | `workout_programs.accepted_at` («Θα το κάνω»), `declined_at` + `decline_reason` («Δεν θα το κάνω»), `cancelled_at` (the coach's «Ακύρωση»); existing workouts are backfilled as accepted (only when the column is first added); the final answer needs an accepted, open workout; triggers `trg_guard_workout_insert`, `trg_notify_workout_choice`; RPCs `cancel_workout(p_workout)` / `restore_workout(p_workout)`; `remind_workout` and `admin_overview` updated |
 | `012_workout_outcome_reminders.sql` | `workout_programs.not_completed_at` («Δεν ολοκληρώθηκε») and `last_reminded_at`; the athlete's answer is one of the two, once, and final; trigger `trg_notify_workout_not_completed`; RPC `remind_workout(p_workout)` (coach reminder, at most once an hour) |
 
@@ -25,7 +26,7 @@ The schema lives in `supabase/`. On a fresh project, run the files **in order** 
 | `coaches` | `auth_user_id`, `full_name`, `email`, `profile_image_path`, `must_set_password` | One row per coach login. Created by an administrator |
 | `athletes` | `coach_id`, `auth_user_id` (nullable until linked), `full_name`, `email`, `date_of_birth`, `height_cm`, `profile_image_path`, `notes`, `updated_at` | `updated_at` is bumped by every new measurement or workout. The **Πρόσφατα** screen sorts by it |
 | `measurements` | `athlete_id`, `measured_at`, `weight_kg`, `fat_mass_wt`, `fat_hgt` | |
-| `workout_programs` | `athlete_id`, `title`, `content`, `target_date`, `coach_present`, `accepted_at`, `declined_at`, `decline_reason`, `cancelled_at`, `completed_at`, `not_completed_at`, `read_at`, `last_reminded_at` | The athlete first chooses once: `accepted_at` («Θα το κάνω») or `declined_at` («Δεν θα το κάνω», optional `decline_reason`, ≤ 200 characters); both null while waiting. `cancelled_at` is the coach's «Ακύρωση» (null again after «Επαναφορά»). An accepted, not cancelled workout then takes the final answer once: `completed_at` («Ολοκληρώθηκε») or `not_completed_at` («Δεν ολοκληρώθηκε»); both null while open. `last_reminded_at` is the coach's last reminder. `read_at` is when the athlete first saw it. `coach_present` is optional (null shows no indicator). `content` is plain text with a small markup (`## `, `- `, `1. `, `**…**`) that the app shows formatted |
+| `workout_programs` | `athlete_id`, `title`, `content`, `target_date`, `start_time`, `coach_present`, `accepted_at`, `declined_at`, `decline_reason`, `cancelled_at`, `completed_at`, `not_completed_at`, `read_at`, `last_reminded_at` | The athlete first chooses once: `accepted_at` («Θα το κάνω») or `declined_at` («Δεν θα το κάνω», optional `decline_reason`, ≤ 200 characters); both null while waiting. `cancelled_at` is the coach's «Ακύρωση» (null again after «Επαναφορά»). An accepted, not cancelled workout then takes the final answer once: `completed_at` («Ολοκληρώθηκε») or `not_completed_at` («Δεν ολοκληρώθηκε»); both null while open. `last_reminded_at` is the coach's last reminder. `read_at` is when the athlete first saw it. `coach_present` is optional (null shows no indicator). `content` is plain text with a small markup (`## `, `- `, `1. `, `**…**`) that the app shows formatted |
 | `workout_templates` | `coach_id`, `name`, `content`, `created_at` | `coach_id` defaults to `auth_coach_id()` |
 | `notifications` | `athlete_id`, `recipient` (`athlete` / `coach`), `type`, `message`, `related_workout_id`, `is_read` | Every insert triggers a phone push, see [push-notifications.md](push-notifications.md) |
 | `device_tokens` | `token` (PK), `auth_user_id`, `platform` | The Firebase token of each installed Android app |
@@ -69,7 +70,7 @@ The RPC `mark_workout_read(p_workout)` (`security definer`) sets `read_at = now(
 | `trg_notify_workout_completed` | `completed_at` changes from null to a value | Inserts a coach notification: «Ο/Η {name} ολοκλήρωσε το ασκησιολόγιο της DD/MM» |
 | `trg_notify_workout_not_completed` | `not_completed_at` changes from null to a value | Inserts a coach notification: «Ο/Η {name} δεν ολοκλήρωσε το ασκησιολόγιο της DD/MM» |
 | `trg_notify_workout_choice` | `accepted_at` or `declined_at` changes from null to a value | Inserts a coach notification: «Ο/Η {name} θα κάνει / δεν θα κάνει το ασκησιολόγιο της DD/MM» (+ «: {reason}»), types `workout_accepted` / `workout_declined` |
-| `trg_notify_workout_updated` | A coach changes `content` or `target_date` | Inserts an athlete notification: «Ο {coach} ενημέρωσε το ασκησιολόγιο της DD/MM» |
+| `trg_notify_workout_updated` | A coach changes `content`, `target_date` or `start_time` (014) | Inserts an athlete notification: «Ο {coach} ενημέρωσε το ασκησιολόγιο της DD/MM» |
 | `trg_touch_athlete_on_measurement` / `_on_workout` | A measurement or workout is inserted | Bumps `athletes.updated_at` |
 | `trg_link_athlete_on_signup` (on `auth.users`) | A login is created | Links it to the athlete with the same email |
 | `trg_link_athlete_on_email` | An athlete's email is set or changed | Links the athlete to an existing login with that email |

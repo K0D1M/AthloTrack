@@ -34,6 +34,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
     private string _baseContent = string.Empty;
     private DateOnly _baseDate = DateOnly.FromDateTime(DateTime.Today);
     private bool? _basePresent;
+    private TimeOnly? _baseTime;
     private bool _suspendDraft;
 
     private Func<Task>? _pendingConfirm;
@@ -81,6 +82,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
         _baseContent = workout.Content;
         _baseDate = workout.TargetDate;
         _basePresent = workout.CoachPresent;
+        _baseTime = workout.StartTime;
         // The constructor may have restored this athlete's new-workout draft: an edit doesn't use it.
         IsDraftRestored = false;
         ApplyBase();
@@ -96,6 +98,19 @@ public partial class AddWorkoutViewModel : ObservableValidator
 
     [ObservableProperty]
     public partial DateTimeOffset TargetDate { get; set; } = DateTimeOffset.Now;
+
+    /// <summary>Optional start time (the TimePicker's value); null = no time.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasStartTime))]
+    public partial TimeSpan? StartTime { get; set; }
+
+    public bool HasStartTime => StartTime is not null;
+
+    private TimeOnly? StartTimeOnly => StartTime is { } t ? TimeOnly.FromTimeSpan(t) : null;
+
+    /// <summary>«Χωρίς ώρα»: removes the time.</summary>
+    [RelayCommand]
+    private void ClearStartTime() => StartTime = null;
 
     [ObservableProperty]
     [NotifyDataErrorInfo]
@@ -145,6 +160,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
     partial void OnContentChanged(string value) => SaveDraft();
     partial void OnTargetDateChanged(DateTimeOffset value) => SaveDraft();
     partial void OnCoachPresentChanged(bool? value) => SaveDraft();
+    partial void OnStartTimeChanged(TimeSpan? value) => SaveDraft();
 
     /// <summary>Throws the restored draft away and goes back to how the form started.</summary>
     [RelayCommand]
@@ -160,14 +176,15 @@ public partial class AddWorkoutViewModel : ObservableValidator
     {
         if (_suspendDraft) return;
         var date = DateOnly.FromDateTime(TargetDate.DateTime);
-        if (Content == _baseContent && date == _baseDate && CoachPresent == _basePresent)
+        if (Content == _baseContent && date == _baseDate && CoachPresent == _basePresent && StartTimeOnly == _baseTime)
         {
             _preferences.Set(_draftKey, null);
             return;
         }
 
         _preferences.Set(_draftKey, string.Join(Separator,
-            "1", BaseStamp(), date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), PresentCode(CoachPresent), Content));
+            "2", BaseStamp(), date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), PresentCode(CoachPresent),
+            TimeCode(StartTimeOnly), Content));
     }
 
     private void RestoreDraft()
@@ -175,10 +192,13 @@ public partial class AddWorkoutViewModel : ObservableValidator
         var stored = _preferences.Get(_draftKey);
         if (stored is null) return;
 
-        var parts = stored.Split(Separator, 5);
+        // "1": stamp, date, presence, text (before the start time); "2": … presence, time, text.
+        var version = stored.Length > 0 ? stored[0] : '?';
+        var parts = stored.Split(Separator, version == '2' ? 6 : 5);
         // An edit draft only applies to the version it was started from: if the workout was changed
         // since (e.g. on another device), the draft would overwrite newer text, so it's dropped.
-        if (parts.Length != 5 || parts[0] != "1" || parts[1] != BaseStamp()
+        var expected = version == '2' ? 6 : 5;
+        if (parts.Length != expected || parts[0] is not ("1" or "2") || parts[1] != BaseStamp()
             || !DateOnly.TryParseExact(parts[2], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
         {
             _preferences.Set(_draftKey, null);
@@ -186,9 +206,12 @@ public partial class AddWorkoutViewModel : ObservableValidator
         }
 
         _suspendDraft = true;
-        Content = parts[4];
+        Content = parts[^1];
         TargetDate = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue));
         CoachPresent = parts[3] switch { "1" => true, "0" => false, _ => null };
+        StartTime = version == '2'
+            ? ParseTimeCode(parts[4])?.ToTimeSpan()
+            : _baseTime?.ToTimeSpan();
         _suspendDraft = false;
         IsDraftRestored = true;
     }
@@ -199,11 +222,21 @@ public partial class AddWorkoutViewModel : ObservableValidator
         Content = _baseContent;
         TargetDate = new DateTimeOffset(_baseDate.ToDateTime(TimeOnly.MinValue));
         CoachPresent = _basePresent;
+        StartTime = _baseTime?.ToTimeSpan();
         _suspendDraft = false;
     }
 
+    // The time joins the stamp only when there is one, so drafts made before it still match.
     private string BaseStamp() =>
-        _editingId is null ? string.Empty : Fingerprint($"{_baseContent}{Separator}{_baseDate:yyyy-MM-dd}{Separator}{PresentCode(_basePresent)}");
+        _editingId is null ? string.Empty
+            : Fingerprint($"{_baseContent}{Separator}{_baseDate:yyyy-MM-dd}{Separator}{PresentCode(_basePresent)}"
+                          + (_baseTime is null ? string.Empty : $"{Separator}{TimeCode(_baseTime)}"));
+
+    private static string TimeCode(TimeOnly? time) =>
+        time?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? string.Empty;
+
+    private static TimeOnly? ParseTimeCode(string code) =>
+        TimeOnly.TryParseExact(code, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t) ? t : null;
 
     private static string PresentCode(bool? present) => present switch { true => "1", false => "0", null => "" };
 
@@ -525,7 +558,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
             if (_editingId is { } id)
             {
                 // The DB clears the read receipt and sends the athlete "ενημέρωσε το ασκησιολόγιο".
-                await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime), CoachPresent);
+                await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime), CoachPresent, StartTimeOnly);
             }
             else
             {
@@ -534,6 +567,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
                     AthleteId = _athleteId,
                     Content = Content.Trim(),
                     TargetDate = DateOnly.FromDateTime(TargetDate.DateTime),
+                    StartTime = StartTimeOnly,
                     CreatedBy = _session.ProfileId,
                     CoachPresent = CoachPresent,
                 };

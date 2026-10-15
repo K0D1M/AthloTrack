@@ -159,6 +159,15 @@
                         <controls:GreekDatePicker SelectedDate="{Binding TargetDate, Mode=TwoWay}" />
                     </StackPanel>
 
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Ώρα (προαιρετικό)" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <controls:GreekTimePicker SelectedTime="{Binding StartTime, Mode=TwoWay}" />
+                            <Button Content="Χωρίς ώρα" VerticalAlignment="Center"
+                                    IsVisible="{Binding HasStartTime}" Command="{Binding ClearStartTimeCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
                     <StackPanel Spacing="6">
                         <TextBlock Text="Παρουσία προπονητή (προαιρετικό)" FontWeight="SemiBold" />
                         <StackPanel Orientation="Horizontal" Spacing="10">

@@ -119,12 +119,13 @@ public partial class CalendarViewModel : ViewModelBase
 
             var programs = await _workouts.GetAllAsync();
             Entries.Clear();
-            foreach (var p in programs.OrderBy(p => p.TargetDate))
+            // Within a day: timed workouts first, by time.
+            foreach (var p in programs.OrderBy(p => p.TargetDate).ThenBy(p => p.StartTime ?? TimeOnly.MaxValue))
             {
                 byId.TryGetValue(p.AthleteId, out var athlete);
                 Entries.Add(new CalendarEntryViewModel(
                     p.TargetDate, p.AthleteId, athlete?.FullName ?? "—", athlete?.ProfileImagePath,
-                    AthloTrack.Core.Workouts.WorkoutMarkup.PlainPreview(p.Content)));
+                    AthloTrack.Core.Workouts.WorkoutMarkup.PlainPreview(p.Content), p.StartTime));
             }
 
             ShowMonth(_month);
