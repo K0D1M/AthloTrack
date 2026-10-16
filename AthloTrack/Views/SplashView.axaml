@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             x:Class="AthloTrack.Views.SplashView">
+    <!-- The opening screen: the logo in the centre of the window (where Android's own launch
+         screen puts it, so the hand-over doesn't jump), the name, a loading bar and the motto.
+         On the way out the logo moves into its place on the login screen (SplashView.axaml.cs). -->
+    <Panel>
+        <Border x:Name="Backdrop">
+            <Border.Background>
+                <RadialGradientBrush Center="50%,46%" GradientOrigin="50%,46%" RadiusX="120%" RadiusY="70%">
+                    <GradientStop Color="#0D4A8C" Offset="0" />
+                    <GradientStop Color="#003366" Offset="0.62" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- Kept clear of the status / navigation bars (App sets the margin). -->
+        <Grid x:Name="Texts" RowDefinitions="*,Auto">
+            <StackPanel x:Name="Heading" Grid.Row="0" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <TextBlock Text="AthloTrack" FontSize="34" FontWeight="ExtraBold" Foreground="White"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Παρακολούθηση προόδου αθλητών" FontSize="14" Foreground="#CFE3FF"
+                           HorizontalAlignment="Center" />
+                <Border Width="128" Height="3" CornerRadius="2" Margin="0,22,0,0" Background="#29FFFFFF"
+                        HorizontalAlignment="Center" ClipToBounds="True">
+                    <Border x:Name="BarFill" Width="0" Height="3" CornerRadius="2" HorizontalAlignment="Left"
+                            Background="{StaticResource BrandAccentBrush}" />
+                </Border>
+            </StackPanel>
+            <StackPanel Grid.Row="1" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,24">
+                <TextBlock Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ" FontFamily="{StaticResource GreekAccentFont}"
+                           FontStyle="Italic" FontSize="20" Foreground="White" HorizontalAlignment="Center" />
+                <TextBlock Text="{x:Static vm:AppInfo.Version}" FontSize="12" Foreground="#9FC1EA"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <Canvas>
+            <Border x:Name="Logo" Width="112" Height="112" CornerRadius="32" Padding="28"
+                    Background="{StaticResource BrandLogoGradient}" BoxShadow="0 10 30 0 #4D000000">
+                <Viewbox>
+                    <PathIcon x:Name="Heart" Data="{StaticResource LogoIcon}" Width="24" Height="24"
+                              Foreground="{StaticResource BrandPrimaryDarkBrush}">
+                        <PathIcon.RenderTransform>
+                            <ScaleTransform />
+                        </PathIcon.RenderTransform>
+                    </PathIcon>
+                </Viewbox>
+            </Border>
+        </Canvas>
+    </Panel>
+</UserControl>

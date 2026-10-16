@@ -5,9 +5,10 @@
     <color android:color="@color/splash_background"/>
   </item>
 
-  <item android:drawable="@drawable/icon"
-        android:width="120dp"
-        android:height="120dp"
+  <!-- Same size and place as the logo on the app's own splash (SplashView) -->
+  <item android:drawable="@drawable/splash_logo"
+        android:width="288dp"
+        android:height="288dp"
         android:gravity="center" />
 
 </layer-list>

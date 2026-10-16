@@ -120,7 +120,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center">
 
-            <Border Width="88" Height="88" CornerRadius="26"
+            <Border x:Name="Logo" Width="88" Height="88" CornerRadius="26"
                     Background="{StaticResource BrandLogoGradient}"
                     BoxShadow="0 8 24 0 #40000000"
                     HorizontalAlignment="Center">

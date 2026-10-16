@@ -6,16 +6,19 @@
 
   <style name="MyTheme.NoActionBar" parent="@style/Theme.AppCompat.NoActionBar">
     <item name="android:windowActionBar">false</item>
-    <item name="android:windowBackground">@null</item>
+    <!-- Behind the launch screen, and after it until the app's first frame: the same navy and
+         logo (drawable/splash_screen), so there is no black gap before the app's own splash. -->
+    <item name="android:windowBackground">@drawable/splash_screen</item>
     <item name="android:windowNoTitle">true</item>
     <item name="android:windowSplashScreenBackground">@color/splash_background</item>
-    <item name="android:windowSplashScreenAnimatedIcon">@drawable/avalonia_anim</item>
-    <item name="android:windowSplashScreenAnimationDuration">1000</item>
+    <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
     <item name="postSplashScreenTheme">@style/MyTheme.Main</item>
 
   </style>
   <style name="MyTheme.Main"
          parent ="MyTheme.NoActionBar">
-    <item name="android:windowIsTranslucent">true</item>
+    <!-- Not translucent: a translucent window draws no background, which showed black between the
+         launch screen and the first frame. -->
+    <item name="android:windowIsTranslucent">false</item>
   </style>
 </resources>

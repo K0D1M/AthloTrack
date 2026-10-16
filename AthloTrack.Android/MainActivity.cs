@@ -23,6 +23,7 @@ public class MainActivity : AvaloniaMainActivity
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        HoldLaunchScreen();
 
         // Android 13+: phone notifications need the user's permission.
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
@@ -32,6 +33,41 @@ public class MainActivity : AvaloniaMainActivity
         }
 
         HandleNotificationIntent(Intent); // cold start from a notification
+    }
+
+    /// <summary>
+    /// Android 12+: the launch screen (navy + logo) normally fades out as soon as the app's window
+    /// draws, but the app's surface is still black then. Instead it stays on top until the app's
+    /// own splash, which looks the same, has drawn (App.SplashReady), and is then removed at once,
+    /// so the hand-over can't be seen. At most 6 s.
+    /// </summary>
+    private void HoldLaunchScreen()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(31)) return;
+        SplashScreen.SetOnExitAnimationListener(new RemoveWhenReady(DateTime.UtcNow + TimeSpan.FromSeconds(6)));
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("android31.0")]
+    private sealed class RemoveWhenReady(DateTime until)
+        : Java.Lang.Object, global::Android.Window.ISplashScreenOnExitAnimationListener
+    {
+        public void OnSplashScreenExit(global::Android.Window.SplashScreenView view) => Check(view);
+
+        private void Check(global::Android.Window.SplashScreenView view)
+        {
+            if (App.SplashReady)
+            {
+                // The app's first frames reach the screen a little after they are drawn.
+                view.PostDelayed(view.Remove, 100);
+                return;
+            }
+            if (DateTime.UtcNow > until)
+            {
+                view.Remove();
+                return;
+            }
+            view.PostDelayed(() => Check(view), 30);
+        }
     }
 
     protected override void OnNewIntent(Intent? intent)

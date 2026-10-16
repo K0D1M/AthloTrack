@@ -37,10 +37,15 @@
 <div id="out">
     <!-- Loading screen shown until the app has started -->
     <div class="avalonia-splash">
+        <!-- Laid out like the app's own splash (SplashView), which takes over from it -->
         <div class="athlo-splash">
-            <img src="./icon-192.png" width="96" height="96" alt="">
-            <h1>AthloTrack</h1>
-            <p>Φόρτωση…</p>
+            <img src="./icon-192.png" width="112" height="112" alt="">
+            <div class="athlo-splash-name">
+                <h1>AthloTrack</h1>
+                <p>Παρακολούθηση προόδου αθλητών</p>
+                <div class="athlo-splash-bar" role="progressbar" aria-label="Φόρτωση"><span></span></div>
+            </div>
+            <div class="athlo-splash-motto">νοῦς ὑγιής ἐν σώματι ὑγιεῖ</div>
         </div>
     </div>
 </div>

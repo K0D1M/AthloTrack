@@ -44,6 +44,8 @@ public partial class App : Application
         // The PIN lock sits over the root: the app underneath stays as it was while locked.
         _shell.Children.Add(_root);
         _shell.Children.Add(_lockLayer);
+        // The opening screen covers both while the saved session is restored (RunSplashAsync).
+        _shell.Children.Add(_splash!);
         _shell.AttachedToVisualTree += (_, _) => WatchSafeArea();
         Services.GetRequiredService<AthloTrack.Services.PinPrompt>().Host = ShowPinPromptAsync;
 
@@ -88,6 +90,7 @@ public partial class App : Application
         }
 
         SetRoot(CreateLoginView());
+        if (_startupLogin is { } startup) _ = RunSplashAsync(startup);
 
         base.OnFrameworkInitializationCompleted();
     }
@@ -117,6 +120,7 @@ public partial class App : Application
     private Control CreateLoginView()
     {
         var loginVm = Services.GetRequiredService<LoginViewModel>();
+        _startupLogin ??= loginVm;
         loginVm.LoginSucceeded += role => OnLoginSucceeded(role, loginVm.LastLoginWasRestored);
         if (_loginNotice is not null)
         {
@@ -295,11 +299,81 @@ public partial class App : Application
     /// <summary>Shows a screen (login, set-password, main shell) on every head.</summary>
     private Avalonia.Controls.Platform.IInsetsManager? _insets;
 
+    private Views.SplashView? _splash = new();
+
+    /// <summary>
+    /// The app's own splash has been laid out. Android keeps its launch screen up until then
+    /// (MainActivity), otherwise the not-yet-drawn app surface shows black in between.
+    /// </summary>
+    public static bool SplashReady { get; private set; }
+
+    /// <summary>The first login screen's view model: the splash waits for its session restore.</summary>
+    private LoginViewModel? _startupLogin;
+
+    /// <summary>
+    /// The opening screen: at least <c>minimum</c> (the loading bar's run), and until the saved
+    /// session was tried. Then its logo moves onto the login screen's, or it fades over the main
+    /// screen / PIN lock that the restore opened underneath.
+    /// </summary>
+    private async System.Threading.Tasks.Task RunSplashAsync(LoginViewModel login)
+    {
+        if (_splash is not { } splash) return;
+        // Counted from the splash's first layout: the browser's own loading screen (index.html) is
+        // still fading out until then, and has already shown the same picture for a while.
+        var loaded = new System.Threading.Tasks.TaskCompletionSource();
+        splash.Loaded += (_, _) => loaded.TrySetResult();
+        if (splash.IsLoaded) loaded.TrySetResult();
+        await loaded.Task;
+        // Rendered by the render thread (twice), not only laid out or requested: on Android the app
+        // surface stays black until then, and the launch screen waits for this (MainActivity).
+        await System.Threading.Tasks.Task.WhenAny(SplashRenderedAsync(splash), System.Threading.Tasks.Task.Delay(4000));
+        SplashReady = true;
+        var minimum = OperatingSystem.IsBrowser() ? TimeSpan.FromMilliseconds(1000) : TimeSpan.FromMilliseconds(1800);
+        splash.Play(minimum);
+
+        var ready = new System.Threading.Tasks.TaskCompletionSource();
+        void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (login.IsReady) ready.TrySetResult();
+        }
+        login.PropertyChanged += OnChanged;
+        if (login.IsReady) ready.TrySetResult();
+        try
+        {
+            await System.Threading.Tasks.Task.WhenAll(System.Threading.Tasks.Task.Delay(minimum),
+                System.Threading.Tasks.Task.WhenAny(ready.Task, System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(10))));
+        }
+        finally
+        {
+            login.PropertyChanged -= OnChanged;
+        }
+
+        var target = !_lockLayer.IsVisible && _root.Content is LoginView view ? view.LogoElement : null;
+        try
+        {
+            await splash.DismissAsync(target);
+        }
+        finally
+        {
+            _shell.Children.Remove(splash);
+            _splash = null;
+        }
+    }
+
     /// <summary>
     /// Keeps every screen clear of the Android status and navigation bars (edge-to-edge since
     /// Android 15). PageNavigationHost only does this when it is the top level's own content, and
     /// the root is <see cref="_shell"/> (root + PIN layer), so the insets are applied here instead.
     /// </summary>
+    private static async System.Threading.Tasks.Task SplashRenderedAsync(Views.SplashView splash)
+    {
+        if (Avalonia.Rendering.Composition.ElementComposition.GetElementVisual(splash)?.Compositor is not { } compositor) return;
+        for (var i = 0; i < 2; i++)
+        {
+            await compositor.RequestCompositionBatchCommitAsync().Rendered;
+        }
+    }
+
     private void WatchSafeArea()
     {
         var topLevel = TopLevel.GetTopLevel(_shell);
@@ -324,6 +398,7 @@ public partial class App : Application
         var padding = _insets.SafeAreaPadding;
         _root.Padding = padding;
         _lockLayer.Padding = padding;
+        _splash?.SetSafeArea(padding);
         // The strips behind the bars take the root's colour (the PIN screen covers the app under it).
         _lockLayer.Background = _root.Background;
     }

@@ -11,6 +11,9 @@ public partial class LoginView : UserControl
 {
     private LoginViewModel? _vm;
 
+    /// <summary>The logo, where the opening screen's logo lands (SplashView).</summary>
+    public Avalonia.Controls.Control LogoElement => Logo;
+
     public LoginView()
     {
         InitializeComponent();
