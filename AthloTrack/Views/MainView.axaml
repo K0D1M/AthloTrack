@@ -107,7 +107,8 @@
     <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource SurfaceBrush}">
 
     <!-- Top bar: Up arrow on sub-pages, the page title, and the signed-in user's photo (opens Ρυθμίσεις). -->
-    <Border x:Name="TopBar" Grid.Row="0" Background="{StaticResource BrandBarGradient}">
+    <StackPanel Grid.Row="0">
+    <Border x:Name="TopBar" Background="{StaticResource BrandBarGradient}">
         <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56" Margin="8,0">
             <Button x:Name="BackButton" Grid.Column="0" Classes="bar" IsVisible="False"
                     Click="OnBackClick" ToolTip.Tip="Πίσω">
@@ -124,6 +125,20 @@
             </Button>
         </Grid>
     </Border>
+    <!-- «Νέα έκδοση» (Android): a newer APK is out (UpdateChecker, at most once a day) -->
+    <Border x:Name="UpdateBanner" IsVisible="False" Background="{DynamicResource NoticeBrush}"
+            BorderBrush="{DynamicResource NoticeBorderBrush}" BorderThickness="0,0,0,1" Padding="16,10,8,10">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Νέα έκδοση" FontWeight="SemiBold" />
+                <TextBlock x:Name="UpdateBannerText" FontSize="13" TextWrapping="Wrap" />
+            </StackPanel>
+            <Button Grid.Column="1" Classes="primary" Content="Λήψη" Click="OnUpdateDownload" VerticalAlignment="Center" />
+            <Button Grid.Column="2" Content="Αργότερα" Click="OnUpdateLater" VerticalAlignment="Center"
+                    Height="44" CornerRadius="22" Padding="14,0" VerticalContentAlignment="Center" Background="Transparent" />
+        </Grid>
+    </Border>
+    </StackPanel>
 
     <ContentPage Name="ContentPage" Grid.Row="1" AutomaticallyApplySafeAreaPadding="False">
         <ContentPage.DataTemplates>
@@ -706,6 +721,20 @@
                         <TextBlock Text="{Binding AppName}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding Version, StringFormat='Έκδοση {0}'}" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource BrandSupportBrush}" />
+                        <!-- «Έλεγχος για ενημέρωση» (Android) -->
+                        <StackPanel IsVisible="{Binding CanCheckUpdates}" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
+                            <Button HorizontalAlignment="Center" Command="{Binding CheckUpdateCommand}" IsEnabled="{Binding !IsChecking}"
+                                    Height="40" CornerRadius="20" Padding="16,0" VerticalContentAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <controls:Spinner IsVisible="{Binding IsChecking}" VerticalAlignment="Center" />
+                                    <TextBlock Text="Έλεγχος για ενημέρωση" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{Binding UpdateStatus}" TextWrapping="Wrap" TextAlignment="Center" FontSize="13"
+                                       IsVisible="{Binding UpdateStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <Button Classes="primary" HorizontalAlignment="Center" Command="{Binding DownloadCommand}"
+                                    IsVisible="{Binding HasUpdate}" Content="Λήψη νέας έκδοσης" />
+                        </StackPanel>
                         <Border IsVisible="{Binding IsPreRelease}" HorizontalAlignment="Center" Margin="0,4,0,0"
                                 Background="{DynamicResource NoticeBrush}" BorderBrush="{DynamicResource NoticeBorderBrush}"
                                 BorderThickness="1" CornerRadius="10" Padding="12,8">

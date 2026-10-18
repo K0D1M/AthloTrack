@@ -1,5 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using AthloTrack.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AthloTrack.ViewModels;
 
@@ -16,6 +20,48 @@ public partial class AboutViewModel : ViewModelBase
     public partial string Version { get; set; } = AppInfo.Version;
 
     public bool IsPreRelease => AppInfo.IsPreRelease;
+
+    // ---- «Έλεγχος για ενημέρωση» (the Android app only) ----
+
+    public bool CanCheckUpdates => UpdateChecker.IsSupported;
+
+    [ObservableProperty]
+    public partial string? UpdateStatus { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdate))]
+    public partial UpdateInfo? Update { get; set; }
+
+    public bool HasUpdate => Update is not null;
+
+    [ObservableProperty]
+    public partial bool IsChecking { get; set; }
+
+    [RelayCommand]
+    private async Task CheckUpdateAsync()
+    {
+        IsChecking = true;
+        UpdateStatus = null;
+        Update = null;
+        try
+        {
+            Update = await UpdateChecker.CheckAsync(throwOnError: true);
+            UpdateStatus = Update is { } u
+                ? $"Νέα έκδοση {u.Version} διαθέσιμη."
+                : "Έχεις την τελευταία έκδοση.";
+        }
+        catch (Exception)
+        {
+            UpdateStatus = "Δεν ήταν δυνατός ο έλεγχος. Έλεγξε τη σύνδεση και δοκίμασε ξανά.";
+        }
+        finally
+        {
+            IsChecking = false;
+        }
+    }
+
+    [RelayCommand]
+    private Task DownloadAsync() => Update is { } u ? UpdateChecker.OpenAsync(u) : Task.CompletedTask;
 
     public string Copyright { get; } = "© 2026 K0D1M";
 

@@ -156,6 +156,36 @@ public partial class MainView : ContentPage
         // A tapped phone notification opens its section (see MainActivity).
         AthloTrack.Services.NotificationNavigation.Requested += ApplyPendingSection;
         ApplyPendingSection();
+
+        // «Νέα έκδοση»: links open in the browser; the banner checks at most once a day (Android).
+        var launcher = _topLevel?.Launcher;
+        if (launcher is not null)
+            AthloTrack.Services.UpdateChecker.Opener = url => launcher.LaunchUriAsync(new Uri(url));
+        _ = CheckForUpdateAsync();
+    }
+
+    private AthloTrack.Services.UpdateInfo? _update;
+
+    private async System.Threading.Tasks.Task CheckForUpdateAsync()
+    {
+        if (!AthloTrack.Services.UpdateChecker.IsSupported) return;
+        var prefs = Resolve<AthloTrack.Core.Auth.IAppPreferences>();
+        _update = await AthloTrack.Services.UpdateChecker.CheckDailyAsync(prefs, DateTimeOffset.UtcNow);
+        if (_update is null) return;
+        UpdateBannerText.Text = $"Η έκδοση {_update.Version} είναι διαθέσιμη (έχεις την {AppInfo.Version}).";
+        UpdateBanner.IsVisible = true;
+    }
+
+    private void OnUpdateDownload(object? sender, RoutedEventArgs e)
+    {
+        if (_update is { } update) _ = AthloTrack.Services.UpdateChecker.OpenAsync(update);
+    }
+
+    private void OnUpdateLater(object? sender, RoutedEventArgs e)
+    {
+        if (_update is { } update)
+            AthloTrack.Services.UpdateChecker.Dismiss(Resolve<AthloTrack.Core.Auth.IAppPreferences>(), update);
+        UpdateBanner.IsVisible = false;
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

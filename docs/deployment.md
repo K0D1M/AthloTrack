@@ -38,7 +38,7 @@ Requirements: the .NET 10 SDK with `dotnet workload install android`, and the An
 |---|---|
 | Package ID | `com.k0d1m.athlotrack` |
 | Minimum Android | 6.0 (API 23). Push notifications need Google Play services |
-| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj` (now 20 / 1.19-alpha; the part after the dash is the release stage, shown as a tag on the login screen and a notice in Σχετικά, and dropped for a stable release). Keep `<Version>` in `AthloTrack/AthloTrack.csproj` equal to `ApplicationDisplayVersion`: it is the version shown in Σχετικά on every platform. **Increase `ApplicationVersion` for every APK you hand out**, or Android refuses to install it over the old one |
+| Version | `ApplicationVersion` / `ApplicationDisplayVersion` in `AthloTrack.Android.csproj` (now 21 / 1.20-alpha; the part after the dash is the release stage, shown as a tag on the login screen and a notice in Σχετικά, and dropped for a stable release). Keep `<Version>` in `AthloTrack/AthloTrack.csproj` equal to `ApplicationDisplayVersion`: it is the version shown in Σχετικά on every platform. **Increase `ApplicationVersion` for every APK you hand out**, or Android refuses to install it over the old one |
 
 ```powershell
 # Debug build, installed on the connected device/emulator
@@ -68,6 +68,16 @@ The app isn't on the Play Store. Install the APK directly (sideloading): send th
 ### Emulator notes
 - Use a system image with **Google Play services** (a "Google Play" image). A plain AOSP image can't receive FCM pushes.
 - The emulator needs hardware acceleration. On Windows, turn on *Windows Hypervisor Platform*.
+
+## «Νέα έκδοση» (Android update check)
+The APK reads `https://athlotrack.gr/version/latest.json` (`AthloTrack.Browser/wwwroot/version/latest.json`) at start, at most once a day, and in Σχετικά on demand. When its `android.version` is newer than the app's own `<Version>` and `android.url` is an https link, it shows «Νέα έκδοση» with «Λήψη», which opens the link.
+
+For every APK you hand out:
+1. Raise the version (`ApplicationVersion`, `ApplicationDisplayVersion`, `<Version>`) and add the changelog entry.
+2. Build the APK and upload it (e.g. to MEGA); copy the share link.
+3. Set `android.version` and `android.url` in `latest.json`, then push: the site deploys and the installed apps see it.
+
+An empty `url` shows nothing, so `latest.json` can be pushed before the upload.
 
 ## Desktop (development)
 

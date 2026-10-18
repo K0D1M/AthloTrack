@@ -24,6 +24,8 @@ namespace AthloTrack.Android
                 services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, FirebaseTokenProvider>();
             };
             PushNotifications.EnsureChannel(this);
+            // «Νέα έκδοση»: this APK reads the "android" entry of athlotrack.gr/version/latest.json.
+            AthloTrack.Services.UpdateChecker.Channel = "android";
 
             return base.CustomizeAppBuilder(builder)
             .WithInterFont();
