@@ -52,6 +52,7 @@ public sealed class MeasurementRepository : IMeasurementRepository
         WeightKg = r.WeightKg,
         FatMassWt = r.FatMassWt,
         FatHgt = r.FatHgt,
+        Extra = ExtraFromJson(r.Extra),
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
     };
@@ -64,7 +65,30 @@ public sealed class MeasurementRepository : IMeasurementRepository
         WeightKg = m.WeightKg,
         FatMassWt = m.FatMassWt,
         FatHgt = m.FatHgt,
+        Extra = ExtraToJson(m.Extra),
         CreatedBy = m.CreatedBy,
         CreatedAt = m.CreatedAt,
     };
+
+    /// <summary>Field id → number; anything else in the JSON is skipped.</summary>
+    public static Dictionary<Guid, decimal> ExtraFromJson(Newtonsoft.Json.Linq.JObject? json)
+    {
+        var values = new Dictionary<Guid, decimal>();
+        if (json is null) return values;
+        foreach (var (key, token) in json)
+        {
+            if (!Guid.TryParse(key, out var id) || token is null) continue;
+            if (token.Type is Newtonsoft.Json.Linq.JTokenType.Integer or Newtonsoft.Json.Linq.JTokenType.Float)
+                values[id] = token.ToObject<decimal>();
+        }
+        return values;
+    }
+
+    public static Newtonsoft.Json.Linq.JObject? ExtraToJson(Dictionary<Guid, decimal>? values)
+    {
+        if (values is null || values.Count == 0) return null;
+        var json = new Newtonsoft.Json.Linq.JObject();
+        foreach (var (id, value) in values) json[id.ToString()] = value;
+        return json;
+    }
 }

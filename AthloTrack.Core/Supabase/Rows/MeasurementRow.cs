@@ -24,6 +24,10 @@ public sealed class MeasurementRow : BaseModel
     [Column("fat_hgt")]
     public decimal? FatHgt { get; set; }
 
+    // 015: {"<field id>": number}, null when there are no «Άλλες μετρήσεις».
+    [Column("extra")]
+    public Newtonsoft.Json.Linq.JObject? Extra { get; set; }
+
     [Column("created_by")]
     public Guid? CreatedBy { get; set; }
 

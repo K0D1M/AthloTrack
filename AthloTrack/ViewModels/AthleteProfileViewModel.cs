@@ -42,9 +42,11 @@ public partial class AthleteProfileViewModel : ViewModelBase
         IAvatarService avatars,
         CurrentUserViewModel? currentUser = null,
         AthloTrack.Services.WorkoutAnswerSettings? answerSettings = null,
-        Guid? focusWorkoutId = null)
+        Guid? focusWorkoutId = null,
+        IMeasurementFieldRepository? fields = null)
     {
         _athleteId = athleteId;
+        _fields = fields;
         _answerSettings = answerSettings;
         _focusWorkoutId = focusWorkoutId;
         _athletes = athletes;
@@ -55,6 +57,11 @@ public partial class AthleteProfileViewModel : ViewModelBase
         _currentUser = currentUser;
         _ = LoadAsync();
     }
+
+    private readonly IMeasurementFieldRepository? _fields;
+
+    /// <summary>The coach's «Άλλες μετρήσεις» fields, for their names in the rows and the chart.</summary>
+    private System.Collections.Generic.IReadOnlyList<MeasurementField> _fieldList = [];
 
     public ObservableCollection<Measurement> Measurements { get; } = new();
     public ObservableCollection<WorkoutProgram> Workouts { get; } = new();
@@ -478,8 +485,23 @@ public partial class AthleteProfileViewModel : ViewModelBase
             }
 
             Measurements.Clear();
-            foreach (var m in await _measurements.GetForAthleteAsync(_athleteId))
+            var loaded = await _measurements.GetForAthleteAsync(_athleteId);
+            if (_fields is not null && loaded.Any(m => m.Extra.Count > 0))
+            {
+                try
+                {
+                    _fieldList = await _fields.GetAllAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AthloTrack] measurement fields failed to load: {ex.Message}");
+                }
+            }
+            foreach (var m in loaded)
+            {
+                m.ExtraLines = ExtraLinesFor(m, _fieldList);
                 Measurements.Add(m);
+            }
 
             BuildChart();
 
@@ -522,6 +544,18 @@ public partial class AthleteProfileViewModel : ViewModelBase
         Photo = await _avatars.GetAsync(ProfileImagePath);
     }
 
+    /// <summary>«Περιφέρεια μέσης: 82 cm» per custom value of a known field, in the fields' order.</summary>
+    internal static System.Collections.Generic.List<string> ExtraLinesFor(Measurement m,
+        System.Collections.Generic.IReadOnlyList<MeasurementField> fields) =>
+        fields.Where(f => m.Extra.ContainsKey(f.Id))
+            .Select(f => string.IsNullOrWhiteSpace(f.Unit)
+                ? $"{f.Name}: {m.Extra[f.Id]}"
+                : $"{f.Name}: {m.Extra[f.Id]} {f.Unit}")
+            .ToList();
+
+    /// <summary>Line colours for «Άλλες μετρήσεις», after the weight / fat ones.</summary>
+    private static readonly string[] ExtraColors = ["#8E24AA", "#E53935", "#00897B", "#6D4C41", "#3949AB", "#F4511E", "#546E7A", "#C0CA33"];
+
     private void BuildChart()
     {
         var ordered = Measurements.OrderBy(m => m.MeasuredAt).ToList();
@@ -541,6 +575,12 @@ public partial class AthleteProfileViewModel : ViewModelBase
             lines.Add(new("Fat Mass/WT", "#009941", ordered.Select(m => (double?)m.FatMassWt).ToArray()));
         if (ordered.Any(m => m.FatHgt is not null))
             lines.Add(new("fat/hgt", "#FFB300", ordered.Select(m => (double?)m.FatHgt).ToArray()));
+        var color = 0;
+        foreach (var field in _fieldList.Where(f => ordered.Any(m => m.Extra.ContainsKey(f.Id))))
+        {
+            lines.Add(new(field.Label, ExtraColors[color++ % ExtraColors.Length],
+                ordered.Select(m => m.Extra.TryGetValue(field.Id, out var v) ? (double?)v : null).ToArray()));
+        }
 
         Chart = new ProgressChart(ordered.Select(m => m.MeasuredAt.ToString("dd/MM")).ToArray(), lines);
         OnPropertyChanged(nameof(HasChartData));

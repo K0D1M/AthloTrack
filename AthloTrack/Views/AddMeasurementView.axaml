@@ -4,9 +4,44 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:AthloTrack.ViewModels"
              xmlns:controls="using:AthloTrack.Views.Controls"
+             xmlns:models="using:AthloTrack.Core.Models"
              mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="640"
              x:Class="AthloTrack.Views.AddMeasurementView"
              x:DataType="vm:AddMeasurementViewModel">
+
+    <UserControl.Styles>
+        <!-- A category («Λιπομέτρηση», «Άλλες μετρήσεις»): a card with its title and × -->
+        <Style Selector="Border.category">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="14,10,14,14" />
+        </Style>
+        <Style Selector="Button.addcategory">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+        </Style>
+        <Style Selector="Button.close">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.chip">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+        </Style>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
 
@@ -24,19 +59,126 @@
                     <TextBox Text="{Binding WeightKg, Mode=TwoWay}" PlaceholderText="π.χ. 72.5" />
                 </StackPanel>
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Fat Mass/WT" FontWeight="SemiBold" />
-                    <TextBox Text="{Binding FatMassWt, Mode=TwoWay}" />
-                    <TextBlock Text="Λιπώδης μάζα ως προς το βάρος" FontSize="12"
-                               Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
-                </StackPanel>
+                <!-- The categories the coach adds to this measurement -->
+                <WrapPanel>
+                    <Button Classes="addcategory" Command="{Binding AddFatSectionCommand}" IsVisible="{Binding !ShowFat}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource PlusIcon}" Width="16" Height="16" />
+                            <TextBlock Text="Λιπομέτρηση" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="addcategory" Command="{Binding AddCustomSectionCommand}" IsVisible="{Binding !ShowCustom}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource PlusIcon}" Width="16" Height="16" />
+                            <TextBlock Text="Άλλες μετρήσεις" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="fat/hgt" FontWeight="SemiBold" />
-                    <TextBox Text="{Binding FatHgt, Mode=TwoWay}" />
-                    <TextBlock Text="Λίπος ως προς το ύψος" FontSize="12"
-                               Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
-                </StackPanel>
+                <!-- «Λιπομέτρηση» -->
+                <Border Classes="category" IsVisible="{Binding ShowFat}">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Λιπομέτρηση" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource HeadingBrush}" />
+                            <Button Grid.Column="1" Classes="close" Command="{Binding RemoveFatSectionCommand}"
+                                    ToolTip.Tip="Αφαίρεση λιπομέτρησης" AutomationProperties.Name="Αφαίρεση λιπομέτρησης">
+                                <PathIcon Data="{StaticResource CloseIcon}" />
+                            </Button>
+                        </Grid>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Fat Mass/WT" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding FatMassWt, Mode=TwoWay}" />
+                            <TextBlock Text="Λιπώδης μάζα ως προς το βάρος" FontSize="12"
+                                       Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="fat/hgt" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding FatHgt, Mode=TwoWay}" />
+                            <TextBlock Text="Λίπος ως προς το ύψος" FontSize="12"
+                                       Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- «Άλλες μετρήσεις»: the coach's own fields -->
+                <Border Classes="category" IsVisible="{Binding ShowCustom}">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Άλλες μετρήσεις" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource HeadingBrush}" />
+                            <Button Grid.Column="1" Classes="close" Command="{Binding RemoveCustomSectionCommand}"
+                                    ToolTip.Tip="Αφαίρεση άλλων μετρήσεων" AutomationProperties.Name="Αφαίρεση άλλων μετρήσεων">
+                                <PathIcon Data="{StaticResource CloseIcon}" />
+                            </Button>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding CustomRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CustomValueRow">
+                                    <StackPanel Spacing="4" Margin="0,0,0,10">
+                                        <TextBlock Text="{Binding Field.Label}" FontWeight="SemiBold" />
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                                            <TextBox Text="{Binding Value, Mode=TwoWay}" />
+                                            <Button Grid.Column="1" Classes="close" Command="{Binding RemoveCommand}"
+                                                    ToolTip.Tip="Αφαίρεση πεδίου" AutomationProperties.Name="Αφαίρεση πεδίου">
+                                                <PathIcon Data="{StaticResource CloseIcon}" />
+                                            </Button>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Error}" FontSize="12" Foreground="{DynamicResource DangerBrush}"
+                                                   IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="Πρόσθεσε πεδίο" FontSize="13" Foreground="{DynamicResource BrandSupportBrush}" />
+                        <WrapPanel>
+                            <ItemsControl ItemsSource="{Binding AvailableFields}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MeasurementField">
+                                        <Button Classes="chip" Content="{Binding Label}"
+                                                Command="{Binding $parent[UserControl].((vm:AddMeasurementViewModel)DataContext).AddFieldCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Classes="chip" Command="{Binding StartNewFieldCommand}"
+                                    IsVisible="{Binding CanCreateFields}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource PlusIcon}" Width="14" Height="14" />
+                                    <TextBlock Text="Νέο πεδίο" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <!-- «+ Νέο πεδίο»: saved for every measurement after this one -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsAddingField}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Όνομα" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding NewFieldName, Mode=TwoWay}" MaxLength="40"
+                                         PlaceholderText="π.χ. Περιφέρεια μέσης" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Μονάδα (προαιρετικό)" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding NewFieldUnit, Mode=TwoWay}" MaxLength="12" PlaceholderText="π.χ. cm" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding NewFieldError}" FontSize="12" Foreground="{DynamicResource DangerBrush}"
+                                       TextWrapping="Wrap"
+                                       IsVisible="{Binding NewFieldError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Button Content="Άκυρο" Command="{Binding CancelNewFieldCommand}" Height="40" CornerRadius="20"
+                                        Padding="16,0" VerticalContentAlignment="Center" />
+                                <Button Classes="primary" Content="Προσθήκη" Command="{Binding CreateFieldCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

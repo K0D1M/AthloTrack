@@ -22,6 +22,7 @@ public static class CoreServiceRegistration
         services.AddSingleton<ICoachRepository, CoachRepository>();
         services.AddSingleton<IAthleteRepository, AthleteRepository>();
         services.AddSingleton<IMeasurementRepository, MeasurementRepository>();
+        services.AddSingleton<IMeasurementFieldRepository, MeasurementFieldRepository>();
         services.AddSingleton<IWorkoutRepository, WorkoutRepository>();
         services.AddSingleton<IWorkoutTemplateRepository, WorkoutTemplateRepository>();
         services.AddSingleton<INotificationRepository, NotificationRepository>();

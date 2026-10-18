@@ -372,13 +372,28 @@
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <TextBlock Grid.Column="0" Text="{Binding MeasuredAt, StringFormat='{}{0:dd/MM/yyyy}'}"
                                                            FontWeight="SemiBold" Width="100" VerticalAlignment="Center" />
-                                                <!-- WrapPanel: on a phone the three values don't fit one line. -->
-                                                <WrapPanel Grid.Column="1" Orientation="Horizontal" ItemSpacing="16" LineSpacing="2"
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}" />
-                                                    <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}', TargetNullValue='Fat Mass/WT: —'}" />
-                                                    <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}', TargetNullValue='fat/hgt: —'}" />
-                                                </WrapPanel>
+                                                <!-- WrapPanel: on a phone the values don't fit one line. Only what was measured. -->
+                                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                    <WrapPanel Orientation="Horizontal" ItemSpacing="16" LineSpacing="2">
+                                                        <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}" />
+                                                        <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}'}"
+                                                                   IsVisible="{Binding FatMassWt, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                        <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}'}"
+                                                                   IsVisible="{Binding FatHgt, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                    </WrapPanel>
+                                                    <ItemsControl ItemsSource="{Binding ExtraLines}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel Orientation="Horizontal" ItemSpacing="16" LineSpacing="2" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="x:String">
+                                                                <TextBlock Text="{Binding}" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                                             IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
                                                     <Button Classes="icon" ToolTip.Tip="Επεξεργασία μέτρησης"

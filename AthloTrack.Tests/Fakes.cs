@@ -166,3 +166,20 @@ internal static class Sessions
     public static SessionState Athlete(Guid athleteId, Guid coachId) =>
         new() { Role = UserRole.Athlete, ProfileId = athleteId, CoachId = coachId, AuthUserId = Guid.NewGuid() };
 }
+
+internal sealed class FakeMeasurementFields : IMeasurementFieldRepository
+{
+    public List<MeasurementField> Items { get; } = new();
+
+    public Task<IReadOnlyList<MeasurementField>> GetAllAsync() =>
+        Task.FromResult<IReadOnlyList<MeasurementField>>(Items.OrderBy(f => f.Name).ToList());
+
+    public Task<MeasurementField> AddAsync(Guid coachId, string name, string? unit)
+    {
+        if (Items.Any(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)))
+            throw new DuplicateMeasurementFieldException();
+        var field = new MeasurementField { Id = Guid.NewGuid(), CoachId = coachId, Name = name, Unit = unit };
+        Items.Add(field);
+        return Task.FromResult(field);
+    }
+}
