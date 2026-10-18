@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.Controls.MarkupEditor">
+    <!-- A text box with the Ασκησιολόγιο markup toolbar (bold, lists, heading) and a formatted
+         preview; the text is the Text property. Used for the measurement notes. -->
+    <UserControl.Styles>
+        <Style Selector="Button.tool, ToggleButton.tool">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="MinWidth" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.tool:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BrandPrimaryBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.tool PathIcon, ToggleButton.tool PathIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="8">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <WrapPanel x:Name="Toolbar" ItemSpacing="6" LineSpacing="6">
+                <Button Classes="tool" Tag="bold" Click="OnFormat" ToolTip.Tip="Έντονα" AutomationProperties.Name="Έντονα">
+                    <PathIcon Data="{StaticResource FormatBoldIcon}" />
+                </Button>
+                <Button Classes="tool" Tag="bullet" Click="OnFormat" ToolTip.Tip="Λίστα με κουκκίδες" AutomationProperties.Name="Λίστα με κουκκίδες">
+                    <PathIcon Data="{StaticResource ListBulletedIcon}" />
+                </Button>
+                <Button Classes="tool" Tag="numbered" Click="OnFormat" ToolTip.Tip="Αριθμημένη λίστα" AutomationProperties.Name="Αριθμημένη λίστα">
+                    <PathIcon Data="{StaticResource ListNumberedIcon}" />
+                </Button>
+                <Button Classes="tool" Tag="heading" Click="OnFormat" ToolTip.Tip="Επικεφαλίδα" AutomationProperties.Name="Επικεφαλίδα">
+                    <PathIcon Data="{StaticResource HeadingIcon}" />
+                </Button>
+            </WrapPanel>
+            <ToggleButton x:Name="PreviewToggle" Grid.Column="1" Classes="tool" VerticalAlignment="Top"
+                          IsCheckedChanged="OnPreviewChanged">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="{StaticResource EyeIcon}" Width="16" Height="16" />
+                    <TextBlock Text="Προεπισκόπηση" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+            </ToggleButton>
+        </Grid>
+        <TextBox x:Name="Editor" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="120" MaxLength="4000"
+                 PlaceholderText="Σημειώσεις για τη μέτρηση..." />
+        <Border x:Name="Preview" IsVisible="False" MinHeight="120" Padding="12,10"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" CornerRadius="4"
+                Background="{DynamicResource CardBrush}">
+            <controls:WorkoutText x:Name="PreviewText" />
+        </Border>
+    </StackPanel>
+</UserControl>

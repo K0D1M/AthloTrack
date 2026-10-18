@@ -53,6 +53,7 @@ public sealed class MeasurementRepository : IMeasurementRepository
         FatMassWt = r.FatMassWt,
         FatHgt = r.FatHgt,
         Extra = ExtraFromJson(r.Extra),
+        Notes = r.Notes,
         CreatedBy = r.CreatedBy,
         CreatedAt = r.CreatedAt,
     };
@@ -66,6 +67,7 @@ public sealed class MeasurementRepository : IMeasurementRepository
         FatMassWt = m.FatMassWt,
         FatHgt = m.FatHgt,
         Extra = ExtraToJson(m.Extra),
+        Notes = string.IsNullOrWhiteSpace(m.Notes) ? null : m.Notes.Trim(),
         CreatedBy = m.CreatedBy,
         CreatedAt = m.CreatedAt,
     };

@@ -40,6 +40,85 @@ public sealed partial class CustomValueRow : ObservableObject
     private void Remove() => _remove(this);
 }
 
+/// <summary>«Διαχείριση πεδίων»: one saved field, with rename (✎) and delete (🗑, confirmed inline).</summary>
+public sealed partial class FieldManageRow : ObservableObject
+{
+    private readonly Func<FieldManageRow, Task> _save;
+    private readonly Func<FieldManageRow, Task> _askDelete;
+    private readonly Func<FieldManageRow, Task> _delete;
+
+    public FieldManageRow(MeasurementField field, Func<FieldManageRow, Task> save,
+        Func<FieldManageRow, Task> askDelete, Func<FieldManageRow, Task> delete)
+    {
+        Field = field;
+        _save = save;
+        _askDelete = askDelete;
+        _delete = delete;
+    }
+
+    public MeasurementField Field { get; }
+
+    [ObservableProperty]
+    public partial bool IsEditing { get; set; }
+
+    [ObservableProperty]
+    public partial string EditName { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string EditUnit { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsIdle))]
+    public partial bool IsConfirmingDelete { get; set; }
+
+    [ObservableProperty]
+    public partial string? DeleteText { get; set; }
+
+    [ObservableProperty]
+    public partial string? Error { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
+
+    /// <summary>Neither renaming nor confirming: the label with ✎ and 🗑.</summary>
+    public bool IsIdle => !IsEditing && !IsConfirmingDelete;
+
+    partial void OnIsEditingChanged(bool value) => OnPropertyChanged(nameof(IsIdle));
+
+    [RelayCommand]
+    private void Edit()
+    {
+        EditName = Field.Name;
+        EditUnit = Field.Unit ?? string.Empty;
+        Error = null;
+        IsConfirmingDelete = false;
+        IsEditing = true;
+    }
+
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        IsEditing = false;
+        Error = null;
+    }
+
+    [RelayCommand]
+    private Task SaveEditAsync() => _save(this);
+
+    [RelayCommand]
+    private Task AskDeleteAsync() => _askDelete(this);
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        IsConfirmingDelete = false;
+        Error = null;
+    }
+
+    [RelayCommand]
+    private Task ConfirmDeleteAsync() => _delete(this);
+}
+
 /// <summary>
 /// «Νέα μέτρηση»: date and weight, plus the categories the coach adds — «Λιπομέτρηση»
 /// (Fat Mass/WT, fat/hgt) and «Άλλες μετρήσεις» (the coach's own saved fields).
@@ -89,7 +168,9 @@ public partial class AddMeasurementViewModel : ObservableValidator
         _editing = measurement;
         var culture = CultureInfo.CurrentCulture;
         MeasuredAt = new DateTimeOffset(measurement.MeasuredAt.ToDateTime(TimeOnly.MinValue));
-        WeightKg = measurement.WeightKg.ToString(culture);
+        WeightKg = measurement.WeightKg?.ToString(culture) ?? string.Empty;
+        Notes = measurement.Notes ?? string.Empty;
+        if (measurement.HasNotes) ShowCustom = true;
         FatMassWt = measurement.FatMassWt?.ToString(culture) ?? string.Empty;
         FatHgt = measurement.FatHgt?.ToString(culture) ?? string.Empty;
         ShowFat = measurement.HasFat;
@@ -101,11 +182,17 @@ public partial class AddMeasurementViewModel : ObservableValidator
     [ObservableProperty]
     public partial DateTimeOffset MeasuredAt { get; set; } = DateTimeOffset.Now;
 
+    /// <summary>Optional: a measurement may be only «Λιπομέτρηση», «Άλλες μετρήσεις» or notes.</summary>
     [ObservableProperty]
     [NotifyDataErrorInfo]
-    [Required(ErrorMessage = "Το βάρος είναι υποχρεωτικό.")]
-    [RegularExpression(@"^\d{1,3}([.,]\d{1,2})?$", ErrorMessage = "Μη έγκυρο βάρος (π.χ. 72.5).")]
+    [RegularExpression(NumberPattern, ErrorMessage = "Μη έγκυρο βάρος (π.χ. 72.5).")]
     public partial string WeightKg { get; set; } = string.Empty;
+
+    /// <summary>«Σημειώσεις» in «Άλλες μετρήσεις»: free text with the Ασκησιολόγιο markup.</summary>
+    [ObservableProperty]
+    public partial string Notes { get; set; } = string.Empty;
+
+    public const string NothingText = "Συμπλήρωσε τουλάχιστον μία τιμή.";
 
     [ObservableProperty]
     [NotifyDataErrorInfo]
@@ -161,6 +248,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
     private void RemoveCustomSection()
     {
         CustomRows.Clear();
+        Notes = string.Empty;
         CancelNewField();
         RefreshAvailable();
         ShowCustom = false;
@@ -236,6 +324,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
             _saved.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCultureIgnoreCase));
             IsAddingField = false;
             AddField(field);
+            if (IsManaging) RefreshManaged();
         }
         catch (DuplicateMeasurementFieldException ex)
         {
@@ -244,6 +333,125 @@ public partial class AddMeasurementViewModel : ObservableValidator
         catch (Exception ex)
         {
             NewFieldError = ex.Message;
+        }
+    }
+
+    // ---- «Διαχείριση πεδίων» ----
+
+    [ObservableProperty]
+    public partial bool IsManaging { get; set; }
+
+    public ObservableCollection<FieldManageRow> ManagedFields { get; } = new();
+
+    public bool HasSavedFields => _saved.Count > 0;
+
+    [RelayCommand]
+    private void ToggleManage()
+    {
+        IsManaging = !IsManaging;
+        if (IsManaging) RefreshManaged();
+    }
+
+    private void RefreshManaged()
+    {
+        ManagedFields.Clear();
+        foreach (var f in _saved)
+            ManagedFields.Add(new FieldManageRow(f, SaveRenameAsync, AskDeleteAsync, DeleteFieldAsync));
+        OnPropertyChanged(nameof(HasSavedFields));
+    }
+
+    /// <summary>Same checks as a new field; a name clash with another field is refused.</summary>
+    private static string? CheckName(string name, string unit) =>
+        name.Length == 0 ? "Γράψε όνομα πεδίου."
+        : name.Length > 40 ? "Έως 40 χαρακτήρες."
+        : unit.Length > 12 ? "Η μονάδα έως 12 χαρακτήρες."
+        : null;
+
+    private async Task SaveRenameAsync(FieldManageRow row)
+    {
+        if (_fields is null) return;
+        var name = (row.EditName ?? string.Empty).Trim();
+        var unit = (row.EditUnit ?? string.Empty).Trim();
+        if (CheckName(name, unit) is { } problem) { row.Error = problem; return; }
+        if (_saved.Any(f => f.Id != row.Field.Id && string.Equals(f.Name.Trim(), name, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            row.Error = "Υπάρχει ήδη πεδίο με αυτό το όνομα.";
+            return;
+        }
+
+        row.IsBusy = true;
+        try
+        {
+            var renamed = await _fields.UpdateAsync(row.Field.Id, name, unit.Length == 0 ? null : unit);
+            var at = _saved.FindIndex(f => f.Id == renamed.Id);
+            if (at >= 0) _saved[at] = renamed;
+            _saved.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCultureIgnoreCase));
+            // A row of it already in the form keeps its value under the new name.
+            for (var i = 0; i < CustomRows.Count; i++)
+            {
+                if (CustomRows[i].Field.Id == renamed.Id)
+                    CustomRows[i] = new CustomValueRow(renamed, CustomRows[i].Value, RemoveRow);
+            }
+            RefreshAvailable();
+            RefreshManaged();
+        }
+        catch (Exception ex)
+        {
+            row.Error = ex.Message;
+        }
+        finally
+        {
+            row.IsBusy = false;
+        }
+    }
+
+    private async Task AskDeleteAsync(FieldManageRow row)
+    {
+        if (_fields is null) return;
+        row.Error = null;
+        row.IsEditing = false;
+        row.IsBusy = true;
+        try
+        {
+            var count = await _fields.UsageAsync(row.Field.Id);
+            row.DeleteText = DeleteQuestion(row.Field.Name, count);
+            row.IsConfirmingDelete = true;
+        }
+        catch (Exception ex)
+        {
+            row.Error = ex.Message;
+        }
+        finally
+        {
+            row.IsBusy = false;
+        }
+    }
+
+    internal static string DeleteQuestion(string name, int count) => count switch
+    {
+        0 => $"Διαγραφή του «{name}»; Δεν έχει τιμές ακόμα.",
+        1 => $"Διαγραφή του «{name}»; Θα σβηστεί και 1 τιμή από μετρήσεις.",
+        _ => $"Διαγραφή του «{name}»; Θα σβηστούν και {count} τιμές από μετρήσεις.",
+    };
+
+    private async Task DeleteFieldAsync(FieldManageRow row)
+    {
+        if (_fields is null) return;
+        row.IsBusy = true;
+        try
+        {
+            await _fields.DeleteAsync(row.Field.Id);
+            _saved.RemoveAll(f => f.Id == row.Field.Id);
+            foreach (var r in CustomRows.Where(r => r.Field.Id == row.Field.Id).ToList()) CustomRows.Remove(r);
+            _hiddenExtra.Remove(row.Field.Id);
+            RefreshAvailable();
+            RefreshManaged();
+            if (_saved.Count == 0) IsManaging = false;
+        }
+        catch (Exception ex)
+        {
+            row.Error = ex.Message;
+            row.IsBusy = false;
         }
     }
 
@@ -286,6 +494,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
         foreach (var f in _saved.Where(f => CustomRows.All(r => r.Field.Id != f.Id)))
             AvailableFields.Add(f);
         OnPropertyChanged(nameof(HasAvailableFields));
+        OnPropertyChanged(nameof(HasSavedFields));
     }
 
     // ---- save ----
@@ -311,14 +520,24 @@ public partial class AddMeasurementViewModel : ObservableValidator
             return;
         }
 
+        var notes = ShowCustom && !string.IsNullOrWhiteSpace(Notes) ? Notes.Trim() : null;
+        var extraNow = BuildExtra();
+        if (ParseNullable(WeightKg) is null
+            && !(ShowFat && (ParseNullable(FatMassWt) is not null || ParseNullable(FatHgt) is not null))
+            && extraNow.Count == 0 && notes is null)
+        {
+            ErrorMessage = NothingText;
+            return;
+        }
+
         IsBusy = true;
         try
         {
             var measuredAt = DateOnly.FromDateTime(MeasuredAt.DateTime);
-            var weight = ParseDecimal(WeightKg)!.Value;
+            var weight = ParseNullable(WeightKg);
             var fatMass = ShowFat ? ParseNullable(FatMassWt) : null;
             var fatHgt = ShowFat ? ParseNullable(FatHgt) : null;
-            var extra = BuildExtra();
+            var extra = extraNow;
 
             if (_editing is { } existing)
             {
@@ -327,6 +546,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
                 existing.FatMassWt = fatMass;
                 existing.FatHgt = fatHgt;
                 existing.Extra = extra;
+                existing.Notes = notes;
                 await _measurements.UpdateAsync(existing);
             }
             else
@@ -339,6 +559,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
                     FatMassWt = fatMass,
                     FatHgt = fatHgt,
                     Extra = extra,
+                    Notes = notes,
                     CreatedBy = _session.ProfileId,
                 });
             }

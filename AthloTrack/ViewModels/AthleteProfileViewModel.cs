@@ -567,10 +567,10 @@ public partial class AthleteProfileViewModel : ViewModelBase
         }
 
         // Brand blue for weight (with a soft fill), green and amber for the fat metrics.
-        var lines = new System.Collections.Generic.List<ChartLine>
-        {
-            new("Βάρος (kg)", "#1565C0", ordered.Select(m => (double?)m.WeightKg).ToArray(), Width: 3, Fill: true),
-        };
+        // Weight is optional (016): its line only when some measurement has one.
+        var lines = new System.Collections.Generic.List<ChartLine>();
+        if (ordered.Any(m => m.HasWeight))
+            lines.Add(new("Βάρος (kg)", "#1565C0", ordered.Select(m => (double?)m.WeightKg).ToArray(), Width: 3, Fill: true));
         if (ordered.Any(m => m.FatMassWt is not null))
             lines.Add(new("Fat Mass/WT", "#009941", ordered.Select(m => (double?)m.FatMassWt).ToArray()));
         if (ordered.Any(m => m.FatHgt is not null))

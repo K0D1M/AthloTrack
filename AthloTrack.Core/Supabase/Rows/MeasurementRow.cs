@@ -16,13 +16,17 @@ public sealed class MeasurementRow : BaseModel
     public DateTime MeasuredAt { get; set; }
 
     [Column("weight_kg")]
-    public decimal WeightKg { get; set; }
+    public decimal? WeightKg { get; set; }
 
     [Column("fat_mass_wt")]
     public decimal? FatMassWt { get; set; }
 
     [Column("fat_hgt")]
     public decimal? FatHgt { get; set; }
+
+    // 016: free text (Ασκησιολόγιο markup), null when empty.
+    [Column("notes")]
+    public string? Notes { get; set; }
 
     // 015: {"<field id>": number}, null when there are no «Άλλες μετρήσεις».
     [Column("extra")]

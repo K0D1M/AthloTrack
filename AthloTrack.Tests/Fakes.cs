@@ -182,4 +182,27 @@ internal sealed class FakeMeasurementFields : IMeasurementFieldRepository
         Items.Add(field);
         return Task.FromResult(field);
     }
+
+    /// <summary>What UsageAsync answers per field (default 0).</summary>
+    public Dictionary<Guid, int> Usage { get; } = new();
+    public List<Guid> Deleted { get; } = new();
+
+    public Task<MeasurementField> UpdateAsync(Guid id, string name, string? unit)
+    {
+        if (Items.Any(f => f.Id != id && string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)))
+            throw new DuplicateMeasurementFieldException();
+        var old = Items.Single(f => f.Id == id);
+        var renamed = new MeasurementField { Id = id, CoachId = old.CoachId, Name = name, Unit = unit };
+        Items[Items.IndexOf(old)] = renamed;
+        return Task.FromResult(renamed);
+    }
+
+    public Task<int> UsageAsync(Guid id) => Task.FromResult(Usage.TryGetValue(id, out var n) ? n : 0);
+
+    public Task<int> DeleteAsync(Guid id)
+    {
+        Deleted.Add(id);
+        Items.RemoveAll(f => f.Id == id);
+        return UsageAsync(id);
+    }
 }

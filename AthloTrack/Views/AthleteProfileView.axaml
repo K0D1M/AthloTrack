@@ -375,7 +375,8 @@
                                                 <!-- WrapPanel: on a phone the values don't fit one line. Only what was measured. -->
                                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                                     <WrapPanel Orientation="Horizontal" ItemSpacing="16" LineSpacing="2">
-                                                        <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}" />
+                                                        <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}"
+                                                                   IsVisible="{Binding HasWeight}" />
                                                         <TextBlock Text="{Binding FatMassWt, StringFormat='Fat Mass/WT: {0}'}"
                                                                    IsVisible="{Binding FatMassWt, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                                         <TextBlock Text="{Binding FatHgt, StringFormat='fat/hgt: {0}'}"
@@ -393,6 +394,7 @@
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
+                                                    <controls:WorkoutText Text="{Binding Notes}" IsVisible="{Binding HasNotes}" Margin="0,4,0,0" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                                             IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}">
