@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AthloTrack · Εκδόσεις</title>
+<meta name="description" content="Η τρέχουσα έκδοση του AthloTrack και τι άλλαξε σε κάθε ενημέρωση.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<meta property="og:title" content="AthloTrack · Εκδόσεις">
+<meta property="og:description" content="Η τρέχουσα έκδοση του AthloTrack και τι άλλαξε σε κάθε ενημέρωση.">
+<meta property="og:image" content="https://athlotrack.gr/og-image.png">
+<style>
+:root {
+  --bg: #F4F7FC; --card: #FFFFFF; --text: #1C2430; --muted: #5B6573; --line: #E3E8F0;
+  --brand: #1565C0; --brand-dark: #003366; --gold: #FFD700; --pill: #E8F0FB; --pill-text: #0D47A1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121417; --card: #1A1F26; --text: #E6E8EB; --muted: #9AA3AE; --line: #2A313B;
+    --brand: #64A8F0; --pill: #1D2735; --pill-text: #9CC7F5;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121417; --card: #1A1F26; --text: #E6E8EB; --muted: #9AA3AE; --line: #2A313B;
+  --brand: #64A8F0; --pill: #1D2735; --pill-text: #9CC7F5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; }
+header { background: radial-gradient(120% 140% at 30% 0%, #0D4A8C 0%, #003366 70%); color: #FFFFFF; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+.hero { display: flex; align-items: center; gap: 16px; padding-top: 36px; padding-bottom: 32px; }
+.hero img { width: 64px; height: 64px; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,.3); flex: none; }
+.hero h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.3px; }
+.hero p { margin: 2px 0 0; color: #CFE3FF; font-size: 15px; }
+.current { margin-top: -18px; background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 18px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.current .label { color: var(--muted); font-size: 13px; }
+.current .num { font-size: 24px; font-weight: 800; }
+.current a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 22px;
+  background: var(--brand-dark); color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 14px; }
+.current a:hover { background: #0D47A1; }
+main { padding: 28px 0 48px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+.release { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; }
+.release summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+  min-height: 52px; }
+.release summary::-webkit-details-marker { display: none; }
+.release summary .v { font-weight: 700; font-size: 16px; }
+.release summary .d { color: var(--muted); font-size: 14px; margin-left: auto; white-space: nowrap; }
+.release summary .chev { width: 18px; height: 18px; flex: none; color: var(--muted); transition: transform .15s; }
+.release[open] summary .chev { transform: rotate(90deg); }
+.tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: var(--pill); color: var(--pill-text); }
+.release ul { margin: 0; padding: 0 18px 16px 38px; }
+.release li { margin: 6px 0; }
+.note { color: var(--muted); font-size: 14px; }
+footer { color: var(--muted); font-size: 13px; text-align: center; padding: 0 16px 32px; }
+footer a { color: var(--brand); }
+@media (max-width: 480px) { .hero h1 { font-size: 24px; } .release summary .d { font-size: 13px; } }
+@media (prefers-reduced-motion: reduce) { .release summary .chev { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hero">
+    <img src="/icon-192.png" alt="">
+    <div>
+      <h1>AthloTrack · Εκδόσεις</h1>
+      <p>Τι άλλαξε σε κάθε ενημέρωση</p>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <section class="current" aria-live="polite">
+    <div>
+      <div class="label">Τρέχουσα έκδοση</div>
+      <div class="num" id="current">…</div>
+      <div class="label" id="current-date"></div>
+    </div>
+    <a href="/">Άνοιγμα του AthloTrack</a>
+  </section>
+</div>
+<main class="wrap">
+  <h2>Ιστορικό εκδόσεων</h2>
+  <div id="list"><p class="note">Φόρτωση…</p></div>
+</main>
+<footer>© K0D1M · <a href="/">athlotrack.gr</a></footer>
+<script>
+(function () {
+  var months = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου',
+                'Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
+  function when(iso) {
+    var p = iso.split('-');
+    return parseInt(p[2], 10) + ' ' + months[parseInt(p[1], 10) - 1] + ' ' + p[0];
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  var chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>';
+  fetch('changelog.json', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (data) {
+      var list = document.getElementById('list');
+      list.textContent = '';
+      var releases = data.releases || [];
+      if (releases.length) {
+        document.getElementById('current').textContent = releases[0].version;
+        document.getElementById('current-date').textContent = when(releases[0].date);
+      }
+      releases.forEach(function (r, i) {
+        var d = el('details', 'release');
+        if (i === 0) d.open = true;
+        var s = el('summary');
+        s.innerHTML = chev;
+        s.appendChild(el('span', 'v', r.version));
+        if (i === 0) s.appendChild(el('span', 'tag', 'Τρέχουσα'));
+        s.appendChild(el('span', 'd', when(r.date)));
+        d.appendChild(s);
+        var ul = el('ul');
+        (r.changes || []).forEach(function (c) { ul.appendChild(el('li', null, c)); });
+        d.appendChild(ul);
+        list.appendChild(d);
+      });
+    })
+    .catch(function () {
+      document.getElementById('list').innerHTML = '<p class="note">Το ιστορικό δεν φόρτωσε. Δοκίμασε ξανά σε λίγο.</p>';
+      document.getElementById('current').textContent = '—';
+    });
+})();
+</script>
+</body>
+</html>
