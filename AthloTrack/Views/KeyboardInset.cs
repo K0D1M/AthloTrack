@@ -6,8 +6,9 @@ using Avalonia.Controls.Platform;
 namespace AthloTrack.Views;
 
 /// <summary>
-/// How much of a view the phone's on-screen keyboard covers. The app's view isn't resized for
-/// the keyboard, so views with text fields use this to keep their content above it.
+/// Whether (and how tall) the phone's on-screen keyboard is open. The app itself ends above the
+/// keyboard (App.OnInputPaneChanged); views use this only for extras, such as hiding the login
+/// motto or keeping the typed line in view.
 /// </summary>
 public sealed class KeyboardInset
 {
@@ -15,7 +16,7 @@ public sealed class KeyboardInset
     private readonly Action<double> _changed;
     private IInputPane? _pane;
 
-    /// <param name="changed">Called with the covered height (0 when the keyboard closes).</param>
+    /// <param name="changed">Called with the keyboard's height (0 when it closes).</param>
     public KeyboardInset(Control view, Action<double> changed)
     {
         _view = view;
@@ -38,10 +39,9 @@ public sealed class KeyboardInset
     private void OnStateChanged(object? sender, InputPaneStateEventArgs e)
     {
         var inset = 0.0;
-        if (e.NewState == InputPaneState.Open && TopLevel.GetTopLevel(_view) is { } top
-            && _view.TranslatePoint(new Point(0, _view.Bounds.Height), top) is { } bottom)
+        if (e.NewState == InputPaneState.Open && TopLevel.GetTopLevel(_view) is { } top)
         {
-            inset = Math.Max(0, bottom.Y - e.EndRect.Top);
+            inset = Math.Max(0, top.ClientSize.Height - e.EndRect.Top);
         }
 
         Update(inset);

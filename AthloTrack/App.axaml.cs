@@ -387,7 +387,33 @@ public partial class App : Application
         // once the scaling is known, so it's read again then (and on resize / rotation).
         topLevel.ScalingChanged += (_, _) => ApplySafeArea();
         _shell.SizeChanged += (_, _) => ApplySafeArea();
+        if (topLevel.InputPane is { } pane) pane.StateChanged += OnInputPaneChanged;
         ApplySafeArea();
+    }
+
+    /// <summary>How far the phone keyboard reaches up from the bottom of the window (0 when closed).</summary>
+    private double _keyboard;
+
+    /// <summary>
+    /// The app's view isn't resized for the keyboard (edge-to-edge), so every screen used to run
+    /// on under it. Like Android's own "adjust resize": the root ends above the keyboard, and the
+    /// field being typed in scrolls into view.
+    /// </summary>
+    private void OnInputPaneChanged(object? sender, Avalonia.Controls.Platform.InputPaneStateEventArgs e)
+    {
+        var top = TopLevel.GetTopLevel(_shell);
+        var keyboard = e.NewState == Avalonia.Controls.Platform.InputPaneState.Open && top is not null
+            ? Math.Max(0, top.ClientSize.Height - e.EndRect.Top)
+            : 0;
+        if (Math.Abs(keyboard - _keyboard) < 0.5) return;
+        _keyboard = keyboard;
+        ApplySafeArea();
+        if (keyboard > 0)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => (top?.FocusManager?.GetFocusedElement() as Control)?.BringIntoView(),
+                Avalonia.Threading.DispatcherPriority.Background);
+        }
     }
 
     private void OnSafeAreaChanged(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e) => ApplySafeArea();
@@ -396,8 +422,10 @@ public partial class App : Application
     {
         if (_insets is null) return;
         var padding = _insets.SafeAreaPadding;
-        _root.Padding = padding;
-        _lockLayer.Padding = padding;
+        // The keyboard covers the navigation bar too: the larger of the two at the bottom.
+        var withKeyboard = new Thickness(padding.Left, padding.Top, padding.Right, Math.Max(padding.Bottom, _keyboard));
+        _root.Padding = withKeyboard;
+        _lockLayer.Padding = withKeyboard;
         _splash?.SetSafeArea(padding);
         // The strips behind the bars take the root's colour (the PIN screen covers the app under it).
         _lockLayer.Background = _root.Background;

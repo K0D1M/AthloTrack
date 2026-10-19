@@ -17,13 +17,9 @@ public partial class LoginView : UserControl
     public LoginView()
     {
         InitializeComponent();
-        // The keyboard opens with the form (Email gets the focus): keep the form above it. The
-        // motto steps aside for the room.
-        _ = new KeyboardInset(this, inset =>
-        {
-            Motto.IsVisible = inset <= 0;
-            Content.Margin = new Avalonia.Thickness(16, 24, 16, 24 + inset);
-        });
+        // The keyboard opens with the form (Email gets the focus); the app ends above it (App),
+        // and the motto steps aside for the room.
+        _ = new KeyboardInset(this, inset => Motto.IsVisible = inset <= 0);
     }
 
     protected override void OnDataContextChanged(EventArgs e)

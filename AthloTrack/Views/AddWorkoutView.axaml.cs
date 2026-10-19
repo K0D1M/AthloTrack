@@ -22,10 +22,9 @@ public partial class AddWorkoutView : UserControl
     {
         InitializeComponent();
         Editor.TextChanged += OnEditorTextChanged;
-        // Phone keyboard open: the form ends above it, and the line being typed stays in view.
+        // Phone keyboard open: the app ends above it (App); the line being typed stays in view.
         _keyboard = new KeyboardInset(this, inset =>
         {
-            Form.Margin = new Thickness(16, 16, 16, 16 + inset);
             if (inset > 0) Dispatcher.UIThread.Post(BringCaretIntoView, DispatcherPriority.Background);
         });
     }

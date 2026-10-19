@@ -151,6 +151,11 @@ public partial class MainView : ContentPage
         _topLevel = TopLevel.GetTopLevel(this);
         if (_topLevel is not null) _topLevel.BackRequested += OnBackRequested;
 
+        // While typing, the tab bar steps aside: the keyboard leaves little room (the app ends
+        // above it, App.OnInputPaneChanged).
+        _inputPane = _topLevel?.InputPane;
+        if (_inputPane is not null) _inputPane.StateChanged += OnInputPaneChanged;
+
         AthloTrack.Services.PhotoPreview.Requested += ShowPhoto;
 
         // A tapped phone notification opens its section (see MainActivity).
@@ -163,6 +168,11 @@ public partial class MainView : ContentPage
             AthloTrack.Services.UpdateChecker.Opener = url => launcher.LaunchUriAsync(new Uri(url));
         _ = CheckForUpdateAsync();
     }
+
+    private Avalonia.Controls.Platform.IInputPane? _inputPane;
+
+    private void OnInputPaneChanged(object? sender, Avalonia.Controls.Platform.InputPaneStateEventArgs e) =>
+        BottomBar.IsVisible = e.NewState != Avalonia.Controls.Platform.InputPaneState.Open;
 
     private AthloTrack.Services.UpdateInfo? _update;
 
@@ -193,6 +203,8 @@ public partial class MainView : ContentPage
         AthloTrack.Services.NotificationNavigation.Requested -= ApplyPendingSection;
         AthloTrack.Services.PhotoPreview.Requested -= ShowPhoto;
         if (_topLevel is not null) _topLevel.BackRequested -= OnBackRequested;
+        if (_inputPane is not null) _inputPane.StateChanged -= OnInputPaneChanged;
+        _inputPane = null;
         _topLevel = null;
         base.OnDetachedFromVisualTree(e);
     }
