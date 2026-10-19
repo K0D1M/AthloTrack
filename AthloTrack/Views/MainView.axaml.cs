@@ -162,11 +162,22 @@ public partial class MainView : ContentPage
         AthloTrack.Services.NotificationNavigation.Requested += ApplyPendingSection;
         ApplyPendingSection();
 
-        // «Νέα έκδοση»: links open in the browser; the banner checks at most once a day (Android).
+        // «Νέα έκδοση» (Android): links open in the browser; checked at every start and on
+        // return to the app (at most every 30 minutes).
         var launcher = _topLevel?.Launcher;
         if (launcher is not null)
             AthloTrack.Services.UpdateChecker.Opener = url => launcher.LaunchUriAsync(new Uri(url));
+        _activatable = Avalonia.Application.Current?.TryGetFeature(typeof(Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime))
+            as Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime;
+        if (_activatable is not null) _activatable.Activated += OnAppActivated;
         _ = CheckForUpdateAsync();
+    }
+
+    private Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime? _activatable;
+
+    private void OnAppActivated(object? sender, Avalonia.Controls.ApplicationLifetimes.ActivatedEventArgs e)
+    {
+        if (e.Kind == Avalonia.Controls.ApplicationLifetimes.ActivationKind.Background) _ = CheckForUpdateAsync();
     }
 
     private Avalonia.Controls.Platform.IInputPane? _inputPane;
@@ -180,8 +191,9 @@ public partial class MainView : ContentPage
     {
         if (!AthloTrack.Services.UpdateChecker.IsSupported) return;
         var prefs = Resolve<AthloTrack.Core.Auth.IAppPreferences>();
-        _update = await AthloTrack.Services.UpdateChecker.CheckDailyAsync(prefs, DateTimeOffset.UtcNow);
-        if (_update is null) return;
+        var update = await AthloTrack.Services.UpdateChecker.CheckAutoAsync(prefs, DateTimeOffset.UtcNow);
+        if (update is null) return;
+        _update = update;
         UpdateBannerText.Text = $"Η έκδοση {_update.Version} είναι διαθέσιμη (έχεις την {AppInfo.Version}).";
         UpdateBanner.IsVisible = true;
     }
@@ -205,6 +217,8 @@ public partial class MainView : ContentPage
         if (_topLevel is not null) _topLevel.BackRequested -= OnBackRequested;
         if (_inputPane is not null) _inputPane.StateChanged -= OnInputPaneChanged;
         _inputPane = null;
+        if (_activatable is not null) _activatable.Activated -= OnAppActivated;
+        _activatable = null;
         _topLevel = null;
         base.OnDetachedFromVisualTree(e);
     }

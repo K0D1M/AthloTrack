@@ -44,7 +44,7 @@ public sealed class UpdateCheckerTests
         try
         {
             Assert.False(UpdateChecker.IsSupported);
-            Assert.Null(await UpdateChecker.CheckDailyAsync(new InMemoryAppPreferences(), DateTimeOffset.UtcNow));
+            Assert.Null(await UpdateChecker.CheckAutoAsync(new InMemoryAppPreferences(), DateTimeOffset.UtcNow));
         }
         finally
         {

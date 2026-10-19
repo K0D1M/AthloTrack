@@ -20,7 +20,10 @@ public static class UpdateChecker
 {
     public const string LatestUrl = "https://athlotrack.gr/version/latest.json";
 
-    private const string LastCheckKey = "update.last_check";
+    /// <summary>Between automatic checks (start and return to the app); the first one always runs.</summary>
+    public static readonly TimeSpan AutoInterval = TimeSpan.FromMinutes(30);
+
+    private static DateTimeOffset? _lastAuto;
     private const string DismissedKey = "update.dismissed";
 
     /// <summary>The key in latest.json for this head ("android"), or null: no update check.</summary>
@@ -49,19 +52,23 @@ public static class UpdateChecker
         }
     }
 
-    /// <summary>The start-up check: at most once a day, and not for a version the user dismissed.</summary>
-    public static async Task<UpdateInfo?> CheckDailyAsync(IAppPreferences prefs, DateTimeOffset now)
+    /// <summary>
+    /// The automatic check, when the app starts and when it comes back from the background: every
+    /// start checks, a return only after <see cref="AutoInterval"/>. Not for a version the user
+    /// dismissed («Αργότερα»). (It used to run once a day, so a release published after that day's
+    /// check stayed unseen until the next day.)
+    /// </summary>
+    public static async Task<UpdateInfo?> CheckAutoAsync(IAppPreferences prefs, DateTimeOffset now)
     {
         if (!IsSupported) return null;
-        if (DateTimeOffset.TryParse(prefs.Get(LastCheckKey), CultureInfo.InvariantCulture, DateTimeStyles.None, out var last)
-            && now - last < TimeSpan.FromHours(20))
-        {
-            return null;
-        }
+        if (_lastAuto is { } last && now - last < AutoInterval) return null;
+        _lastAuto = now;
         var update = await CheckAsync();
-        prefs.Set(LastCheckKey, now.ToString("O", CultureInfo.InvariantCulture));
         return update is not null && update.Version != prefs.Get(DismissedKey) ? update : null;
     }
+
+    /// <summary>Tests: forget the last automatic check.</summary>
+    internal static void ResetAutoCheck() => _lastAuto = null;
 
     /// <summary>Opens a link in the browser (MainView sets it: it has the top level's launcher).</summary>
     public static Func<string, Task>? Opener { get; set; }
