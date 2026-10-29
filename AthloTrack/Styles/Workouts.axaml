@@ -75,6 +75,149 @@
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
     </Style>
 
+    <!-- ============ Προπονήσεις tab ============ -->
+
+    <!-- Filter chips «Εκκρεμούν (2)»; .selected is the active one -->
+    <Style Selector="Button.chip">
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="12,0,8,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+    </Style>
+    <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+    </Style>
+    <Style Selector="Button.chip.selected">
+        <Setter Property="Background" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.chip.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.chip Border.count">
+        <Setter Property="MinWidth" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Padding" Value="6,0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+    </Style>
+    <Style Selector="Button.chip.selected Border.count">
+        <Setter Property="Background" Value="#38FFFFFF" />
+    </Style>
+    <Style Selector="Button.chip Border.count TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The sort button and the search box next to it -->
+    <Style Selector="Button.sortbutton">
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.sortbutton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    </Style>
+    <Style Selector="TextBox.search">
+        <Setter Property="Height" Value="44" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="4,0,12,0" />
+    </Style>
+
+    <!-- A workout card -->
+    <Style Selector="Border.wcard">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="14,12,10,8" />
+    </Style>
+    <Style Selector="Border.wcard.overdue">
+        <Setter Property="BorderBrush" Value="{DynamicResource NoticeBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+
+    <!-- The status pill; one colour class is set -->
+    <Style Selector="Border.pill">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="9,3" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.pill TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.pill.overdue"><Setter Property="Background" Value="{DynamicResource PillOverdueBrush}" /></Style>
+    <Style Selector="Border.pill.overdue TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillOverdueTextBrush}" /></Style>
+    <Style Selector="Border.pill.pending"><Setter Property="Background" Value="{DynamicResource PillPendingBrush}" /></Style>
+    <Style Selector="Border.pill.pending TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillPendingTextBrush}" /></Style>
+    <Style Selector="Border.pill.accepted"><Setter Property="Background" Value="{DynamicResource PillAcceptedBrush}" /></Style>
+    <Style Selector="Border.pill.accepted TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillAcceptedTextBrush}" /></Style>
+    <Style Selector="Border.pill.done"><Setter Property="Background" Value="{DynamicResource PillDoneBrush}" /></Style>
+    <Style Selector="Border.pill.done TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillDoneTextBrush}" /></Style>
+    <Style Selector="Border.pill.notdone"><Setter Property="Background" Value="{DynamicResource PillNotDoneBrush}" /></Style>
+    <Style Selector="Border.pill.notdone TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillNotDoneTextBrush}" /></Style>
+    <Style Selector="Border.pill.declined"><Setter Property="Background" Value="{DynamicResource PillDeclinedBrush}" /></Style>
+    <Style Selector="Border.pill.declined TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillDeclinedTextBrush}" /></Style>
+    <Style Selector="Border.pill.cancelled"><Setter Property="Background" Value="{DynamicResource PillCancelledBrush}" /></Style>
+    <Style Selector="Border.pill.cancelled TextBlock"><Setter Property="Foreground" Value="{DynamicResource PillCancelledTextBrush}" /></Style>
+
+    <!-- Bottom sheets (Ταξινόμηση, Νέο ασκησιολόγιο για…): the dimmed backdrop and the rows -->
+    <Style Selector="Button.backdrop">
+        <Setter Property="Background" Value="#73000000" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Button.backdrop:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.backdrop:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#73000000" />
+    </Style>
+    <Style Selector="Button.sheetrow">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="MinHeight" Value="52" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="CornerRadius" Value="12" />
+    </Style>
+    <Style Selector="Button.sheetrow:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+    </Style>
+    <!-- The radio dot of a sort choice -->
+    <Style Selector="Ellipse.radio">
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="StrokeThickness" Value="2" />
+    </Style>
+    <Style Selector="Ellipse.radio.on">
+        <Setter Property="Stroke" Value="{StaticResource BrandPrimaryPressedBrush}" />
+        <Setter Property="StrokeThickness" Value="6" />
+    </Style>
+
     <!-- The workout a tapped notification is about: tinted for a moment. -->
     <Style Selector="Border.workoutitem">
         <Setter Property="Transitions">

@@ -34,6 +34,21 @@
             <SolidColorBrush x:Key="SkeletonBrush" Color="#E6ECF4" />
             <SolidColorBrush x:Key="SuccessBrush" Color="#2E7D32" />
             <SolidColorBrush x:Key="DangerBrush" Color="#C62828" />
+            <!-- Προπονήσεις: a workout's status pill (background, text) -->
+            <SolidColorBrush x:Key="PillOverdueBrush" Color="#FFF4CC" />
+            <SolidColorBrush x:Key="PillOverdueTextBrush" Color="#6B4E00" />
+            <SolidColorBrush x:Key="PillPendingBrush" Color="#EEF2F7" />
+            <SolidColorBrush x:Key="PillPendingTextBrush" Color="#3E4A59" />
+            <SolidColorBrush x:Key="PillAcceptedBrush" Color="#E3F0FF" />
+            <SolidColorBrush x:Key="PillAcceptedTextBrush" Color="#0D47A1" />
+            <SolidColorBrush x:Key="PillDoneBrush" Color="#E3F4E8" />
+            <SolidColorBrush x:Key="PillDoneTextBrush" Color="#17612C" />
+            <SolidColorBrush x:Key="PillNotDoneBrush" Color="#FDECEA" />
+            <SolidColorBrush x:Key="PillNotDoneTextBrush" Color="#A4231B" />
+            <SolidColorBrush x:Key="PillDeclinedBrush" Color="#FFEEDC" />
+            <SolidColorBrush x:Key="PillDeclinedTextBrush" Color="#8A4300" />
+            <SolidColorBrush x:Key="PillCancelledBrush" Color="#ECEDEF" />
+            <SolidColorBrush x:Key="PillCancelledTextBrush" Color="#4F5560" />
             <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStop Color="#EEF4FD" Offset="0" />
                 <GradientStop Color="#F8FAFD" Offset="1" />
@@ -57,6 +72,20 @@
             <SolidColorBrush x:Key="SkeletonBrush" Color="#2A3038" />
             <SolidColorBrush x:Key="SuccessBrush" Color="#66BB6A" />
             <SolidColorBrush x:Key="DangerBrush" Color="#EF5350" />
+            <SolidColorBrush x:Key="PillOverdueBrush" Color="#3A3220" />
+            <SolidColorBrush x:Key="PillOverdueTextBrush" Color="#FFD966" />
+            <SolidColorBrush x:Key="PillPendingBrush" Color="#2A3038" />
+            <SolidColorBrush x:Key="PillPendingTextBrush" Color="#C9D1DB" />
+            <SolidColorBrush x:Key="PillAcceptedBrush" Color="#1D2F4A" />
+            <SolidColorBrush x:Key="PillAcceptedTextBrush" Color="#9CC3FF" />
+            <SolidColorBrush x:Key="PillDoneBrush" Color="#1E3324" />
+            <SolidColorBrush x:Key="PillDoneTextBrush" Color="#81C995" />
+            <SolidColorBrush x:Key="PillNotDoneBrush" Color="#3A2222" />
+            <SolidColorBrush x:Key="PillNotDoneTextBrush" Color="#F28B82" />
+            <SolidColorBrush x:Key="PillDeclinedBrush" Color="#3A2A1C" />
+            <SolidColorBrush x:Key="PillDeclinedTextBrush" Color="#FFB870" />
+            <SolidColorBrush x:Key="PillCancelledBrush" Color="#2A2D31" />
+            <SolidColorBrush x:Key="PillCancelledTextBrush" Color="#A0A6AE" />
             <LinearGradientBrush x:Key="CardTintGradient" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStop Color="#1D2735" Offset="0" />
                 <GradientStop Color="#1A1F26" Offset="1" />

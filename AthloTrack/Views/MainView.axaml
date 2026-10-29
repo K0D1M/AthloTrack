@@ -367,137 +367,303 @@
                     <ContentPage.Icon>
                         <PathIcon Data="{StaticResource DumbbellIcon}" />
                     </ContentPage.Icon>
-                    <Grid>
-                        <ScrollViewer>
-                            <StackPanel>
-                            <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
-                                       Margin="16,12,16,0"
-                                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                            <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
-                                       Margin="16,12,16,0"
-                                       IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                            <ItemsControl ItemsSource="{Binding WorkoutPrograms}" Margin="12" Classes="fadeitems">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
-                                        <!-- SeenTracker: an athlete's workout counts as read once on screen -->
-                                        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="4,10"
-                                                Opacity="{Binding CardOpacity}"
-                                                controls:SeenTracker.Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
-                                                controls:SeenTracker.CommandParameter="{Binding}">
-                                            <StackPanel Spacing="2">
-                                                <Grid ColumnDefinitions="*,Auto">
-                                                    <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" FontSize="15"
-                                                               VerticalAlignment="Center" />
-                                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                                        <!-- Coach: ask the athlete to choose / whether it was done -->
-                                                        <Button Classes="iconbutton" ToolTip.Tip="Υπενθύμιση στον αθλητή"
-                                                                IsVisible="{Binding CanRemind}" IsEnabled="{Binding RemindEnabled}"
-                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RemindWorkoutCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <PathIcon Data="{StaticResource BellRingIcon}" Width="18" Height="18"
-                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
-                                                        </Button>
-                                                        <!-- Coach: cancel (stays, dimmed; the athlete is notified) / undo it -->
-                                                        <Button Classes="iconbutton" ToolTip.Tip="Ακύρωση ασκησιολογίου"
-                                                                IsVisible="{Binding CanCancel}"
-                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CancelWorkoutCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <PathIcon Data="{StaticResource CancelIcon}" Width="18" Height="18"
-                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
-                                                        </Button>
-                                                        <Button Classes="iconbutton" ToolTip.Tip="Επαναφορά ασκησιολογίου"
-                                                                IsVisible="{Binding CanRestore}"
-                                                                Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).RestoreWorkoutCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <PathIcon Data="{StaticResource RestoreIcon}" Width="18" Height="18"
-                                                                      Foreground="{DynamicResource BrandSupportBrush}" />
-                                                        </Button>
-                                                    </StackPanel>
-                                                </Grid>
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <TextBlock Text="{Binding TargetDateText}" FontSize="12" VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource BrandSupportBrush}" />
-                                                    <Border IsVisible="{Binding FromArchive}" Background="{DynamicResource TintBrush}" CornerRadius="8" Padding="8,1"
-                                                            VerticalAlignment="Center">
-                                                        <TextBlock Text="Αρχείο" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" />
+                    <ContentPage.Styles>
+                        <Style Selector="TextBlock.grouptitle">
+                            <Setter Property="FontSize" Value="15" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+                        </Style>
+                        <Style Selector="TextBlock.grouptitle.today">
+                            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+                        </Style>
+                        <Style Selector="PathIcon.when">
+                            <Setter Property="Width" Value="16" />
+                            <Setter Property="Height" Value="16" />
+                            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+                        </Style>
+                    </ContentPage.Styles>
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Search, sort and the filter chips stay on top while the list scrolls -->
+                        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource DividerBrush}"
+                                BorderThickness="0,0,0,1" Padding="16,12,16,2">
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Classes="search" Text="{Binding SearchText}" Watermark="{Binding SearchWatermark}">
+                                        <TextBox.InnerLeftContent>
+                                            <PathIcon Data="{StaticResource SearchIcon}" Width="18" Height="18" Margin="12,0,4,0"
+                                                      Foreground="{DynamicResource MutedTextBrush}" />
+                                        </TextBox.InnerLeftContent>
+                                    </TextBox>
+                                    <Button Grid.Column="1" Classes="sortbutton" Margin="8,0,0,0" ToolTip.Tip="Ταξινόμηση"
+                                            Command="{Binding OpenSortCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <PathIcon Data="{StaticResource SortIcon}" Width="18" Height="18" />
+                                            <TextBlock Text="{Binding SortShort}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Filters}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:WorkoutFilterOption">
+                                            <Button Classes="chip" Classes.selected="{Binding IsSelected}"
+                                                    Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).PickFilterCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                                    <Border Classes="count">
+                                                        <TextBlock Text="{Binding Count}" />
                                                     </Border>
                                                 </StackPanel>
-                                                <controls:CoachPresence Present="{Binding Program.CoachPresent}" Margin="0,2,0,0" />
-                                                <controls:WorkoutText Text="{Binding Content}" Margin="0,4,0,0" />
-                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0" IsVisible="{Binding IsCancelled}">
-                                                    <PathIcon Data="{StaticResource CancelIcon}" Width="14" Height="14"
-                                                              Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding CancelledText}" VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" />
-                                                </StackPanel>
-                                                <TextBlock Text="{Binding AcceptedText}" IsVisible="{Binding ShowAccepted}"
-                                                           Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
-                                                <TextBlock Text="{Binding DeclinedText}" IsVisible="{Binding IsDeclined}" TextWrapping="Wrap"
-                                                           Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
-                                                <TextBlock Text="Αναμένει απάντηση" IsVisible="{Binding ShowPending}" FontSize="12"
-                                                           Foreground="{DynamicResource BrandSupportBrush}" Margin="0,2,0,0" />
-                                                <TextBlock Text="{Binding CompletedText}" IsVisible="{Binding IsCompleted}"
-                                                           Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
-                                                <TextBlock Text="{Binding NotCompletedText}" IsVisible="{Binding IsNotCompleted}"
-                                                           Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" Margin="0,2,0,0" />
-                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
-                                                            IsVisible="{Binding ShowReminderSent}">
-                                                    <PathIcon Data="{StaticResource BellRingIcon}" Width="14" Height="14"
-                                                              Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding ReminderText}" FontSize="12" TextWrapping="Wrap"
-                                                               Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0"
-                                                            IsVisible="{Binding ShowReadReceipt}">
-                                                    <PathIcon Data="{StaticResource EyeIcon}" Width="14" Height="14"
-                                                              Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding ReadText}" FontSize="12" TextWrapping="Wrap"
-                                                               Foreground="{DynamicResource BrandSupportBrush}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <!-- the athlete chooses on a new workout (final; the coach is notified) -->
-                                                <WrapPanel Margin="0,6,0,0" IsVisible="{Binding CanAccept}">
-                                                    <Button Classes="primary answer" Margin="0,0,8,6"
-                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).AcceptWorkoutCommand}" CommandParameter="{Binding}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                                            <PathIcon Data="{StaticResource CheckCircleIcon}" />
-                                                            <TextBlock Text="Θα το κάνω" VerticalAlignment="Center" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                    <Button Classes="answer notdone" Margin="0,0,8,6"
-                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).DeclineWorkoutCommand}" CommandParameter="{Binding}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                                            <PathIcon Data="{StaticResource CloseCircleIcon}" />
-                                                            <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                </WrapPanel>
-                                                <!-- the athlete answers an accepted workout (final; the coach is notified) -->
-                                                <WrapPanel Margin="0,6,0,0" IsVisible="{Binding CanComplete}">
-                                                    <Button Classes="primary answer" Margin="0,0,8,6"
-                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}" CommandParameter="{Binding}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                                            <PathIcon Data="{StaticResource CheckCircleIcon}" />
-                                                            <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                    <Button Classes="answer notdone" Margin="0,0,8,6"
-                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).NotCompleteWorkoutCommand}" CommandParameter="{Binding}">
-                                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                                            <PathIcon Data="{StaticResource CloseCircleIcon}" />
-                                                            <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                </WrapPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="1">
+                            <StackPanel Margin="16,0,16,96">
+                                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                           Margin="0,12,0,0"
+                                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                                           Margin="0,12,0,0"
+                                           IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                <!-- «Σήμερα: 2 προπονήσεις», and how many are overdue -->
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="2,12,0,0" IsVisible="{Binding !!WorkoutPrograms.Count}">
+                                    <TextBlock Text="{Binding SummaryText}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource MutedTextBrush}" />
+                                    <Border Classes="pill overdue" IsVisible="{Binding HasOverdue}">
+                                        <TextBlock Text="{Binding OverdueText}" />
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Athlete: the next workout, on its own card -->
+                                <Border IsVisible="{Binding HasNext}" Margin="0,12,0,0" CornerRadius="16" Padding="14,12"
+                                        Background="{DynamicResource CardTintGradient}"
+                                        BorderBrush="{StaticResource BrandPrimaryBrush}" BorderThickness="1.5"
+                                        controls:SeenTracker.Command="{Binding WorkoutSeenCommand}"
+                                        controls:SeenTracker.CommandParameter="{Binding Next}">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Επόμενη προπόνηση" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource HeadingBrush}" />
+                                            <Border Grid.Column="1" Classes="pill" Classes.pending="{Binding Next.StatusPending}"
+                                                    Classes.accepted="{Binding Next.StatusAccepted}">
+                                                <TextBlock Text="{Binding Next.StatusText}" />
+                                            </Border>
+                                        </Grid>
+                                        <WrapPanel ItemSpacing="14" LineSpacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <PathIcon Classes="when" Data="{StaticResource CalendarIcon}" Width="18" Height="18" />
+                                                <TextBlock Text="{Binding NextDayText}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
                                             </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Next.HasTime}">
+                                                <PathIcon Classes="when" Data="{StaticResource ClockIcon}" Width="18" Height="18" />
+                                                <TextBlock Text="{Binding Next.TimeText}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </WrapPanel>
+                                        <TextBlock Text="{Binding NextHint}" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                                        <controls:WorkoutText Text="{Binding Next.Content}" />
+                                        <WrapPanel Margin="0,4,0,0" IsVisible="{Binding Next.CanAccept}">
+                                            <Button Classes="primary answer" Margin="0,0,8,6"
+                                                    Command="{Binding AcceptWorkoutCommand}" CommandParameter="{Binding Next}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                    <TextBlock Text="Θα το κάνω" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                    Command="{Binding DeclineWorkoutCommand}" CommandParameter="{Binding Next}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                    <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                        </WrapPanel>
+                                        <WrapPanel Margin="0,4,0,0" IsVisible="{Binding Next.CanComplete}">
+                                            <Button Classes="primary answer" Margin="0,0,8,6"
+                                                    Command="{Binding CompleteWorkoutCommand}" CommandParameter="{Binding Next}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                    <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                    Command="{Binding NotCompleteWorkoutCommand}" CommandParameter="{Binding Next}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                    <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="Δεν βρέθηκαν προπονήσεις με αυτά τα κριτήρια." IsVisible="{Binding IsFilteredEmpty}"
+                                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="12,48,12,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+
+                                <!-- Headings (a day, an athlete or a status) and their workouts -->
+                                <ItemsControl ItemsSource="{Binding Groups}" Classes="fadeitems">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:WorkoutGroup">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="2,16,0,8">
+                                                    <TextBlock Classes="grouptitle" Classes.today="{Binding IsToday}" Text="{Binding Title}" />
+                                                    <TextBlock Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" FontSize="13"
+                                                               VerticalAlignment="Bottom" Foreground="{DynamicResource MutedTextBrush}" />
+                                                </StackPanel>
+                                                <ItemsControl ItemsSource="{Binding Items}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:WorkoutListItemViewModel">
+                                                            <!-- SeenTracker: an athlete's workout counts as read once on screen -->
+                                                            <Border Classes="wcard" Classes.overdue="{Binding IsOverdue}" Margin="0,0,0,10"
+                                                                    Opacity="{Binding CardOpacity}"
+                                                                    controls:SeenTracker.Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).WorkoutSeenCommand}"
+                                                                    controls:SeenTracker.CommandParameter="{Binding}">
+                                                                <StackPanel Spacing="8">
+                                                                    <!-- Coach: who, and the status -->
+                                                                    <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding IsCoach}">
+                                                                        <controls:Avatar Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0"
+                                                                                         Initial="{Binding AthleteInitial}" />
+                                                                        <TextBlock Grid.Column="1" Text="{Binding AthleteName}" FontSize="15" FontWeight="SemiBold"
+                                                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                                        <Border Grid.Column="2" Classes="pill" Margin="8,0,0,0"
+                                                                                Classes.overdue="{Binding StatusOverdue}" Classes.pending="{Binding StatusPending}"
+                                                                                Classes.accepted="{Binding StatusAccepted}" Classes.done="{Binding StatusDone}"
+                                                                                Classes.notdone="{Binding StatusNotDone}" Classes.declined="{Binding StatusDeclined}"
+                                                                                Classes.cancelled="{Binding StatusCancelled}">
+                                                                            <TextBlock Text="{Binding StatusText}" />
+                                                                        </Border>
+                                                                    </Grid>
+                                                                    <!-- When: calendar and clock icons; the athlete's status at the end -->
+                                                                    <Grid ColumnDefinitions="*,Auto">
+                                                                        <WrapPanel ItemSpacing="14" LineSpacing="6" VerticalAlignment="Center">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                                                <PathIcon Classes="when" Data="{StaticResource CalendarIcon}" />
+                                                                                <TextBlock Text="{Binding DayText}" FontSize="13" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding HasTime}">
+                                                                                <PathIcon Classes="when" Data="{StaticResource ClockIcon}" />
+                                                                                <TextBlock Text="{Binding TimeText}" FontSize="13" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                            <controls:CoachPresence Present="{Binding Program.CoachPresent}" VerticalAlignment="Center" />
+                                                                        </WrapPanel>
+                                                                        <Border Grid.Column="1" Classes="pill" Margin="8,0,0,0" IsVisible="{Binding !IsCoach}"
+                                                                                Classes.overdue="{Binding StatusOverdue}" Classes.pending="{Binding StatusPending}"
+                                                                                Classes.accepted="{Binding StatusAccepted}" Classes.done="{Binding StatusDone}"
+                                                                                Classes.notdone="{Binding StatusNotDone}" Classes.declined="{Binding StatusDeclined}"
+                                                                                Classes.cancelled="{Binding StatusCancelled}">
+                                                                            <TextBlock Text="{Binding StatusText}" />
+                                                                        </Border>
+                                                                    </Grid>
+                                                                    <controls:WorkoutText Text="{Binding Content}" />
+                                                                    <TextBlock Text="{Binding ReasonText}" IsVisible="{Binding HasReason}" FontSize="13"
+                                                                               TextWrapping="Wrap" Foreground="{DynamicResource PillDeclinedTextBrush}" />
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding ShowReminderSent}">
+                                                                        <PathIcon Data="{StaticResource BellRingIcon}" Width="14" Height="14"
+                                                                                  Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                                        <TextBlock Text="{Binding ReminderText}" FontSize="12" TextWrapping="Wrap"
+                                                                                   Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                                    </StackPanel>
+                                                                    <!-- the athlete chooses on a new workout (final; the coach is notified) -->
+                                                                    <WrapPanel IsVisible="{Binding CanAccept}">
+                                                                        <Button Classes="primary answer" Margin="0,0,8,6"
+                                                                                Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).AcceptWorkoutCommand}" CommandParameter="{Binding}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                                                <TextBlock Text="Θα το κάνω" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                        <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                                                Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).DeclineWorkoutCommand}" CommandParameter="{Binding}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                                                <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </WrapPanel>
+                                                                    <!-- the athlete answers an accepted workout (final; the coach is notified) -->
+                                                                    <WrapPanel IsVisible="{Binding CanComplete}">
+                                                                        <Button Classes="primary answer" Margin="0,0,8,6"
+                                                                                Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).CompleteWorkoutCommand}" CommandParameter="{Binding}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                                                                <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                        <Button Classes="answer notdone" Margin="0,0,8,6"
+                                                                                Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).NotCompleteWorkoutCommand}" CommandParameter="{Binding}">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                                <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                                                                <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </WrapPanel>
+                                                                    <!-- Answered / read, and the coach's buttons -->
+                                                                    <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="0,4,0,0">
+                                                                        <Border.IsVisible>
+                                                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                                                <Binding Path="HasMeta" />
+                                                                                <Binding Path="IsCoach" />
+                                                                            </MultiBinding>
+                                                                        </Border.IsVisible>
+                                                                        <Grid ColumnDefinitions="*,Auto" MinHeight="36">
+                                                                            <TextBlock Text="{Binding MetaText}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"
+                                                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                                                <Button Classes="iconbutton" ToolTip.Tip="Υπενθύμιση στον αθλητή"
+                                                                                        IsVisible="{Binding CanRemind}" IsEnabled="{Binding RemindEnabled}"
+                                                                                        Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).RemindWorkoutCommand}"
+                                                                                        CommandParameter="{Binding}">
+                                                                                    <PathIcon Data="{StaticResource BellRingIcon}" Width="18" Height="18"
+                                                                                              Foreground="{DynamicResource BrandSupportBrush}" />
+                                                                                </Button>
+                                                                                <Button Classes="iconbutton" ToolTip.Tip="Ακύρωση ασκησιολογίου"
+                                                                                        IsVisible="{Binding CanCancel}"
+                                                                                        Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).CancelWorkoutCommand}"
+                                                                                        CommandParameter="{Binding}">
+                                                                                    <PathIcon Data="{StaticResource CancelIcon}" Width="18" Height="18"
+                                                                                              Foreground="{DynamicResource BrandSupportBrush}" />
+                                                                                </Button>
+                                                                                <Button Classes="iconbutton" ToolTip.Tip="Επαναφορά ασκησιολογίου"
+                                                                                        IsVisible="{Binding CanRestore}"
+                                                                                        Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).RestoreWorkoutCommand}"
+                                                                                        CommandParameter="{Binding}">
+                                                                                    <PathIcon Data="{StaticResource RestoreIcon}" Width="18" Height="18"
+                                                                                              Foreground="{DynamicResource BrandSupportBrush}" />
+                                                                                </Button>
+                                                                                <Button Classes="iconbutton" ToolTip.Tip="Επεξεργασία"
+                                                                                        IsVisible="{Binding CanEdit}"
+                                                                                        Command="{Binding $parent[ScrollViewer].((vm:WorkoutsViewModel)DataContext).EditWorkoutCommand}"
+                                                                                        CommandParameter="{Binding}">
+                                                                                    <PathIcon Data="{StaticResource PencilIcon}" Width="18" Height="18"
+                                                                                              Foreground="{DynamicResource BrandSupportBrush}" />
+                                                                                </Button>
+                                                                            </StackPanel>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </ScrollViewer>
 
                         <!-- First load: cards shaped like the workouts -->
-                        <StackPanel Margin="16,22,16,0" Spacing="26" IsVisible="{Binding ShowSkeleton}">
+                        <StackPanel Grid.Row="1" Margin="16,22,16,0" Spacing="26" IsVisible="{Binding ShowSkeleton}">
                             <StackPanel Spacing="8">
                                 <Border Classes="skeleton" Width="150" Height="14" HorizontalAlignment="Left" />
                                 <Border Classes="skeleton" Width="100" Height="10" HorizontalAlignment="Left" />
@@ -518,7 +684,7 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <TextBlock Text="Δεν υπάρχουν ασκησιολόγια ακόμη."
+                        <TextBlock Grid.Row="1" Text="Δεν υπάρχουν ασκησιολόγια ακόμη."
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                    Foreground="{DynamicResource BrandSupportBrush}">
                             <TextBlock.IsVisible>
@@ -528,8 +694,76 @@
                                 </MultiBinding>
                             </TextBlock.IsVisible>
                         </TextBlock>
-                        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
-                        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+
+                        <!-- Coach: «Νέο ασκησιολόγιο», choosing the athlete first -->
+                        <Button Grid.Row="1" Classes="fab" IsVisible="{Binding IsCoach}" ToolTip.Tip="Νέο ασκησιολόγιο"
+                                Command="{Binding AddWorkoutCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20">
+                            <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
+                        </Button>
+                        <ProgressBar Grid.Row="1" Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+
+                        <!-- «Ταξινόμηση» sheet -->
+                        <Grid Grid.RowSpan="2" RowDefinitions="*,Auto" IsVisible="{Binding IsSortOpen}">
+                            <Button Grid.RowSpan="2" Classes="backdrop" Command="{Binding CloseSortCommand}" />
+                            <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="20,20,0,0" Padding="8,10,8,20">
+                                <StackPanel>
+                                    <Border Width="40" Height="4" CornerRadius="2" Background="{DynamicResource DividerBrush}"
+                                            HorizontalAlignment="Center" Margin="0,0,0,10" />
+                                    <TextBlock Text="Ταξινόμηση" FontSize="16" FontWeight="Bold" Margin="12,4,12,8" />
+                                    <ItemsControl ItemsSource="{Binding SortOptions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:WorkoutSortOption">
+                                                <Button Classes="sheetrow"
+                                                        Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).PickSortCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <Ellipse Classes="radio" Classes.on="{Binding IsSelected}" VerticalAlignment="Center" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Label}" FontSize="15" FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding Hint}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- «Νέο ασκησιολόγιο για…»: the athlete picker -->
+                        <Grid Grid.RowSpan="2" RowDefinitions="*,Auto" IsVisible="{Binding IsAthletePickerOpen}">
+                            <Button Grid.RowSpan="2" Classes="backdrop" Command="{Binding CloseAthletePickerCommand}" />
+                            <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="20,20,0,0" Padding="8,10,8,20">
+                                <StackPanel>
+                                    <Border Width="40" Height="4" CornerRadius="2" Background="{DynamicResource DividerBrush}"
+                                            HorizontalAlignment="Center" Margin="0,0,0,10" />
+                                    <TextBlock Text="Νέο ασκησιολόγιο για…" FontSize="16" FontWeight="Bold" Margin="12,4,12,8" />
+                                    <TextBlock Text="Δεν υπάρχουν αθλητές ακόμη. Πρόσθεσέ τους από τους Αθλητές."
+                                               IsVisible="{Binding !Athletes.Count}" TextWrapping="Wrap" Margin="12,4,12,8"
+                                               Foreground="{DynamicResource MutedTextBrush}" />
+                                    <ScrollViewer MaxHeight="420">
+                                        <ItemsControl ItemsSource="{Binding Athletes}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:AthleteChoice">
+                                                    <Button Classes="sheetrow"
+                                                            Command="{Binding $parent[ItemsControl].((vm:WorkoutsViewModel)DataContext).PickAthleteCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <controls:Avatar Width="36" Height="36" CornerRadius="18" Initial="{Binding Initial}" />
+                                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <views:ConfirmOverlay Grid.RowSpan="2" DataContext="{Binding Confirm}" />
                     </Grid>
                 </ContentPage>
             </DataTemplate>

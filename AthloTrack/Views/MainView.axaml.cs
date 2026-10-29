@@ -53,7 +53,7 @@ public partial class MainView : ContentPage
         new("Πρόσφατα", "TabRecentOutline", "TabRecentFilled", typeof(RecentViewModel), CreateRecentPage),
         new("Αθλητές", "TabAthletesOutline", "TabAthletesFilled", typeof(AthletesViewModel), CreateAthletesPage),
         // No outline dumbbell in MDI: the same shape, stroked instead of filled.
-        new("Προπονήσεις", "DumbbellIcon", "DumbbellIcon", typeof(WorkoutsViewModel), Resolve<WorkoutsViewModel>,
+        new("Προπονήσεις", "DumbbellIcon", "DumbbellIcon", typeof(WorkoutsViewModel), CreateWorkoutsPage,
             StrokedOutline: true),
         new("Ημερολόγιο", "TabCalendarOutline", "TabCalendarFilled", typeof(CalendarViewModel), CreateCalendarPage),
         new("Ρυθμίσεις", "TabSettingsOutline", "TabSettingsFilled", typeof(SettingsViewModel), CreateSettingsPage),
@@ -436,6 +436,16 @@ public partial class MainView : ContentPage
         return vm;
     }
 
+    private WorkoutsViewModel CreateWorkoutsPage()
+    {
+        var vm = Resolve<WorkoutsViewModel>();
+        // The form returns to Προπονήσεις, re-created so the list reloads.
+        void Return() => UpdatePage(TabOf<WorkoutsViewModel>());
+        vm.AddWorkoutRequested += (id, name) => OnAddWorkout(id, name, Return);
+        vm.EditWorkoutRequested += (w, name) => OnEditWorkout(w, name, Return);
+        return vm;
+    }
+
     private AthletesViewModel CreateAthletesPage()
     {
         var vm = Resolve<AthletesViewModel>();
@@ -464,7 +474,8 @@ public partial class MainView : ContentPage
         Show(profile, "Προφίλ αθλητή", back);
     }
 
-    // Editors: Αποθήκευση, Άκυρο and back all return to the athlete's profile.
+    // Editors: Αποθήκευση, Άκυρο and back all return to where the editor was opened from
+    // (the athlete's profile, or Προπονήσεις).
 
     private void OnAddMeasurement(Guid athleteId, Action toProfile)
     {
