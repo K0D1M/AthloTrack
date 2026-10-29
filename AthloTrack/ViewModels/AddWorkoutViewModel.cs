@@ -227,8 +227,8 @@ public partial class AddWorkoutViewModel : ObservableValidator
         }
 
         _preferences.Set(_draftKey, string.Join(Separator,
-            "2", BaseStamp(), date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), PresentCode(CoachPresent),
-            TimeCode(StartTimeOnly), Content));
+            "3", BaseStamp(), date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), PresentCode(CoachPresent),
+            TimeCode(StartTimeOnly), DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), Content));
     }
 
     private void RestoreDraft()
@@ -236,24 +236,34 @@ public partial class AddWorkoutViewModel : ObservableValidator
         var stored = _preferences.Get(_draftKey);
         if (stored is null) return;
 
-        // "1": stamp, date, presence, text (before the start time); "2": … presence, time, text.
+        // "1": stamp, date, presence, text (before the start time); "2": … presence, time, text;
+        // "3": … presence, time, the day the draft was saved, text.
         var version = stored.Length > 0 ? stored[0] : '?';
-        var parts = stored.Split(Separator, version == '2' ? 6 : 5);
+        var expected = version switch { '3' => 7, '2' => 6, _ => 5 };
+        var parts = stored.Split(Separator, expected);
         // An edit draft only applies to the version it was started from: if the workout was changed
         // since (e.g. on another device), the draft would overwrite newer text, so it's dropped.
-        var expected = version == '2' ? 6 : 5;
-        if (parts.Length != expected || parts[0] is not ("1" or "2") || parts[1] != BaseStamp()
+        if (parts.Length != expected || parts[0] is not ("1" or "2" or "3") || parts[1] != BaseStamp()
             || !DateOnly.TryParseExact(parts[2], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
         {
             _preferences.Set(_draftKey, null);
             return;
         }
 
+        // A new workout's date that has passed since the draft was saved moves to today, so it isn't
+        // silently saved as an old workout («Αρχείο», no notification). A date that was already past
+        // when the draft was saved (an old workout being typed in) stays.
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly? savedOn = version == '3'
+            && DateOnly.TryParseExact(parts[5], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var s)
+            ? s : null;
+        if (_editingId is null && date < today && (savedOn is null || date >= savedOn)) date = today;
+
         _suspendDraft = true;
         Content = parts[^1];
         TargetDate = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue));
         CoachPresent = parts[3] switch { "1" => true, "0" => false, _ => null };
-        StartTime = version == '2'
+        StartTime = version is '2' or '3'
             ? ParseTimeCode(parts[4])?.ToTimeSpan()
             : _baseTime?.ToTimeSpan();
         _suspendDraft = false;
