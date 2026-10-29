@@ -21,6 +21,15 @@ public sealed class WorkoutProgram
     public Guid? CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>
+    /// A workout from before the app («Παλιό ασκησιολόγιο», 017): added already answered, with no
+    /// notification to the athlete.
+    /// </summary>
+    public bool FromArchive { get; set; }
+
+    /// <summary>The coach's «Διαβάστηκε»: not for an archived workout (it was never sent).</summary>
+    public bool ShowRead => IsRead && !FromArchive;
+
     /// <summary>The athlete's «Θα το κάνω»; null until they choose (013 backfills older workouts).</summary>
     public DateTimeOffset? AcceptedAt { get; set; }
 

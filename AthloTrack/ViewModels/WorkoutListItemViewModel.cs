@@ -16,7 +16,8 @@ public sealed class WorkoutListItemViewModel
         CompletedText = program.CompletedAt is { } done ? $"✓ Ολοκληρώθηκε {done.ToLocalTime():dd/MM/yyyy}" : string.Empty;
         IsNotCompleted = program.IsNotCompleted;
         NotCompletedText = program.NotCompletedAt is { } notDone ? $"✗ Δεν ολοκληρώθηκε {notDone.ToLocalTime():dd/MM/yyyy}" : string.Empty;
-        ShowReadReceipt = isCoach && program.IsRead;
+        ShowReadReceipt = isCoach && program.ShowRead;
+        FromArchive = program.FromArchive;
         ReadText = program.ReadAtLocal is { } read ? $"Διαβάστηκε από τον αθλητή στις {read:dd/MM/yyyy HH:mm}" : string.Empty;
         CanComplete = !isCoach && program.CanAnswerOutcome;
         CanAccept = !isCoach && program.IsPending;
@@ -53,6 +54,9 @@ public sealed class WorkoutListItemViewModel
 
     /// <summary>Coach only: the athlete has seen this workout.</summary>
     public bool ShowReadReceipt { get; }
+
+    /// <summary>«Αρχείο»: a workout from before the app.</summary>
+    public bool FromArchive { get; }
     public string ReadText { get; }
 
     /// <summary>Athlete only: «Ολοκληρώθηκε» / «Δεν ολοκληρώθηκε» on an accepted, open workout.</summary>

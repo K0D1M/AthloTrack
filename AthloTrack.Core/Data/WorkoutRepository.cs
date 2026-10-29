@@ -61,6 +61,35 @@ public sealed class WorkoutRepository : IWorkoutRepository
             .Update();
     }
 
+    public async Task<Guid> AddPastAsync(Guid athleteId, string content, DateOnly date, TimeOnly? startTime,
+        bool completed, bool? coachPresent)
+    {
+        var client = await _factory.GetClientAsync();
+        var args = new Dictionary<string, object>
+        {
+            ["p_athlete"] = athleteId,
+            ["p_content"] = content,
+            ["p_date"] = date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            ["p_completed"] = completed,
+        };
+        if (TimeText(startTime) is { } time) args["p_time"] = time;
+        if (coachPresent is { } present) args["p_coach_present"] = present;
+        try
+        {
+            var response = await client.Rpc("add_past_workout", args);
+            return Guid.TryParse(response.Content?.Trim().Trim('"'), out var id) ? id : Guid.Empty;
+        }
+        catch (global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+        {
+            var message = ex.Message.Contains("not past") ? "Το παλιό ασκησιολόγιο πρέπει να έχει ημερομηνία πριν από σήμερα."
+                : ex.Message.Contains("not allowed") ? "Μόνο ο προπονητής του αθλητή μπορεί να το προσθέσει."
+                : ex.Message.Contains("PGRST202") ? "Τα παλιά ασκησιολόγια δεν είναι ακόμα διαθέσιμα (λείπει το 017_past_workouts.sql)."
+                : null;
+            if (message is null) throw;
+            throw new PastWorkoutException(message, ex);
+        }
+    }
+
     public async Task AcceptAsync(Guid id)
     {
         var client = await _factory.GetClientAsync();
@@ -179,6 +208,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         DeclinedAt = r.DeclinedAt,
         DeclineReason = r.DeclineReason,
         CancelledAt = r.CancelledAt,
+        FromArchive = r.FromArchive,
         ReadAt = r.ReadAt,
         CoachPresent = r.CoachPresent,
     };

@@ -78,6 +78,7 @@ public partial class AddWorkoutViewModel : ObservableValidator
     public void BeginEdit(WorkoutProgram workout, string athleteName)
     {
         _editingId = workout.Id;
+        OnPropertyChanged(nameof(IsPast));
         _draftKey = $"workout.draft.edit.{workout.Id}";
         _baseContent = workout.Content;
         _baseDate = workout.TargetDate;
@@ -158,7 +159,50 @@ public partial class AddWorkoutViewModel : ObservableValidator
     public partial bool IsDraftRestored { get; set; }
 
     partial void OnContentChanged(string value) => SaveDraft();
-    partial void OnTargetDateChanged(DateTimeOffset value) => SaveDraft();
+    partial void OnTargetDateChanged(DateTimeOffset value)
+    {
+        SaveDraft();
+        OnPropertyChanged(nameof(IsPast));
+    }
+
+    // ---- «Παλιό ασκησιολόγιο»: a workout from before the app ----
+
+    /// <summary>
+    /// A new workout dated before today: saved as already answered, with no notification to the
+    /// athlete (add_past_workout, 017). Editing never changes what a workout is.
+    /// </summary>
+    public bool IsPast => _editingId is null && DateOnly.FromDateTime(TargetDate.DateTime) < DateOnly.FromDateTime(DateTime.Now);
+
+    /// <summary>The old workout's result: «Ολοκληρώθηκε» (true, the default) or «Δεν ολοκληρώθηκε».</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PastNotCompleted))]
+    public partial bool PastCompleted { get; set; } = true;
+
+    public bool PastNotCompleted
+    {
+        get => !PastCompleted;
+        set => PastCompleted = !value;
+    }
+
+    /// <summary>
+    /// «Αποθήκευση και νέο»: for typing in a series of old workouts. Saves, then keeps the form
+    /// open for the same athlete, emptied, with the date a day later.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAndNewAsync()
+    {
+        var date = DateOnly.FromDateTime(TargetDate.DateTime);
+        if (!await SaveCoreAsync()) return;
+        _suspendDraft = true;
+        Content = string.Empty;
+        TargetDate = new DateTimeOffset(date.AddDays(1).ToDateTime(TimeOnly.MinValue));
+        _suspendDraft = false;
+        _preferences.Set(_draftKey, null);
+        IsDraftRestored = false;
+        ClearErrors();
+        InfoMessage = $"Αποθηκεύτηκε το ασκησιολόγιο της {date:dd/MM/yyyy}.";
+    }
+
     partial void OnCoachPresentChanged(bool? value) => SaveDraft();
     partial void OnStartTimeChanged(TimeSpan? value) => SaveDraft();
 
@@ -544,18 +588,30 @@ public partial class AddWorkoutViewModel : ObservableValidator
     [RelayCommand]
     private async Task SaveAsync()
     {
+        if (await SaveCoreAsync()) Saved?.Invoke();
+    }
+
+    private async Task<bool> SaveCoreAsync()
+    {
         ErrorMessage = null;
+        InfoMessage = null;
         ValidateAllProperties();
         if (HasErrors)
         {
             ErrorMessage = "Παρακαλώ συμπληρώστε το ασκησιολόγιο.";
-            return;
+            return false;
         }
 
         IsBusy = true;
         try
         {
-            if (_editingId is { } id)
+            if (IsPast)
+            {
+                // Already answered, no notification: add_past_workout (017).
+                await _workouts.AddPastAsync(_athleteId, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime),
+                    StartTimeOnly, PastCompleted, CoachPresent);
+            }
+            else if (_editingId is { } id)
             {
                 // The DB clears the read receipt and sends the athlete "ενημέρωσε το ασκησιολόγιο".
                 await _workouts.UpdateAsync(id, Content.Trim(), DateOnly.FromDateTime(TargetDate.DateTime), CoachPresent, StartTimeOnly);
@@ -577,11 +633,12 @@ public partial class AddWorkoutViewModel : ObservableValidator
             }
 
             _preferences.Set(_draftKey, null);
-            Saved?.Invoke();
+            return true;
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            return false;
         }
         finally
         {

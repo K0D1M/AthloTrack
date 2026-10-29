@@ -168,6 +168,27 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <!-- «Παλιό ασκησιολόγιο»: a new workout dated before today, from before the app -->
+                    <Border IsVisible="{Binding IsPast}" Background="{DynamicResource NoticeBrush}"
+                            BorderBrush="{DynamicResource NoticeBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,12">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Παλιό ασκησιολόγιο (πριν από την εφαρμογή)" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="Αποθηκεύεται με το αποτέλεσμα που επιλέγεις. Δεν θα σταλεί ειδοποίηση στον αθλητή."
+                                       FontSize="13" TextWrapping="Wrap" />
+                            <WrapPanel ItemSpacing="10" LineSpacing="8">
+                                <ToggleButton Classes="presence present" Content="✓ Ολοκληρώθηκε"
+                                              IsChecked="{Binding PastCompleted, Mode=TwoWay}" />
+                                <ToggleButton Classes="presence absent" Content="✗ Δεν ολοκληρώθηκε"
+                                              IsChecked="{Binding PastNotCompleted, Mode=TwoWay}" />
+                            </WrapPanel>
+                            <Button HorizontalAlignment="Left" Command="{Binding SaveAndNewCommand}" IsEnabled="{Binding !IsBusy}"
+                                    Height="44" CornerRadius="22" Padding="16,0" VerticalContentAlignment="Center"
+                                    Content="Αποθήκευση και νέο (επόμενη μέρα)" />
+                            <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                                       IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel Spacing="6">
                         <TextBlock Text="Παρουσία προπονητή (προαιρετικό)" FontWeight="SemiBold" />
                         <StackPanel Orientation="Horizontal" Spacing="10">

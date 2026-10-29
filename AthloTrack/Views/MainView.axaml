@@ -414,8 +414,14 @@
                                                         </Button>
                                                     </StackPanel>
                                                 </Grid>
-                                                <TextBlock Text="{Binding TargetDateText}" FontSize="12"
-                                                           Foreground="{DynamicResource BrandSupportBrush}" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding TargetDateText}" FontSize="12" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource BrandSupportBrush}" />
+                                                    <Border IsVisible="{Binding FromArchive}" Background="{DynamicResource TintBrush}" CornerRadius="8" Padding="8,1"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="Αρχείο" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" />
+                                                    </Border>
+                                                </StackPanel>
                                                 <controls:CoachPresence Present="{Binding Program.CoachPresent}" Margin="0,2,0,0" />
                                                 <controls:WorkoutText Text="{Binding Content}" Margin="0,4,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0" IsVisible="{Binding IsCancelled}">

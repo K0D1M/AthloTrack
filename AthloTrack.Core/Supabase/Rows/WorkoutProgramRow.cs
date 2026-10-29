@@ -58,6 +58,10 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("cancelled_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset? CancelledAt { get; set; }
 
+    // 017: set only by add_past_workout().
+    [Column("from_archive", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public bool FromArchive { get; set; }
+
     // Set by the database: sending the model's default would store 0001-01-01.
     [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }

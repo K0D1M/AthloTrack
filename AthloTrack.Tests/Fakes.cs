@@ -44,6 +44,14 @@ internal sealed class FakeWorkouts : IWorkoutRepository
         return Task.CompletedTask;
     }
 
+    public List<(Guid Athlete, string Content, DateOnly Date, TimeOnly? Time, bool Completed, bool? Present)> AddedPast { get; } = new();
+
+    public Task<Guid> AddPastAsync(Guid athleteId, string content, DateOnly date, TimeOnly? startTime, bool completed, bool? coachPresent)
+    {
+        AddedPast.Add((athleteId, content, date, startTime, completed, coachPresent));
+        return Task.FromResult(Guid.NewGuid());
+    }
+
     public List<Guid> Accepted { get; } = new();
     public List<(Guid Id, string? Reason)> Declined { get; } = new();
     public List<Guid> Cancelled { get; } = new();

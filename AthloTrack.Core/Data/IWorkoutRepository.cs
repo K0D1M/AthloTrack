@@ -39,8 +39,17 @@ public sealed class WorkoutCancelException : Exception
     public CancelRefusal Reason { get; }
 }
 
+/// <summary>The server refused an old workout (not before today, not the coach's athlete, 017 not run).</summary>
+public sealed class PastWorkoutException(string message, Exception? inner = null) : Exception(message, inner);
+
 public interface IWorkoutRepository
 {
+    /// <summary>
+    /// A workout from before the app, already answered («Ολοκληρώθηκε» / «Δεν ολοκληρώθηκε»), with no
+    /// notification to the athlete. Only for a date before today. Throws <see cref="PastWorkoutException"/>.
+    /// </summary>
+    Task<Guid> AddPastAsync(Guid athleteId, string content, DateOnly date, TimeOnly? startTime, bool completed, bool? coachPresent);
+
     /// <summary>All workout programs the current user can see (RLS-scoped).</summary>
     Task<IReadOnlyList<WorkoutProgram>> GetAllAsync();
     Task<IReadOnlyList<WorkoutProgram>> GetForAthleteAsync(Guid athleteId);

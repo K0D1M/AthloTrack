@@ -1,6 +1,6 @@
 # Database (Supabase)
 
-The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–016) are safe to run again.
+The schema lives in `supabase/`. On a fresh project, run the files **in order** in **SQL Editor**. The migrations (002–017) are safe to run again.
 
 | File | Adds |
 |---|---|
@@ -15,6 +15,7 @@ The schema lives in `supabase/`. On a fresh project, run the files **in order** 
 | `009_workout_templates.sql` | Table `workout_templates`: the coach's saved workout texts («Πρότυπα» in the editor) |
 | `010_fix_created_at.sql` | Data repair: before 1.6 the app stored `created_at` (and a new athlete's `updated_at`) as 0001-01-01; this sets real values. The row models now leave `created_at` to the database (`ignoreOnInsert`) |
 | `011_admin.sql` | Administrators: tables `admins` and `admin_audit`, `is_admin()`, and the admin dashboard's functions (`admin_overview`, `admin_activity`, `admin_health`, `admin_coaches`, `admin_athletes`, `admin_devices`, `admin_audit_log`, `admin_force_password_change`, `admin_move_athlete`, `admin_delete_athlete`) |
+| `017_past_workouts.sql` | `workout_programs.from_archive`; RPC `add_past_workout(p_athlete, p_content, p_date, p_time, p_completed, p_coach_present)` (the athlete's own coach, a date before today): inserts an already answered, read, accepted workout with no notification, through the `athlotrack.archiving` setting that `guard_workout_insert` and `notify_new_workout` honour; editing an archived workout sends no «ενημέρωσε» and keeps it read |
 | `016_measurements_more.sql` | `measurements.weight_kg` optional; `measurements.notes` (free text, ≤ 4000, Ασκησιολόγιο markup); RPCs `measurement_field_usage(p_field)` and `delete_measurement_field(p_field)` (the field's own coach only; deleting also removes its values from every `extra`) |
 | `015_custom_measurements.sql` | `measurement_fields` (a coach's own fields: `name`, optional `unit`; unique per coach, case-insensitive; the coach manages their own, their athletes read them) and `measurements.extra` (jsonb `{"<field id>": number}`, «Άλλες μετρήσεις») |
 | `014_workout_start_time.sql` | `workout_programs.start_time` (optional time of day); the athlete can't change it; a coach's change clears `read_at` and sends `workout_updated` like a date change |
