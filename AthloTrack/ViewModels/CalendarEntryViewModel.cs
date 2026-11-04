@@ -11,11 +11,14 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
     {
     }
 
+    /// <param name="completed">The athlete's answer: true «Ολοκληρώθηκε», false «Δεν ολοκληρώθηκε», null none yet.</param>
     public CalendarEntryViewModel(DateOnly date, Guid athleteId, string athleteName, string? profileImagePath, string content,
-        TimeOnly? startTime = null)
+        TimeOnly? startTime = null, bool? completed = null)
     {
         Date = date;
         StartTime = startTime;
+        IsDone = completed == true;
+        IsNotDone = completed == false;
         DateText = date.ToString("dddd dd/MM/yyyy", new System.Globalization.CultureInfo("el-GR"))
                    + (startTime is { } t ? $" · {t:HH:mm}" : string.Empty);
         AthleteId = athleteId;
@@ -33,6 +36,15 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
     public string AthleteName { get; }
     public string? ProfileImagePath { get; }
     public string Content { get; }
+
+    /// <summary>The green ✓ on the athlete's photo.</summary>
+    public bool IsDone { get; }
+
+    /// <summary>The red ✕ on the athlete's photo.</summary>
+    public bool IsNotDone { get; }
+
+    public bool IsAnswered => IsDone || IsNotDone;
+    public string StatusText => IsDone ? "Ολοκληρώθηκε" : IsNotDone ? "Δεν ολοκληρώθηκε" : string.Empty;
 
     /// <summary>First letter of the athlete's name — shown when there is no photo.</summary>
     public string Initial => string.IsNullOrEmpty(AthleteName) ? "?" : AthleteName.Substring(0, 1).ToUpperInvariant();

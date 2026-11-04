@@ -218,6 +218,34 @@
         <Setter Property="StrokeThickness" Value="6" />
     </Style>
 
+    <!-- Ημερολόγιο: ✓ / ✕ on an athlete's photo once the workout is answered -->
+    <Style Selector="Border.answerbadge">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="BorderBrush" Value="White" />
+        <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <Style Selector="Border.answerbadge.done">
+        <Setter Property="Background" Value="#2E7D32" />
+    </Style>
+    <Style Selector="Border.answerbadge.notdone">
+        <Setter Property="Background" Value="#C62828" />
+    </Style>
+    <Style Selector="TextBlock.answer.done">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="TextBlock.answer.notdone">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Border.answerbadge Path">
+        <Setter Property="Stroke" Value="White" />
+        <Setter Property="StrokeLineCap" Value="Round" />
+        <Setter Property="StrokeJoin" Value="Round" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <!-- The workout a tapped notification is about: tinted for a moment. -->
     <Style Selector="Border.workoutitem">
         <Setter Property="Transitions">

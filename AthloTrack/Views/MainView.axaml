@@ -864,13 +864,24 @@
                                                             IsVisible="{Binding HasWorkouts}">
                                                     <ItemsControl ItemsSource="{Binding Avatars}">
                                                         <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate>
+                                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4" /></ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate x:DataType="vm:CalendarEntryViewModel">
-                                                                <controls:Avatar Width="20" Height="20"
-                                                                                 BorderBrush="White" BorderThickness="1"
-                                                                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                                <!-- ✓ / ✕ once the athlete has answered -->
+                                                                <Panel Width="20" Height="20">
+                                                                    <controls:Avatar Width="20" Height="20"
+                                                                                     BorderBrush="White" BorderThickness="1"
+                                                                                     Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                                    <Border Classes="answerbadge done" IsVisible="{Binding IsDone}"
+                                                                            Width="12" Height="12" CornerRadius="6" Margin="0,0,-4,-4">
+                                                                        <Path Data="M2,5.2 L4,7.2 L8,3" StrokeThickness="1.6" Width="6" Height="5" />
+                                                                    </Border>
+                                                                    <Border Classes="answerbadge notdone" IsVisible="{Binding IsNotDone}"
+                                                                            Width="12" Height="12" CornerRadius="6" Margin="0,0,-4,-4">
+                                                                        <Path Data="M3,3 L7,7 M7,3 L3,7" StrokeThickness="1.6" Width="5" Height="5" />
+                                                                    </Border>
+                                                                </Panel>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
@@ -921,12 +932,24 @@
                                                 Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).OpenEntryCommand}"
                                                 CommandParameter="{Binding}">
                                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                                <controls:Avatar Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top"
-                                                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                <Panel Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top">
+                                                    <controls:Avatar Width="40" Height="40"
+                                                                     Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                    <Border Classes="answerbadge done" IsVisible="{Binding IsDone}"
+                                                            Width="18" Height="18" CornerRadius="9" BorderThickness="2" Margin="0,0,-3,-3">
+                                                        <Path Data="M2,5.2 L4,7.2 L8,3" StrokeThickness="2" Width="9" Height="7" />
+                                                    </Border>
+                                                    <Border Classes="answerbadge notdone" IsVisible="{Binding IsNotDone}"
+                                                            Width="18" Height="18" CornerRadius="9" BorderThickness="2" Margin="0,0,-3,-3">
+                                                        <Path Data="M3,3 L7,7 M7,3 L3,7" StrokeThickness="2" Width="7" Height="7" />
+                                                    </Border>
+                                                </Panel>
                                                 <StackPanel Grid.Column="1" Spacing="2">
                                                     <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" />
                                                     <TextBlock Text="{Binding DateText}" FontSize="12"
                                                                Foreground="{DynamicResource BrandSupportBrush}" />
+                                                    <TextBlock Text="{Binding StatusText}" IsVisible="{Binding IsAnswered}" FontSize="13"
+                                                               FontWeight="SemiBold" Classes.done="{Binding IsDone}" Classes.notdone="{Binding IsNotDone}" Classes="answer" />
                                                     <TextBlock Text="{Binding Content}" FontSize="13" TextWrapping="Wrap"
                                                                MaxLines="2" TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
