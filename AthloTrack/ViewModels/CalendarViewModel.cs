@@ -69,8 +69,11 @@ public partial class CalendarViewModel : ViewModelBase
 
     private CalendarDayViewModel? _selectedDay;
 
-    /// <summary>Raised when an agenda entry is tapped, so the shell can open that athlete.</summary>
-    public event Action<Guid>? OpenAthleteRequested;
+    /// <summary>
+    /// Raised when an agenda entry is tapped: the shell opens that athlete's profile at the workout
+    /// (its month and week open, scrolled to it and tinted for a moment).
+    /// </summary>
+    public event Action<Guid, Guid?>? OpenWorkoutRequested;
 
     [RelayCommand]
     private void PreviousMonth() => ShowMonth(_month.AddMonths(-1));
@@ -104,7 +107,7 @@ public partial class CalendarViewModel : ViewModelBase
     {
         if (entry is not null && entry.AthleteId != Guid.Empty)
         {
-            OpenAthleteRequested?.Invoke(entry.AthleteId);
+            OpenWorkoutRequested?.Invoke(entry.AthleteId, entry.WorkoutId);
         }
     }
 
@@ -126,10 +129,11 @@ public partial class CalendarViewModel : ViewModelBase
                 Entries.Add(new CalendarEntryViewModel(
                     p.TargetDate, p.AthleteId, athlete?.FullName ?? "—", athlete?.ProfileImagePath,
                     AthloTrack.Core.Workouts.WorkoutMarkup.PlainPreview(p.Content), p.StartTime,
-                    completed: p.IsCompleted ? true : p.IsNotCompleted ? false : null));
+                    completed: p.IsCompleted ? true : p.IsNotCompleted ? false : null, workoutId: p.Id));
             }
 
-            ShowMonth(_month);
+            // A reload (back from a workout) keeps the month and the day that were shown.
+            ShowMonth(_month, _selectedDay?.Date);
         }
         catch (Exception ex)
         {

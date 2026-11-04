@@ -432,7 +432,13 @@ public partial class MainView : ContentPage
     private CalendarViewModel CreateCalendarPage()
     {
         var vm = Resolve<CalendarViewModel>();
-        vm.OpenAthleteRequested += id => ShowAthleteProfile(id, back: () => UpdatePage(TabOf<CalendarViewModel>()));
+        // Back returns to this calendar, at the month and day it showed, reloaded for any answer or edit.
+        void Back()
+        {
+            Show(vm, _tabs[TabOf<CalendarViewModel>()].Title);
+            _ = vm.LoadAsync();
+        }
+        vm.OpenWorkoutRequested += (athleteId, workoutId) => ShowAthleteProfile(athleteId, Back, focusWorkoutId: workoutId);
         return vm;
     }
 

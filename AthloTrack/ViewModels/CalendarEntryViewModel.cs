@@ -13,9 +13,10 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
 
     /// <param name="completed">The athlete's answer: true «Ολοκληρώθηκε», false «Δεν ολοκληρώθηκε», null none yet.</param>
     public CalendarEntryViewModel(DateOnly date, Guid athleteId, string athleteName, string? profileImagePath, string content,
-        TimeOnly? startTime = null, bool? completed = null)
+        TimeOnly? startTime = null, bool? completed = null, Guid? workoutId = null)
     {
         Date = date;
+        WorkoutId = workoutId;
         StartTime = startTime;
         IsDone = completed == true;
         IsNotDone = completed == false;
@@ -28,6 +29,9 @@ public sealed partial class CalendarEntryViewModel : ObservableObject
     }
 
     public DateOnly Date { get; }
+
+    /// <summary>The workout itself: tapping the entry opens the profile at it.</summary>
+    public Guid? WorkoutId { get; }
 
     /// <summary>The workout's optional start time (shown after the date).</summary>
     public TimeOnly? StartTime { get; }

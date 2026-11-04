@@ -34,5 +34,11 @@ public sealed class CalendarAnswerTests
         Assert.True(byContent["δεν έγινε"].IsNotDone);
         Assert.Equal("Δεν ολοκληρώθηκε", byContent["δεν έγινε"].StatusText);
         Assert.False(byContent["ανοιχτό"].IsAnswered); // no mark until the athlete answers
+
+        // Tapping an entry opens the athlete's profile at that very workout.
+        (Guid Athlete, Guid? Workout)? opened = null;
+        vm.OpenWorkoutRequested += (a, w) => opened = (a, w);
+        vm.OpenEntryCommand.Execute(byContent["δεν έγινε"]);
+        Assert.Equal((athlete.Id, workouts.Items[1].Id), opened);
     }
 }
