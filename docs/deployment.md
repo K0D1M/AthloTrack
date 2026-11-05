@@ -70,14 +70,15 @@ The app isn't on the Play Store. Install the APK directly (sideloading): send th
 - The emulator needs hardware acceleration. On Windows, turn on *Windows Hypervisor Platform*.
 
 ## «Νέα έκδοση» (Android update check)
-The APK reads `https://athlotrack.gr/version/latest.json` (`AthloTrack.Browser/wwwroot/version/latest.json`) at start, at most once a day, and in Σχετικά on demand. When its `android.version` is newer than the app's own `<Version>` and `android.url` is an https link, it shows «Νέα έκδοση» with «Λήψη», which opens the link.
+The APK reads `https://athlotrack.gr/version/latest.json` every time it opens or comes back to the front, and in Σχετικά on demand. When its `android.version` is newer than the app's own `<Version>` and `android.url` is an https link, it shows «Νέα έκδοση» with «Λήψη», which opens the link.
+
+`latest.json` is not in the repo: it is `athlotrack-latest.json` in the MEGA S4 bucket `kdapps`, next to the APK, and the site passes it through at `/version/latest.json` (see the `Caddyfile`). A new version needs no push for the apps to see it.
 
 For every APK you hand out:
-1. Raise the version (`ApplicationVersion`, `ApplicationDisplayVersion`, `<Version>`) and add the changelog entry.
-2. Build the APK and upload it (e.g. to MEGA); copy the share link.
-3. Set `android.version` and `android.url` in `latest.json`, then push: the site deploys and the installed apps see it.
-
-An empty `url` shows nothing, so `latest.json` can be pushed before the upload.
+1. Raise the version (`ApplicationVersion`, `ApplicationDisplayVersion`, `<Version>`) and add the changelog entry (push it: the changelog page is on the site).
+2. Build the APK and upload it to MEGA S4 as `kdapps/com.k0d1m.athlotrack-Signed.apk`, replacing the old one.
+3. Update `kdapps/athlotrack-latest.json`: `{"android": {"version": "1.24-alpha", "url": "https://s3.g.megas4.com/zezfyube5luydba3ebxaltvcrho62xkvyfhpu/kdapps/com.k0d1m.athlotrack-Signed.apk"}}`.
+4. **Enable the public link of both files in MEGA.** MEGA turns off the link of every newly written file; until it is on, the address answers 404 (phones can't download, or see no update).
 
 ## Desktop (development)
 

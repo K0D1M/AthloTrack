@@ -24,5 +24,14 @@
 	@entry path / /index.html /main.js /update.js /ime-fix.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js /version /version/ /version/index.html /version/changelog.json /version/latest.json
 	header @entry Cache-Control "no-cache"
 
+	# latest.json, what the installed apps read for «Νέα έκδοση», is kept in MEGA S4 next to the APK
+	# (kdapps/athlotrack-latest.json); the site passes it through, uncached.
+	handle /version/latest.json {
+		rewrite * /zezfyube5luydba3ebxaltvcrho62xkvyfhpu/kdapps/athlotrack-latest.json
+		reverse_proxy https://s3.g.megas4.com {
+			header_up Host {upstream_hostport}
+		}
+	}
+
 	encode zstd gzip
 }
