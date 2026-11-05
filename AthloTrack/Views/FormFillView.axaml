@@ -1,0 +1,106 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.FormFillView"
+             x:DataType="vm:FormFillViewModel">
+    <UserControl.Styles>
+        <Style Selector="Border.question">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="14,12" />
+        </Style>
+        <Style Selector="Border.question.missing">
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+        </Style>
+        <Style Selector="Border.answer">
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,8" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Grid RowDefinitions="*,Auto" Margin="16">
+            <ScrollViewer>
+                <StackPanel Spacing="12">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource HeadingBrush}" />
+                        <TextBlock Text="{Binding AthleteName}" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+
+                    <!-- Submitted: final, with the PDF -->
+                    <Border IsVisible="{Binding IsSubmitted}" Classes="pill done" HorizontalAlignment="Left">
+                        <TextBlock Text="{Binding SubmittedText}" />
+                    </Border>
+                    <Border IsVisible="{Binding HasDraft}" Classes="pill pending" HorizontalAlignment="Left">
+                        <TextBlock Text="Πρόχειρο στη συσκευή: δεν το βλέπει ο προπονητής πριν την υποβολή" TextWrapping="Wrap" />
+                    </Border>
+
+                    <controls:WorkoutText Text="{Binding Intro}" IsVisible="{Binding HasIntro}" />
+
+                    <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FormAnswerItem">
+                                <Border Classes="question" Classes.missing="{Binding IsMissing}" Margin="0,0,0,10">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="*" IsVisible="{Binding IsRequired}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource DangerBrush}" />
+                                        </StackPanel>
+
+                                        <TextBox IsVisible="{Binding IsShort}" Text="{Binding Text}" />
+                                        <TextBox IsVisible="{Binding IsLong}" Text="{Binding Text}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" MinHeight="96" />
+                                        <StackPanel IsVisible="{Binding IsYesNo}" Orientation="Horizontal" Spacing="16">
+                                            <RadioButton GroupName="{Binding Question.Id}" Content="Ναι" IsChecked="{Binding IsYes}" />
+                                            <RadioButton GroupName="{Binding Question.Id}" Content="Όχι" IsChecked="{Binding IsNo}" />
+                                        </StackPanel>
+                                        <ComboBox IsVisible="{Binding IsChoice}" ItemsSource="{Binding Options}"
+                                                  SelectedItem="{Binding SelectedOption}" PlaceholderText="Διάλεξε…" MinWidth="200" />
+                                        <controls:GreekDatePicker IsVisible="{Binding IsDate}" SelectedDate="{Binding Date, Mode=TwoWay}" />
+
+                                        <!-- Read-only: the answer as it was submitted -->
+                                        <Border Classes="answer" IsVisible="{Binding IsReadOnly}">
+                                            <SelectableTextBlock Text="{Binding Display}" TextWrapping="Wrap" />
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{Binding FormError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                               IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <TextBlock x:Name="PdfMessage" IsVisible="False" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+                <Button IsVisible="{Binding IsSubmitted}" Click="OnDownloadPdf" Height="44" CornerRadius="22" Padding="18,0"
+                        VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource DownloadIcon}" Width="18" Height="18" />
+                        <TextBlock Text="Λήψη PDF" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="primary" IsVisible="{Binding CanEdit}" Command="{Binding SubmitCommand}" IsEnabled="{Binding CanSubmit}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+                        <TextBlock Text="Υποβολή" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>

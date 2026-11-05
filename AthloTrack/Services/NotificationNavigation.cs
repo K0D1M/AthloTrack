@@ -13,6 +13,9 @@ public static class NotificationNavigation
     /// <summary>Προπονήσεις, in MainView's drawer order.</summary>
     public const int WorkoutsSection = 2;
 
+    /// <summary>Πρόσφατα.</summary>
+    public const int HomeSection = 0;
+
     /// <summary>The section to open, and the tapped notification(s) (marked read: they've been seen).</summary>
     public sealed record Request(int Section, IReadOnlyList<Guid> NotificationIds);
 
@@ -28,13 +31,15 @@ public static class NotificationNavigation
     public static void RequestFor(string? type, string? notificationIds = null)
     {
         if (type is not ("new_workout" or "workout_updated" or "workout_completed" or "workout_not_completed" or "workout_reminder"
-            or "workout_accepted" or "workout_declined" or "workout_cancelled" or "workout_restored")) return;
+            or "workout_accepted" or "workout_declined" or "workout_cancelled" or "workout_restored"
+            or "new_form" or "form_submitted")) return;
         var ids = (notificationIds ?? string.Empty)
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(s => Guid.TryParse(s, out var id) ? id : (Guid?)null)
             .OfType<Guid>()
             .ToList();
-        _pending = new Request(WorkoutsSection, ids);
+        // A form opens its own page (MainView looks it up); without one, Πρόσφατα.
+        _pending = new Request(type is "new_form" or "form_submitted" ? HomeSection : WorkoutsSection, ids);
         Requested?.Invoke();
     }
 

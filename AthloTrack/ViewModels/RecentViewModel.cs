@@ -17,10 +17,12 @@ public partial class RecentViewModel : ViewModelBase
     private readonly INotificationRepository _notifications;
     private readonly IAvatarService _avatars;
     private readonly ICoachRepository _coaches;
+    private readonly IFormRepository? _forms;
 
     public RecentViewModel(SessionState session, IAthleteRepository athletes, INotificationRepository notifications, IAvatarService avatars, ICoachRepository coaches,
-        PushPromptViewModel pushPrompt)
+        PushPromptViewModel pushPrompt, IFormRepository? forms = null)
     {
+        _forms = forms;
         Push = pushPrompt;
         _avatars = avatars;
         _coaches = coaches;
@@ -29,9 +31,44 @@ public partial class RecentViewModel : ViewModelBase
         _notifications = notifications;
         WelcomeMessage = $"Χαίρε, {_session.DisplayName ?? string.Empty}".TrimEnd(',', ' ') + "!";
         _ = LoadAsync();
+        if (session.Role == UserRole.Athlete) _ = LoadOpenFormsAsync();
     }
 
     public ObservableCollection<AppNotification> Notifications { get; } = new();
+
+    /// <summary>Athlete: forms still to fill in («Έντυπο να συμπληρώσεις: …»).</summary>
+    public ObservableCollection<OpenFormItem> OpenForms { get; } = new();
+
+    /// <summary>An open form was tapped: the shell opens its fill-in page.</summary>
+    public event Action<Guid>? OpenFormRequested;
+
+    [RelayCommand]
+    private void OpenForm(OpenFormItem? item)
+    {
+        if (item is not null) OpenFormRequested?.Invoke(item.AssignmentId);
+    }
+
+    private async Task LoadOpenFormsAsync()
+    {
+        if (_forms is null || _session.ProfileId is not { } athleteId) return;
+        try
+        {
+            var copies = await _forms.GetAssignmentsForAthleteAsync(athleteId);
+            var forms = await _forms.GetFormsAsync(); // only the ones sent to this athlete
+            OpenForms.Clear();
+            foreach (var c in copies)
+            {
+                if (c.IsSubmitted) continue;
+                var form = System.Linq.Enumerable.FirstOrDefault(forms, f => f.Id == c.FormId);
+                if (form is not null) OpenForms.Add(new OpenFormItem(c.Id, form.Title));
+            }
+        }
+        catch (Exception ex)
+        {
+            // 018 not run yet, or offline: no card.
+            Console.WriteLine($"[AthloTrack] Open forms: {ex.Message}");
+        }
+    }
 
     /// <summary>A notification card was tapped: the shell opens the workout it's about.</summary>
     public event Action<AppNotification>? OpenNotificationRequested;

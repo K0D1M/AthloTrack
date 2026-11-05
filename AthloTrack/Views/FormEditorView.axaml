@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.FormEditorView"
+             x:DataType="vm:FormEditorViewModel">
+    <UserControl.Styles>
+        <Style Selector="Button.qtool">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.qtool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        </Style>
+        <Style Selector="Button.qtool:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.qtool:disabled PathIcon, Button.qtool:disabled TextBlock">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Grid RowDefinitions="*,Auto" Margin="16">
+            <ScrollViewer>
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Τίτλος" FontWeight="SemiBold" />
+                        <TextBox Text="{Binding Title}" Watermark="π.χ. Ιστορικό υγείας" />
+                    </StackPanel>
+
+                    <!-- The text before the questions, formatted like the Ασκησιολόγιο; Word: paste or import -->
+                    <StackPanel Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Κείμενο (προαιρετικό)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Click="OnImportWord" Height="40" CornerRadius="20" Padding="14,0"
+                                    VerticalContentAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource FormIcon}" Width="16" Height="16" />
+                                    <TextBlock Text="Εισαγωγή από Word" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <controls:MarkupEditor Text="{Binding Intro, Mode=TwoWay}" />
+                        <TextBlock Text="Μπορείς να κάνεις και επικόλληση από το Word: οι λίστες κρατιούνται, τα έντονα και οι επικεφαλίδες ξαναμπαίνουν από τη γραμμή εργαλείων."
+                                   FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                                   IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+
+                    <!-- The questions -->
+                    <TextBlock Text="Ερωτήσεις" FontWeight="SemiBold" FontSize="16" Margin="0,6,0,0" />
+                    <Border IsVisible="{Binding IsLocked}" Background="{DynamicResource NoticeBrush}"
+                            BorderBrush="{DynamicResource NoticeBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10">
+                        <TextBlock TextWrapping="Wrap" FontSize="13"
+                                   Text="Κάποιος αθλητής έχει ήδη υποβάλει το έντυπο, οπότε οι ερωτήσεις δεν αλλάζουν. Ο τίτλος και το κείμενο αλλάζουν. Για άλλες ερωτήσεις, φτιάξε «Αντίγραφο»." />
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Questions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FormQuestionEditor">
+                                <Border Classes="wcard" Margin="0,0,0,10" Padding="14,10,8,12"
+                                        IsEnabled="{Binding $parent[ItemsControl].((vm:FormEditorViewModel)DataContext).CanEditQuestions}">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                            <ComboBox ItemsSource="{x:Static vm:FormEditorViewModel.KindNames}"
+                                                      SelectedIndex="{Binding KindIndex}" MinWidth="170" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Classes="qtool" ToolTip.Tip="Πάνω"
+                                                    Command="{Binding $parent[ItemsControl].((vm:FormEditorViewModel)DataContext).MoveUpCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <TextBlock Text="▲" FontSize="13" />
+                                            </Button>
+                                            <Button Grid.Column="2" Classes="qtool" ToolTip.Tip="Κάτω"
+                                                    Command="{Binding $parent[ItemsControl].((vm:FormEditorViewModel)DataContext).MoveDownCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <TextBlock Text="▼" FontSize="13" />
+                                            </Button>
+                                            <Button Grid.Column="3" Classes="qtool" ToolTip.Tip="Διαγραφή ερώτησης"
+                                                    Command="{Binding $parent[ItemsControl].((vm:FormEditorViewModel)DataContext).RemoveQuestionCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="{StaticResource DeleteIcon}" Width="18" Height="18"
+                                                          Foreground="{DynamicResource DangerBrush}" />
+                                            </Button>
+                                        </Grid>
+                                        <TextBox Text="{Binding Label}" Watermark="Η ερώτηση" TextWrapping="Wrap" Margin="0,0,6,0" />
+                                        <StackPanel Spacing="4" IsVisible="{Binding IsChoice}" Margin="0,0,6,0">
+                                            <TextBlock Text="Επιλογές, μία σε κάθε γραμμή" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBox Text="{Binding OptionsText}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" />
+                                        </StackPanel>
+                                        <CheckBox Content="Υποχρεωτική" IsChecked="{Binding Required}" />
+                                        <TextBlock Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                                   IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Command="{Binding AddQuestionCommand}" IsVisible="{Binding CanEditQuestions}"
+                            Height="44" CornerRadius="22" Padding="16,0" VerticalContentAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource PlusIcon}" Width="16" Height="16" />
+                            <TextBlock Text="Ερώτηση" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock Text="{Binding FormError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                               IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
+                <Button Content="Άκυρο" Command="{Binding CancelCommand}" IsEnabled="{Binding !IsBusy}" Height="44" CornerRadius="22" Padding="20,0" VerticalContentAlignment="Center" />
+                <Button Classes="primary" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+                        <TextBlock Text="Αποθήκευση" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>

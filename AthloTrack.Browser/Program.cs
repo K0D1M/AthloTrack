@@ -12,6 +12,8 @@ internal sealed partial class Program
     private static async Task Main(string[] args)
     {
         await PushInterop.LoadAsync();
+        // «Λήψη PDF» in browsers without a save dialog.
+        await DownloadInterop.LoadAsync();
         // Opened by tapping a notification (?type=…&notification=…): open Προπονήσεις once signed in.
         if (PushInterop.Loaded && PushInterop.LaunchRequest() is { Length: > 0 } request)
         {

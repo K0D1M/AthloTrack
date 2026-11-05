@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:views="using:AthloTrack.Views"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.FormDetailView"
+             x:DataType="vm:FormDetailViewModel">
+    <!-- A form (coach): its actions, then who it went to and who submitted it -->
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16,12,16,24" Spacing="12">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{DynamicResource HeadingBrush}" />
+                    <TextBlock Text="{Binding QuestionsText}" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" />
+                </StackPanel>
+
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                    <Button Classes="primary" Command="{Binding SendCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource PersonIcon}" Width="16" Height="16" />
+                            <TextBlock Text="Αποστολή σε…" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Content="Επεξεργασία" Command="{Binding EditCommand}" Height="44" CornerRadius="22" Padding="16,0"
+                            VerticalContentAlignment="Center" />
+                    <Button Content="Αντίγραφο" Command="{Binding CopyCommand}" Height="44" CornerRadius="22" Padding="16,0"
+                            VerticalContentAlignment="Center" />
+                    <Button Content="Διαγραφή" Command="{Binding DeleteCommand}" Height="44" CornerRadius="22" Padding="16,0"
+                            VerticalContentAlignment="Center" Foreground="{DynamicResource DangerBrush}" />
+                </WrapPanel>
+
+                <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                <TextBlock Text="{Binding Summary}" FontWeight="SemiBold" Margin="0,8,0,0" />
+                <ItemsControl ItemsSource="{Binding Recipients}" Classes="fadeitems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FormRecipientItem">
+                            <Button Classes="formrow" Margin="0,0,0,8" IsHitTestVisible="{Binding IsSubmitted}"
+                                    Command="{Binding $parent[ItemsControl].((vm:FormDetailViewModel)DataContext).OpenAnswersCommand}"
+                                    CommandParameter="{Binding}">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <controls:Avatar Width="36" Height="36" CornerRadius="18" Margin="0,0,12,0" Initial="{Binding Initial}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding AthleteName}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <Border Grid.Column="2" Classes="pill" Classes.done="{Binding IsSubmitted}" Classes.pending="{Binding !IsSubmitted}">
+                                        <TextBlock Text="{Binding StatusText}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <views:ConfirmOverlay DataContext="{Binding Confirm}" />
+    </Grid>
+</UserControl>

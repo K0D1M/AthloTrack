@@ -43,10 +43,12 @@ public partial class AthleteProfileViewModel : ViewModelBase
         CurrentUserViewModel? currentUser = null,
         AthloTrack.Services.WorkoutAnswerSettings? answerSettings = null,
         Guid? focusWorkoutId = null,
-        IMeasurementFieldRepository? fields = null)
+        IMeasurementFieldRepository? fields = null,
+        IFormRepository? forms = null)
     {
         _athleteId = athleteId;
         _fields = fields;
+        _forms = forms;
         _answerSettings = answerSettings;
         _focusWorkoutId = focusWorkoutId;
         _athletes = athletes;
@@ -56,6 +58,43 @@ public partial class AthleteProfileViewModel : ViewModelBase
         _avatars = avatars;
         _currentUser = currentUser;
         _ = LoadAsync();
+        _ = LoadFormsAsync();
+    }
+
+    private readonly IFormRepository? _forms;
+
+    /// <summary>«Έντυπα»: the forms sent to this athlete, with their status.</summary>
+    public ObservableCollection<ProfileFormItem> Forms { get; } = new();
+
+    public bool HasForms => Forms.Count > 0;
+
+    /// <summary>A form was tapped: the athlete fills it in; the coach (or a submitted one) reads it.</summary>
+    public event Action<Guid>? OpenFormRequested;
+
+    [RelayCommand]
+    private void OpenForm(ProfileFormItem? item)
+    {
+        if (item is not null) OpenFormRequested?.Invoke(item.AssignmentId);
+    }
+
+    private async Task LoadFormsAsync()
+    {
+        if (_forms is null) return;
+        try
+        {
+            var copies = await _forms.GetAssignmentsForAthleteAsync(_athleteId);
+            if (copies.Count == 0) return;
+            var titles = (await _forms.GetFormsAsync()).ToDictionary(f => f.Id, f => f.Title);
+            Forms.Clear();
+            foreach (var c in copies)
+                if (titles.TryGetValue(c.FormId, out var title)) Forms.Add(new ProfileFormItem(c, title));
+            OnPropertyChanged(nameof(HasForms));
+        }
+        catch (Exception ex)
+        {
+            // 018 not run yet, or offline: no section.
+            Console.WriteLine($"[AthloTrack] Profile forms: {ex.Message}");
+        }
     }
 
     private readonly IMeasurementFieldRepository? _fields;

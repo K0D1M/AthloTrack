@@ -3,6 +3,7 @@ using AthloTrack.Core.Workouts;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
@@ -32,6 +33,29 @@ public partial class MarkupEditor : UserControl
     {
         InitializeComponent();
         Editor.TextChanged += OnEditorTextChanged;
+        Editor.PastingFromClipboard += OnPasting;
+    }
+
+    /// <summary>Text from Word: its bullets and numbered lines become the markup's lists.</summary>
+    private async void OnPasting(object? sender, RoutedEventArgs e)
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard) return;
+        e.Handled = true;
+        try
+        {
+            var pasted = WorkoutMarkup.NormalizePasted(await clipboard.TryGetTextAsync());
+            if (pasted.Length == 0) return;
+            var text = Editor.Text ?? string.Empty;
+            var start = Math.Min(Editor.SelectionStart, Editor.SelectionEnd);
+            var end = Math.Max(Editor.SelectionStart, Editor.SelectionEnd);
+            var caret = start + pasted.Length;
+            Apply(new TextEdit(text[..start] + pasted + text[end..], caret, caret));
+        }
+        catch (Exception ex)
+        {
+            // async void: never let a clipboard error take the app down.
+            Console.WriteLine($"[AthloTrack] Paste failed: {ex.Message}");
+        }
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

@@ -24,6 +24,10 @@ public sealed class NotificationRow : BaseModel
     [Column("related_workout_id")]
     public Guid? RelatedWorkoutId { get; set; }
 
+    // 018: the «Έντυπο» copy a new_form / form_submitted notification is about.
+    [Column("related_form_assignment_id", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public Guid? RelatedFormAssignmentId { get; set; }
+
     [Column("is_read")]
     public bool IsRead { get; set; }
 

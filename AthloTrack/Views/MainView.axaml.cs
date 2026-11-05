@@ -333,6 +333,11 @@ public partial class MainView : ContentPage
                 OpenWorkout(notification.AthleteId, workoutId);
                 return;
             }
+            if (notification?.RelatedFormAssignmentId is { } copyId)
+            {
+                ShowFormFill(copyId, back: GoHome);
+                return;
+            }
         }
         catch (Exception ex)
         {
@@ -357,7 +362,9 @@ public partial class MainView : ContentPage
         vm.OpenNotificationRequested += n =>
         {
             if (n.RelatedWorkoutId is { } workoutId) OpenWorkout(n.AthleteId, workoutId);
+            else if (n.RelatedFormAssignmentId is { } copyId) ShowFormFill(copyId, back: GoHome);
         };
+        vm.OpenFormRequested += copyId => ShowFormFill(copyId, back: GoHome);
         return vm;
     }
 
@@ -457,6 +464,7 @@ public partial class MainView : ContentPage
         var vm = Resolve<AthletesViewModel>();
         vm.OpenAthleteRequested += id => ShowAthleteProfile(id, back: ShowAthletesList);
         vm.AddAthleteRequested += OnAddAthlete;
+        vm.OpenFormsRequested += () => ShowForms(back: ShowAthletesList);
         return vm;
     }
 
@@ -477,6 +485,7 @@ public partial class MainView : ContentPage
         profile.EditAthleteRequested += a => OnEditAthlete(a, Return);
         profile.EditWorkoutRequested += (w, name) => OnEditWorkout(w, name, Return);
         profile.AthleteDeleted += ShowAthletesList;
+        profile.OpenFormRequested += copyId => ShowFormFill(copyId, Return);
         Show(profile, "Προφίλ αθλητή", back);
     }
 
@@ -521,6 +530,57 @@ public partial class MainView : ContentPage
         vm.Saved += ShowAthletesList;
         vm.Cancelled += ShowAthletesList;
         Show(vm, vm.Title, ShowAthletesList);
+    }
+
+    // ---- «Έντυπα» ----
+
+    private void ShowForms(Action back)
+    {
+        var vm = new FormsViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>());
+        void Return() => ShowForms(back);
+        vm.NewFormRequested += () => ShowFormEditor(null, locked: false, back: Return, saved: f => ShowFormDetail(f, Return));
+        vm.OpenFormRequested += f => ShowFormDetail(f, Return);
+        Show(vm, "Έντυπα", back);
+    }
+
+    private void ShowFormEditor(FormDefinition? form, bool locked, Action back, Action<FormDefinition> saved)
+    {
+        var vm = new FormEditorViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>(),
+            Resolve<AthloTrack.Core.Auth.SessionState>(), form, locked);
+        vm.Saved += saved;
+        vm.Cancelled += back;
+        Show(vm, vm.PageTitle, back);
+    }
+
+    /// <param name="back">Back to «Έντυπα».</param>
+    private void ShowFormDetail(FormDefinition form, Action back, string? info = null)
+    {
+        var vm = new FormDetailViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>(),
+            Resolve<AthloTrack.Core.Data.IAthleteRepository>(), form, info);
+        void Return() => ShowFormDetail(vm.Form, back);
+        vm.EditRequested += (f, locked) => ShowFormEditor(f, locked, back: Return, saved: s => ShowFormDetail(s, back));
+        vm.SendRequested += f =>
+        {
+            var send = new FormSendViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>(),
+                Resolve<AthloTrack.Core.Data.IAthleteRepository>(), f);
+            send.Sent += count => ShowFormDetail(f, back,
+                count == 0 ? "Όλοι οι επιλεγμένοι αθλητές το είχαν ήδη." : count == 1 ? "Στάλθηκε σε 1 αθλητή." : $"Στάλθηκε σε {count} αθλητές.");
+            send.Cancelled += Return;
+            Show(send, "Αποστολή σε…", Return);
+        };
+        vm.OpenAnswersRequested += (copy, _, _) => ShowFormFill(copy.Id, Return);
+        vm.CopyCreated += copy => ShowFormDetail(copy, back, "Δημιουργήθηκε αντίγραφο. Δεν έχει σταλεί σε κανέναν.");
+        vm.Deleted += back;
+        Show(vm, "Έντυπο", back);
+    }
+
+    /// <summary>A copy of a form: the athlete fills it in, the coach (or a submitted one) reads it.</summary>
+    private void ShowFormFill(Guid copyId, Action back)
+    {
+        var vm = new FormFillViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>(),
+            Resolve<AthloTrack.Core.Data.IAthleteRepository>(), Resolve<AthloTrack.Core.Auth.SessionState>(), copyId,
+            Resolve<AthloTrack.Core.Auth.IAppPreferences>());
+        Show(vm, "Έντυπο", back);
     }
 
     private void OnEditAthlete(Athlete athlete, Action toProfile)

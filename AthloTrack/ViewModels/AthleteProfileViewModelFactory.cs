@@ -15,6 +15,7 @@ public sealed class AthleteProfileViewModelFactory
     private readonly CurrentUserViewModel _currentUser;
     private readonly AthloTrack.Services.WorkoutAnswerSettings _answerSettings;
     private readonly IMeasurementFieldRepository _fields;
+    private readonly IFormRepository _forms;
 
     public AthleteProfileViewModelFactory(
         IAthleteRepository athletes,
@@ -24,8 +25,10 @@ public sealed class AthleteProfileViewModelFactory
         IAvatarService avatars,
         CurrentUserViewModel currentUser,
         AthloTrack.Services.WorkoutAnswerSettings answerSettings,
-        IMeasurementFieldRepository fields)
+        IMeasurementFieldRepository fields,
+        IFormRepository forms)
     {
+        _forms = forms;
         _answerSettings = answerSettings;
         _fields = fields;
         _athletes = athletes;
@@ -38,5 +41,5 @@ public sealed class AthleteProfileViewModelFactory
 
     /// <param name="focusWorkoutId">Opened from a notification: show this workout.</param>
     public AthleteProfileViewModel Create(Guid athleteId, Guid? focusWorkoutId = null) =>
-        new(athleteId, _athletes, _measurements, _workouts, _session, _avatars, _currentUser, _answerSettings, focusWorkoutId, _fields);
+        new(athleteId, _athletes, _measurements, _workouts, _session, _avatars, _currentUser, _answerSettings, focusWorkoutId, _fields, _forms);
 }

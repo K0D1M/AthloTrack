@@ -160,6 +160,29 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Athlete: forms still to fill in -->
+                            <ItemsControl ItemsSource="{Binding OpenForms}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:OpenFormItem">
+                                        <Button Classes="formrow" Margin="0,0,0,8"
+                                                Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).OpenFormCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource NoticeBrush}" Margin="0,0,12,0">
+                                                    <PathIcon Data="{StaticResource FormIcon}" Width="20" Height="20" Foreground="{DynamicResource HeadingBrush}" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="Έντυπο να συμπληρώσεις" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                                <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="18" Height="18"
+                                                          Foreground="{DynamicResource MutedTextBrush}" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                             <!-- Web: offer notifications until they're on (iPhone: after adding to the Home Screen) -->
                             <Border IsVisible="{Binding Push.ShowBanner}" Background="{DynamicResource NoticeBrush}" CornerRadius="14" Padding="16"
                                     BorderBrush="#FFD700" BorderThickness="1">
@@ -276,6 +299,22 @@
                     </ContentPage.Icon>
                     <Grid>
                         <ScrollViewer>
+                        <StackPanel>
+                        <!-- Coach: «Έντυπα», the forms the athletes fill in -->
+                        <Button Classes="formrow" Margin="16,12,16,0" IsVisible="{Binding CanEdit}" Command="{Binding OpenFormsCommand}">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource TintBrush}" Margin="0,0,12,0">
+                                    <PathIcon Data="{StaticResource FormIcon}" Width="20" Height="20" Foreground="{DynamicResource HeadingBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="Έντυπα" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding FormsSummary}" FontSize="12" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource MutedTextBrush}" />
+                                </StackPanel>
+                                <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="18" Height="18"
+                                          Foreground="{DynamicResource MutedTextBrush}" />
+                            </Grid>
+                        </Button>
                         <ItemsControl ItemsSource="{Binding Athletes}" Margin="8,8,8,88" Classes="fadeitems">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:AthleteListItemViewModel">
@@ -298,6 +337,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        </StackPanel>
                         </ScrollViewer>
 
                         <!-- First load: rows shaped like the athlete list -->

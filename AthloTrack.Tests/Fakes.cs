@@ -214,3 +214,62 @@ internal sealed class FakeMeasurementFields : IMeasurementFieldRepository
         return UsageAsync(id);
     }
 }
+
+internal sealed class FakeForms : IFormRepository
+{
+    public List<FormDefinition> Forms { get; } = new();
+    public List<FormAssignment> Copies { get; } = new();
+    public List<(Guid Copy, Dictionary<string, string> Answers)> Submitted { get; } = new();
+
+    public Task<IReadOnlyList<FormDefinition>> GetFormsAsync() => Task.FromResult<IReadOnlyList<FormDefinition>>(Forms.ToList());
+
+    public Task<FormDefinition?> GetFormAsync(Guid id) => Task.FromResult(Forms.FirstOrDefault(f => f.Id == id));
+
+    public Task<FormDefinition> SaveFormAsync(FormDefinition form)
+    {
+        if (form.Id == Guid.Empty) form.Id = Guid.NewGuid();
+        Forms.RemoveAll(f => f.Id == form.Id);
+        Forms.Add(form);
+        return Task.FromResult(form);
+    }
+
+    public Task DeleteFormAsync(Guid id)
+    {
+        Forms.RemoveAll(f => f.Id == id);
+        Copies.RemoveAll(c => c.FormId == id);
+        return Task.CompletedTask;
+    }
+
+    public Task<int> AssignAsync(Guid formId, IEnumerable<Guid> athleteIds)
+    {
+        var added = 0;
+        foreach (var id in athleteIds.Distinct())
+        {
+            if (Copies.Any(c => c.FormId == formId && c.AthleteId == id)) continue;
+            Copies.Add(new FormAssignment { Id = Guid.NewGuid(), FormId = formId, AthleteId = id, CreatedAt = DateTimeOffset.UtcNow });
+            added++;
+        }
+        return Task.FromResult(added);
+    }
+
+    public Task<IReadOnlyList<FormAssignment>> GetAssignmentsAsync(Guid formId) =>
+        Task.FromResult<IReadOnlyList<FormAssignment>>(Copies.Where(c => c.FormId == formId).ToList());
+
+    public Task<IReadOnlyList<FormAssignment>> GetAssignmentsForAthleteAsync(Guid athleteId) =>
+        Task.FromResult<IReadOnlyList<FormAssignment>>(Copies.Where(c => c.AthleteId == athleteId).ToList());
+
+    public Task<IReadOnlyList<FormAssignment>> GetAllAssignmentsAsync() =>
+        Task.FromResult<IReadOnlyList<FormAssignment>>(Copies.ToList());
+
+    public Task<FormAssignment?> GetAssignmentAsync(Guid id) => Task.FromResult(Copies.FirstOrDefault(c => c.Id == id));
+
+    public Task<DateTimeOffset> SubmitAsync(Guid assignmentId, IReadOnlyDictionary<string, string> answers)
+    {
+        var copy = Copies.First(c => c.Id == assignmentId);
+        if (copy.IsSubmitted) throw new FormException("Το έντυπο έχει ήδη υποβληθεί.");
+        copy.Answers = answers.ToDictionary(p => p.Key, p => p.Value);
+        copy.SubmittedAt = DateTimeOffset.UtcNow;
+        Submitted.Add((assignmentId, copy.Answers));
+        return Task.FromResult(copy.SubmittedAt.Value);
+    }
+}

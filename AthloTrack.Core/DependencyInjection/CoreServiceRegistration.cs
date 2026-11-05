@@ -25,6 +25,7 @@ public static class CoreServiceRegistration
         services.AddSingleton<IMeasurementFieldRepository, MeasurementFieldRepository>();
         services.AddSingleton<IWorkoutRepository, WorkoutRepository>();
         services.AddSingleton<IWorkoutTemplateRepository, WorkoutTemplateRepository>();
+        services.AddSingleton<IFormRepository, FormRepository>();
         services.AddSingleton<INotificationRepository, NotificationRepository>();
         services.AddSingleton<IAvatarService, AvatarService>();
         services.AddSingleton<IAdminRepository, AdminRepository>();

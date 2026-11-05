@@ -63,6 +63,7 @@ public sealed class NotificationRepository : INotificationRepository
         Type = r.Type,
         Message = r.Message,
         RelatedWorkoutId = r.RelatedWorkoutId,
+        RelatedFormAssignmentId = r.RelatedFormAssignmentId,
         IsRead = r.IsRead,
         CreatedAt = r.CreatedAt,
     };

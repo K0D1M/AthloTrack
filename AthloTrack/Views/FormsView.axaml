@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AthloTrack.ViewModels"
+             xmlns:controls="using:AthloTrack.Views.Controls"
+             x:Class="AthloTrack.Views.FormsView"
+             x:DataType="vm:FormsViewModel">
+    <!-- «Έντυπα» (coach): the forms, with how many athletes submitted each -->
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Margin="16,12,16,96" Spacing="10">
+                <TextBlock Text="Έντυπα που συμπληρώνουν οι αθλητές σου: ερωτηματολόγια, ιστορικό, συγκαταθέσεις. Τις απαντήσεις τις βλέπεις μόνο εσύ."
+                           TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" />
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="Δεν υπάρχουν έντυπα ακόμη. Πάτησε + για το πρώτο." IsVisible="{Binding IsEmpty}"
+                           TextWrapping="Wrap" Margin="0,24,0,0" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource MutedTextBrush}" />
+                <ItemsControl ItemsSource="{Binding Forms}" Classes="fadeitems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FormListItem">
+                            <Button Classes="formrow" Margin="0,0,0,10"
+                                    Command="{Binding $parent[ItemsControl].((vm:FormsViewModel)DataContext).OpenFormCommand}"
+                                    CommandParameter="{Binding}">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource TintBrush}" Margin="0,0,12,0">
+                                        <PathIcon Data="{StaticResource FormIcon}" Width="20" Height="20" Foreground="{DynamicResource HeadingBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding QuestionsText}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="pill" Margin="8,0,0,0"
+                                            Classes.pending="{Binding HasPending}" Classes.done="{Binding !HasPending}">
+                                        <TextBlock Text="{Binding Summary}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        <Button Classes="fab" Command="{Binding NewFormCommand}" ToolTip.Tip="Νέο έντυπο"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20">
+            <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
+        </Button>
+        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+    </Grid>
+</UserControl>

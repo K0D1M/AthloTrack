@@ -14,13 +14,45 @@ public partial class AthletesViewModel : ViewModelBase
     private readonly IAthleteRepository _athletes;
     private readonly SessionState _session;
     private readonly IAvatarService _avatars;
+    private readonly IFormRepository? _forms;
 
-    public AthletesViewModel(IAthleteRepository athletes, SessionState session, IAvatarService avatars)
+    public AthletesViewModel(IAthleteRepository athletes, SessionState session, IAvatarService avatars,
+        IFormRepository? forms = null)
     {
         _athletes = athletes;
         _session = session;
         _avatars = avatars;
+        _forms = forms;
         _ = LoadAsync();
+        if (session.IsCoach) _ = LoadFormsSummaryAsync();
+    }
+
+    /// <summary>The coach opened «Έντυπα».</summary>
+    public event Action? OpenFormsRequested;
+
+    [RelayCommand]
+    private void OpenForms() => OpenFormsRequested?.Invoke();
+
+    /// <summary>«Έντυπα · 2 σε εκκρεμότητα» on the card above the athletes (coach).</summary>
+    [ObservableProperty]
+    public partial string FormsSummary { get; set; } = "Ερωτηματολόγια και συγκαταθέσεις για τους αθλητές σου";
+
+    private async Task LoadFormsSummaryAsync()
+    {
+        if (_forms is null) return;
+        try
+        {
+            var copies = await _forms.GetAllAssignmentsAsync();
+            var pending = 0;
+            foreach (var c in copies) if (!c.IsSubmitted) pending++;
+            if (copies.Count > 0)
+                FormsSummary = pending == 0 ? "Όλα έχουν υποβληθεί" : pending == 1 ? "1 σε εκκρεμότητα" : $"{pending} σε εκκρεμότητα";
+        }
+        catch (Exception ex)
+        {
+            // 018 not run yet, or offline: the card keeps its plain text.
+            Console.WriteLine($"[AthloTrack] Forms summary: {ex.Message}");
+        }
     }
 
     public ObservableCollection<AthleteListItemViewModel> Athletes { get; } = new();

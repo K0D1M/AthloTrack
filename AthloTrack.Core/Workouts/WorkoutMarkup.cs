@@ -68,6 +68,44 @@ public static partial class WorkoutMarkup
         return sb.ToString();
     }
 
+    [GeneratedRegex(@"^[ \t]*[•◦▪‣·o§\-–*][ \t]+")]
+    private static partial Regex PastedBullet();
+
+    [GeneratedRegex(@"^[ \t]*(\d{1,3})[.)][ \t]+")]
+    private static partial Regex PastedNumber();
+
+    /// <summary>
+    /// Text pasted from Word (or a web page): its bullets (•, ◦, o and § from Word's symbol fonts,
+    /// –, *) become <c>- </c>, «1)» / «1.» items become <c>1. </c>, tabs become spaces, and runs of
+    /// blank lines become one. Everything else stays as typed.
+    /// </summary>
+    public static string NormalizePasted(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        var lines = new List<string>();
+        var blank = false;
+        foreach (var raw in text.Replace("\r\n", "\n").Replace('\r', '\n').Replace(' ', ' ').Split('\n'))
+        {
+            var line = raw.TrimEnd();
+            if (line.Trim().Length == 0)
+            {
+                if (!blank && lines.Count > 0) lines.Add(string.Empty);
+                blank = true;
+                continue;
+            }
+
+            blank = false;
+            if (PastedNumber().Match(line) is { Success: true } number)
+                line = $"{number.Groups[1].Value}. {line[number.Length..]}";
+            else if (PastedBullet().Match(line) is { Success: true } bullet)
+                line = "- " + line[bullet.Length..];
+            lines.Add(line.Replace('\t', ' '));
+        }
+
+        while (lines.Count > 0 && lines[^1].Length == 0) lines.RemoveAt(lines.Count - 1);
+        return string.Join('\n', lines);
+    }
+
     /// <summary>Wraps the selection in <c>**…**</c>, or unwraps it if it already is bold.</summary>
     public static TextEdit ToggleBold(string text, int start, int end)
     {
