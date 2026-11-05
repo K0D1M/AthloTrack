@@ -41,4 +41,20 @@ public sealed class CalendarAnswerTests
         vm.OpenEntryCommand.Execute(byContent["δεν έγινε"]);
         Assert.Equal((athlete.Id, workouts.Items[1].Id), opened);
     }
+
+    [Theory]
+    [InlineData(1, 1, "")]
+    [InlineData(2, 2, "")]
+    [InlineData(3, 2, "+1")] // «+1» goes in the cell corner, by the day number
+    [InlineData(5, 2, "+3")]
+    public void A_crowded_day_shows_two_avatars_and_the_rest_as_a_count(int workouts, int avatars, string more)
+    {
+        var day = DateOnly.FromDateTime(DateTime.Today);
+        var entries = Enumerable.Range(0, workouts).Select(i => new CalendarEntryViewModel(day, $"Α{i}", "x")).ToList();
+
+        var cell = new CalendarDayViewModel(day, isCurrentMonth: true, isToday: true, entries);
+
+        Assert.Equal(avatars, cell.Avatars.Count);
+        Assert.Equal(more, cell.HasMore ? cell.MoreText : "");
+    }
 }

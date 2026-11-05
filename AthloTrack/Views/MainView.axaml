@@ -817,11 +817,12 @@
                         <Style Selector="Button.calday">
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="CornerRadius" Value="10" />
-                            <Setter Property="Padding" Value="2,4" />
+                            <!-- No side padding: two full-size avatars with their ✓ / ✕ need the whole width on a phone -->
+                            <Setter Property="Padding" Value="0,4" />
                             <Setter Property="Margin" Value="1" />
                             <Setter Property="Height" Value="60" />
                             <Setter Property="HorizontalAlignment" Value="Stretch" />
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="VerticalContentAlignment" Value="Top" />
                         </Style>
                         <Style Selector="Button.calday.othermonth">
@@ -898,36 +899,38 @@
                                                 Classes.othermonth="{Binding !IsCurrentMonth}"
                                                 Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).SelectDayCommand}"
                                                 CommandParameter="{Binding}">
-                                            <StackPanel Spacing="3" HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding DayNumber}" FontSize="13" HorizontalAlignment="Center" />
-                                                <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center"
-                                                            IsVisible="{Binding HasWorkouts}">
-                                                    <ItemsControl ItemsSource="{Binding Avatars}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4" /></ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate x:DataType="vm:CalendarEntryViewModel">
-                                                                <!-- ✓ / ✕ once the athlete has answered -->
-                                                                <Panel Width="20" Height="20">
-                                                                    <controls:Avatar Width="20" Height="20"
-                                                                                     BorderBrush="White" BorderThickness="1"
-                                                                                     Photo="{Binding Photo}" Initial="{Binding Initial}" />
-                                                                    <Border Classes="answerbadge done" IsVisible="{Binding IsDone}"
-                                                                            Width="12" Height="12" CornerRadius="6" Margin="0,0,-4,-4">
-                                                                        <Path Data="M2,5.2 L4,7.2 L8,3" StrokeThickness="1.6" Width="6" Height="5" />
-                                                                    </Border>
-                                                                    <Border Classes="answerbadge notdone" IsVisible="{Binding IsNotDone}"
-                                                                            Width="12" Height="12" CornerRadius="6" Margin="0,0,-4,-4">
-                                                                        <Path Data="M3,3 L7,7 M7,3 L3,7" StrokeThickness="1.6" Width="5" Height="5" />
-                                                                    </Border>
-                                                                </Panel>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                    <TextBlock Text="{Binding MoreText}" IsVisible="{Binding HasMore}"
-                                                               FontSize="10" VerticalAlignment="Center" />
-                                                </StackPanel>
+                                            <StackPanel Spacing="3">
+                                                <!-- The day, with «+N» in the corner when more than two athletes train that day -->
+                                                <Panel>
+                                                    <TextBlock Text="{Binding DayNumber}" FontSize="13" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding MoreText}" IsVisible="{Binding HasMore}" FontSize="10" FontWeight="SemiBold"
+                                                               HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0" />
+                                                </Panel>
+                                                <ItemsControl ItemsSource="{Binding Avatars}" HorizontalAlignment="Center"
+                                                              IsVisible="{Binding HasWorkouts}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:CalendarEntryViewModel">
+                                                            <!-- A full-size photo; the ✓ / ✕ sits on its lower-right edge, inside the 23×23
+                                                                 square so the day cell never clips it (two squares fit a phone cell) -->
+                                                            <Panel Width="23" Height="23">
+                                                                <controls:Avatar Width="20" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                                                                 BorderBrush="White" BorderThickness="1"
+                                                                                 Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                                <Border Classes="answerbadge done" IsVisible="{Binding IsDone}"
+                                                                        Width="11" Height="11" CornerRadius="5.5" BorderThickness="1.2">
+                                                                    <Path Data="M2,5.2 L4,7.2 L8,3" StrokeThickness="1.5" Width="6" Height="5" />
+                                                                </Border>
+                                                                <Border Classes="answerbadge notdone" IsVisible="{Binding IsNotDone}"
+                                                                        Width="11" Height="11" CornerRadius="5.5" BorderThickness="1.2">
+                                                                    <Path Data="M3,3 L7,7 M7,3 L3,7" StrokeThickness="1.5" Width="5" Height="5" />
+                                                                </Border>
+                                                            </Panel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
                                         </Button>
                                     </DataTemplate>
