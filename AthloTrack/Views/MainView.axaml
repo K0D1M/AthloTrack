@@ -303,35 +303,72 @@
 
                             <!-- Unread notifications: athletes (new workout) and coaches (workout completed) -->
                             <StackPanel Spacing="8" IsVisible="{Binding !ShowSkeleton}">
-                                <TextBlock Text="Ειδοποιήσεις" FontSize="16" FontWeight="SemiBold" />
-                                <ItemsControl ItemsSource="{Binding Notifications}" Classes="fadeitems">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{DynamicResource NoticeBrush}" CornerRadius="8" Padding="4" Margin="0,0,0,8">
-                                                <Grid ColumnDefinitions="*,Auto">
-                                                    <!-- Tap: open the workout it's about (and mark it read) -->
-                                                    <Button Grid.Column="0" Background="Transparent" Padding="8"
-                                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                                            Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).OpenNotificationCommand}"
-                                                            CommandParameter="{Binding}">
-                                                        <StackPanel Spacing="2">
-                                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
-                                                            <TextBlock Text="{Binding CreatedAt, Converter={x:Static vm:TimeConverters.Stamp}}"
-                                                                       FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
-                                                        </StackPanel>
-                                                    </Button>
-                                                    <Button Grid.Column="1" Content="✓" Margin="0,0,8,0" VerticalAlignment="Center"
-                                                            ToolTip.Tip="Αναγνώστηκε"
-                                                            Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).MarkReadCommand}"
-                                                            CommandParameter="{Binding}" />
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <TextBlock Text="Καμία νέα ειδοποίηση."
-                                           Foreground="{DynamicResource BrandSupportBrush}"
-                                           IsVisible="{Binding !Notifications.Count}" />
+                                <!-- Ειδοποιήσεις: one card; each row the person's photo with a badge for what happened -->
+                                <Border Background="{DynamicResource CardBrush}" CornerRadius="16"
+                                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" ClipToBounds="True">
+                                    <StackPanel>
+                                        <Grid ColumnDefinitions="*,Auto" Margin="16,12,8,10">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Ειδοποιήσεις" FontSize="16" FontWeight="Bold" />
+                                                <TextBlock Text="{Binding NotificationsSummary}" FontSize="12"
+                                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Classes="sheetrow" MinHeight="36" Padding="12,0" CornerRadius="18"
+                                                    IsVisible="{Binding HasNotifications}" Command="{Binding MarkAllReadCommand}">
+                                                <TextBlock Text="Ανάγνωση όλων" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource HeadingBrush}" />
+                                            </Button>
+                                        </Grid>
+                                        <TextBlock Text="Όλα ενημερωμένα. Καμία νέα ειδοποίηση." IsVisible="{Binding !HasNotifications}" FontWeight="Bold"
+                                                   Margin="16,10,16,18" HorizontalAlignment="Center" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource MutedTextBrush}" />
+                                        <ItemsControl ItemsSource="{Binding NotificationItems}" Classes="fadeitems">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:NotificationItem">
+                                                    <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                                                        <Grid ColumnDefinitions="*,Auto">
+                                                            <!-- Tap: open the workout or form it's about (and mark it read) -->
+                                                            <Button Classes="sheetrow" CornerRadius="0" Padding="12,10,4,10"
+                                                                    HorizontalContentAlignment="Stretch"
+                                                                    Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).OpenItemCommand}"
+                                                                    CommandParameter="{Binding}">
+                                                                <Grid ColumnDefinitions="Auto,Auto,*">
+                                                                    <Ellipse Width="8" Height="8" Fill="{StaticResource BrandPrimaryBrush}"
+                                                                             VerticalAlignment="Center" Margin="0,0,10,0" />
+                                                                    <Panel Grid.Column="1" Width="46" Height="46" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                                        <controls:Avatar Width="42" Height="42" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                                                                         Photo="{Binding Photo}" Initial="{Binding Initial}" />
+                                                                        <Border Classes="notifbadge"
+                                                                                Classes.done="{Binding IsDone}" Classes.notdone="{Binding IsNotDone}"
+                                                                                Classes.accepted="{Binding IsAccepted}" Classes.declined="{Binding IsDeclined}"
+                                                                                Classes.form="{Binding IsForm}" Classes.reminder="{Binding IsReminder}"
+                                                                                Classes.cancelled="{Binding IsCancelled}" Classes.restored="{Binding IsRestored}">
+                                                                            <PathIcon />
+                                                                        </Border>
+                                                                    </Panel>
+                                                                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                                        <TextBlock TextWrapping="Wrap" FontSize="14" LineHeight="19">
+                                                                            <Run Text="{Binding NameLead}" FontWeight="Bold" /><Run Text="{Binding Rest}" />
+                                                                        </TextBlock>
+                                                                        <TextBlock Text="{Binding WhenText}" FontSize="12"
+                                                                                   Foreground="{DynamicResource MutedTextBrush}" />
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Button>
+                                                            <Button Grid.Column="1" Classes="iconbutton" Width="40" Height="40" Margin="0,0,8,0"
+                                                                    VerticalAlignment="Center" ToolTip.Tip="Αναγνώστηκε"
+                                                                    Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).ReadItemCommand}"
+                                                                    CommandParameter="{Binding}">
+                                                                <PathIcon Data="{StaticResource TickIcon}" Width="18" Height="18"
+                                                                          Foreground="{DynamicResource MutedTextBrush}" />
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

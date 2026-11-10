@@ -39,6 +39,71 @@ public partial class RecentViewModel : ViewModelBase
 
     public ObservableCollection<AppNotification> Notifications { get; } = new();
 
+    /// <summary>The notifications as shown: the person's photo with a badge, their name in bold.</summary>
+    public ObservableCollection<NotificationItem> NotificationItems { get; } = new();
+
+    /// <summary>«5 νέες», «1 νέα», «Όλα ενημερωμένα».</summary>
+    public string NotificationsSummary => NotificationItems.Count switch
+    {
+        0 => "Όλα ενημερωμένα",
+        1 => "1 νέα",
+        var n => $"{n} νέες",
+    };
+
+    public bool HasNotifications => NotificationItems.Count > 0;
+
+    [RelayCommand]
+    private Task OpenItemAsync(NotificationItem? item) => OpenNotificationAsync(item?.Notification);
+
+    [RelayCommand]
+    private Task ReadItemAsync(NotificationItem? item) => MarkReadAsync(item?.Notification);
+
+    /// <summary>«Ανάγνωση όλων».</summary>
+    [RelayCommand]
+    private async Task MarkAllReadAsync()
+    {
+        foreach (var n in Notifications.ToList()) await MarkReadAsync(n);
+    }
+
+    /// <summary>Rebuilds the shown list; the photos follow, one download per person.</summary>
+    private void ShowNotifications(Func<AppNotification, (string? Name, string? PhotoPath)> person)
+    {
+        NotificationItems.Clear();
+        var byPath = new Dictionary<string, List<NotificationItem>>();
+        foreach (var n in Notifications)
+        {
+            var (name, path) = person(n);
+            var item = new NotificationItem(n, name);
+            NotificationItems.Add(item);
+            if (path is not null)
+            {
+                if (!byPath.TryGetValue(path, out var list)) byPath[path] = list = new();
+                list.Add(item);
+            }
+        }
+        OnNotificationsChanged();
+        foreach (var (path, items) in byPath) _ = LoadNotificationPhotoAsync(path, items);
+    }
+
+    private async Task LoadNotificationPhotoAsync(string path, List<NotificationItem> items)
+    {
+        try
+        {
+            var photo = await _avatars.GetAsync(path);
+            foreach (var i in items) i.Photo = photo;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] Notification photo: {ex.Message}");
+        }
+    }
+
+    private void OnNotificationsChanged()
+    {
+        OnPropertyChanged(nameof(NotificationsSummary));
+        OnPropertyChanged(nameof(HasNotifications));
+    }
+
     /// <summary>Athlete: forms still to fill in («Έντυπο να συμπληρώσεις: …»).</summary>
     public ObservableCollection<OpenFormItem> OpenForms { get; } = new();
 
@@ -191,6 +256,9 @@ public partial class RecentViewModel : ViewModelBase
         {
             await _notifications.MarkReadAsync(notification.Id);
             Notifications.Remove(notification);
+            foreach (var item in NotificationItems.Where(i => i.Notification == notification).ToList())
+                NotificationItems.Remove(item);
+            OnNotificationsChanged();
         }
         catch
         {
@@ -214,13 +282,18 @@ public partial class RecentViewModel : ViewModelBase
                 foreach (var n in await _notifications.GetUnreadForAthleteAsync(athleteId))
                     Notifications.Add(n);
 
+                string? coachName = null, coachPhoto = null;
                 if (_session.CoachId is { } coachId && await _coaches.GetByIdAsync(coachId) is { } coach)
                 {
                     CoachName = coach.FullName;
                     CoachInitial = coach.FullName.Length > 0 ? coach.FullName.Substring(0, 1).ToUpperInvariant() : "?";
                     HasCoach = true;
-                    CoachPhoto = await _avatars.GetAsync(coach.ProfileImagePath);
+                    coachName = coach.FullName;
+                    coachPhoto = coach.ProfileImagePath;
                 }
+                // An athlete's notifications come from their coach.
+                ShowNotifications(_ => (coachName, coachPhoto));
+                if (coachPhoto is not null) CoachPhoto = await _avatars.GetAsync(coachPhoto);
                 return;
             }
 
@@ -228,6 +301,9 @@ public partial class RecentViewModel : ViewModelBase
             Notifications.Clear();
             foreach (var n in await _notifications.GetUnreadForCoachAsync())
                 Notifications.Add(n);
+            // A coach's notifications are about an athlete: their name and photo.
+            var athletes = (await _athletes.GetAllAsync()).ToDictionary(a => a.Id);
+            ShowNotifications(n => athletes.TryGetValue(n.AthleteId, out var a) ? (a.FullName, a.ProfileImagePath) : (null, null));
 
             var athlete = await _athletes.GetMostRecentAsync();
             if (athlete is not null)

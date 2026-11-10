@@ -38,5 +38,19 @@ public static class TimeText
         return span < TimeSpan.FromDays(1) ? Ago(at, now) : at.ToLocalTime().ToString("dd/MM HH:mm", Greek);
     }
 
+    /// <summary>«σήμερα 18:42», «χθες 21:10», older «07/10 18:32».</summary>
+    public static string Day(DateTimeOffset at, DateTimeOffset? now = null)
+    {
+        var local = at.ToLocalTime();
+        var days = DateOnly.FromDateTime((now ?? DateTimeOffset.Now).ToLocalTime().Date).DayNumber
+                   - DateOnly.FromDateTime(local.Date).DayNumber;
+        return days switch
+        {
+            0 => $"σήμερα {local.ToString("HH:mm", Greek)}",
+            1 => $"χθες {local.ToString("HH:mm", Greek)}",
+            _ => local.ToString("dd/MM HH:mm", Greek),
+        };
+    }
+
     private static string Plural(int n, string one, string many) => $"πριν {n} {(n == 1 ? one : many)}";
 }
