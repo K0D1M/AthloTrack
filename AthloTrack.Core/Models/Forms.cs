@@ -39,6 +39,12 @@ public sealed class FormDefinition
 
     /// <summary>The formatted text before the questions (the Ασκησιολόγιο markup).</summary>
     public string Intro { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 019: the athlete fills in / edits the text itself (a Word document); their copy is submitted
+    /// with the answers under <see cref="FormAnswers.DocumentKey"/>.
+    /// </summary>
+    public bool IntroEditable { get; set; }
     public List<FormQuestion> Questions { get; set; } = new();
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
@@ -65,6 +71,13 @@ public static class FormAnswers
 {
     public const string Yes = "yes";
     public const string No = "no";
+
+    /// <summary>The athlete's edited copy of the form's text, among the answers.</summary>
+    public const string DocumentKey = "_document";
+
+    /// <summary>The text as it is to be read: the athlete's edited copy when there is one, else the form's.</summary>
+    public static string Document(FormDefinition form, IReadOnlyDictionary<string, string> answers) =>
+        form.IntroEditable && answers.TryGetValue(DocumentKey, out var text) && !string.IsNullOrWhiteSpace(text) ? text : form.Intro;
 
     /// <summary>The required questions left empty.</summary>
     public static IReadOnlyList<FormQuestion> Missing(IEnumerable<FormQuestion> questions, IReadOnlyDictionary<string, string> answers) =>

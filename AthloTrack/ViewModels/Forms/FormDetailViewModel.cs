@@ -110,6 +110,7 @@ public partial class FormDetailViewModel : ViewModelBase
                 CoachId = Form.CoachId,
                 Title = $"{Form.Title} (αντίγραφο)",
                 Intro = Form.Intro,
+                IntroEditable = Form.IntroEditable,
                 Questions = Form.Questions.Select(q => new FormQuestion
                 {
                     Id = q.Id, Kind = q.Kind, Label = q.Label, Required = q.Required, Options = q.Options.ToList(),

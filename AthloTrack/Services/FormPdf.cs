@@ -127,7 +127,8 @@ public sealed class FormPdf
         var blocks = new List<Block>();
 
         // The intro text, line by line, as in the app.
-        foreach (var line in WorkoutMarkup.Parse(form.Intro))
+        // The athlete's edited copy of the text, when they filled it in.
+        foreach (var line in WorkoutMarkup.Parse(FormAnswers.Document(form, assignment.Answers)))
         {
             switch (line.Kind)
             {

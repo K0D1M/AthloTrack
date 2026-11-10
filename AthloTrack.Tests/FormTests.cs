@@ -233,6 +233,58 @@ public sealed class FormTests
     }
 
     [Fact]
+    public async Task The_athlete_edits_the_document_and_the_coach_reads_their_copy()
+    {
+        var form = Form();
+        form.Intro = "## Συγκατάθεση\nΟνοματεπώνυμο: ______";
+        form.IntroEditable = true;
+        form.Questions.Clear();
+        await _forms.SaveFormAsync(form);
+        await _forms.AssignAsync(form.Id, [_maria.Id]);
+        var copy = _forms.Copies.Single();
+        var prefs = new InMemoryAppPreferences();
+        var athlete = Sessions.Athlete(_maria.Id, _coachId);
+
+        var vm = await OpenAsync(athlete, copy.Id, prefs);
+        Assert.True(vm.CanEditDocument);
+        Assert.False(vm.HasIntro); // the editor shows it, not the read-only text
+        Assert.Equal(form.Intro, vm.Document);
+        vm.Document = "## Συγκατάθεση\nΟνοματεπώνυμο: Μαρία Κ.";
+
+        vm = await OpenAsync(athlete, copy.Id, prefs); // the draft keeps the edited text
+        Assert.Equal("## Συγκατάθεση\nΟνοματεπώνυμο: Μαρία Κ.", vm.Document);
+
+        vm.SubmitCommand.Execute(null);
+        await vm.Confirm.ConfirmCommand.ExecuteAsync(null);
+        var (_, answers) = Assert.Single(_forms.Submitted);
+        Assert.Equal("## Συγκατάθεση\nΟνοματεπώνυμο: Μαρία Κ.", answers[FormAnswers.DocumentKey]);
+        Assert.False(vm.CanEditDocument);
+        Assert.Equal("## Συγκατάθεση\nΟνοματεπώνυμο: Μαρία Κ.", vm.Intro); // read-only, the athlete's copy
+
+        var coach = await OpenAsync(Sessions.Coach(_coachId), copy.Id, new InMemoryAppPreferences());
+        Assert.False(coach.CanEditDocument);
+        Assert.Contains("Μαρία Κ.", coach.Intro);
+        Assert.Contains("Μαρία Κ.", FormAnswers.Document(form, copy.Answers)); // what the PDF prints
+    }
+
+    [Fact]
+    public void Importing_word_lets_the_athlete_fill_the_text_in()
+    {
+        using var docx = new MemoryStream();
+        using (var zip = new ZipArchive(docx, ZipArchiveMode.Create, leaveOpen: true))
+        using (var s = new StreamWriter(zip.CreateEntry("word/document.xml").Open()))
+            s.Write("<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body>"
+                    + "<w:p><w:r><w:t>Όνομα: ____</w:t></w:r></w:p></w:body></w:document>");
+        docx.Position = 0;
+
+        var vm = new FormEditorViewModel(_forms, Sessions.Coach(_coachId));
+        vm.ImportDocx(docx);
+
+        Assert.Equal("Όνομα: ____", vm.Intro);
+        Assert.True(vm.IntroEditable);
+    }
+
+    [Fact]
     public void A_form_notification_opens_its_own_page()
     {
         AthloTrack.Services.NotificationNavigation.RequestFor("new_form", Guid.NewGuid().ToString());

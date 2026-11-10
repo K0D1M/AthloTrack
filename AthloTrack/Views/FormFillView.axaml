@@ -46,6 +46,14 @@
 
                     <controls:WorkoutText Text="{Binding Intro}" IsVisible="{Binding HasIntro}" />
 
+                    <!-- The athlete fills in / edits the form's text itself (e.g. a Word document) -->
+                    <StackPanel Spacing="6" IsVisible="{Binding CanEditDocument}">
+                        <TextBlock Text="Συμπλήρωσε το κείμενο" FontWeight="SemiBold" />
+                        <TextBlock Text="Γράψε μέσα στο κείμενο ό,τι ζητά (π.χ. στα κενά) ή άλλαξέ το. Υποβάλλεται μαζί με τις απαντήσεις."
+                                   FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                        <controls:MarkupEditor Text="{Binding Document, Mode=TwoWay}" />
+                    </StackPanel>
+
                     <ItemsControl ItemsSource="{Binding Items}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:FormAnswerItem">

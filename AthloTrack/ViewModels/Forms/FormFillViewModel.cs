@@ -48,10 +48,23 @@ public partial class FormFillViewModel : ViewModelBase
     [ObservableProperty]
     public partial string Title { get; set; } = "Έντυπο";
 
+    /// <summary>The text as shown read-only: the form's, or the athlete's submitted copy.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIntro))]
     public partial string Intro { get; set; } = string.Empty;
 
-    public bool HasIntro => !string.IsNullOrWhiteSpace(Intro);
+    public bool HasIntro => !string.IsNullOrWhiteSpace(Intro) && !CanEditDocument;
+
+    /// <summary>The athlete's own copy of the text, while they fill it in.</summary>
+    [ObservableProperty]
+    public partial string Document { get; set; } = string.Empty;
+
+    partial void OnDocumentChanged(string value) => SaveDraft();
+
+    /// <summary>The form's text is the athlete's to fill in, and it isn't submitted yet.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIntro))]
+    public partial bool CanEditDocument { get; set; }
 
     [ObservableProperty]
     public partial string AthleteName { get; set; } = string.Empty;
@@ -101,8 +114,6 @@ public partial class FormFillViewModel : ViewModelBase
                    ?? throw new InvalidOperationException("Το έντυπο δεν βρέθηκε (ίσως διαγράφηκε).");
             AthleteName = (await _athletes.GetAllAsync()).FirstOrDefault(a => a.Id == Assignment.AthleteId)?.FullName ?? string.Empty;
             Title = Form.Title;
-            Intro = Form.Intro;
-            OnPropertyChanged(nameof(HasIntro));
 
             // Only the athlete fills it in, and only once.
             IsReadOnly = Assignment.IsSubmitted || _session.IsCoach || _session.ProfileId != Assignment.AthleteId;
@@ -113,6 +124,10 @@ public partial class FormFillViewModel : ViewModelBase
             var answers = Assignment.IsSubmitted ? Assignment.Answers : Draft();
             HasDraft = !Assignment.IsSubmitted && answers.Count > 0;
             _restoring = true;
+            CanEditDocument = Form.IntroEditable && !IsReadOnly;
+            Document = answers.GetValueOrDefault(FormAnswers.DocumentKey) ?? Form.Intro;
+            // Read-only: the athlete's submitted copy; before that, the coach sees the form's text.
+            Intro = FormAnswers.Document(Form, Assignment.Answers);
             Items.Clear();
             var number = 0;
             foreach (var q in Form.Questions)
@@ -153,12 +168,18 @@ public partial class FormFillViewModel : ViewModelBase
         var json = new JObject();
         foreach (var i in Items)
             if (!string.IsNullOrEmpty(i.Value)) json[i.Question.Id] = i.Value;
+        if (CanEditDocument && Form is not null && Document != Form.Intro) json[FormAnswers.DocumentKey] = Document;
         _preferences.Set(DraftKey, json.HasValues ? json.ToString(Newtonsoft.Json.Formatting.None) : null);
         HasDraft = json.HasValues;
     }
 
-    private Dictionary<string, string> Answers() =>
-        Items.Where(i => !string.IsNullOrWhiteSpace(i.Value)).ToDictionary(i => i.Question.Id, i => i.Value!.Trim());
+    private Dictionary<string, string> Answers()
+    {
+        var answers = Items.Where(i => !string.IsNullOrWhiteSpace(i.Value)).ToDictionary(i => i.Question.Id, i => i.Value!.Trim());
+        // The athlete's copy of the text goes with the answers, as they left it.
+        if (CanEditDocument && !string.IsNullOrWhiteSpace(Document)) answers[FormAnswers.DocumentKey] = Document.TrimEnd();
+        return answers;
+    }
 
     [RelayCommand]
     private void Submit()

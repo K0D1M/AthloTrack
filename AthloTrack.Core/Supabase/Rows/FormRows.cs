@@ -24,6 +24,10 @@ public sealed class FormRow : BaseModel
     [Column("intro")]
     public string Intro { get; set; } = string.Empty;
 
+    // 019: the athlete edits the text itself.
+    [Column("intro_editable")]
+    public bool IntroEditable { get; set; }
+
     [Column("questions")]
     public JArray Questions { get; set; } = new();
 

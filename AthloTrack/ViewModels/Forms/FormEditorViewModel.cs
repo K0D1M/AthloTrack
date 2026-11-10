@@ -34,6 +34,7 @@ public partial class FormEditorViewModel : ViewModelBase
         {
             Title = existing.Title;
             Intro = existing.Intro;
+            IntroEditable = existing.IntroEditable;
             foreach (var q in existing.Questions) Questions.Add(FormQuestionEditor.From(q));
         }
     }
@@ -55,6 +56,10 @@ public partial class FormEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string Intro { get; set; } = string.Empty;
+
+    /// <summary>«Ο αθλητής συμπληρώνει το κείμενο»: the athlete gets the text itself to edit.</summary>
+    [ObservableProperty]
+    public partial bool IntroEditable { get; set; }
 
     public ObservableCollection<FormQuestionEditor> Questions { get; } = new();
 
@@ -119,17 +124,21 @@ public partial class FormEditorViewModel : ViewModelBase
             return;
         }
 
+        // A Word document is usually there to be filled in: the athlete edits it.
+        const string editable = " Ο αθλητής θα μπορεί να το συμπληρώσει (μπορείς να το αλλάξεις παρακάτω).";
         if (string.IsNullOrWhiteSpace(Intro))
         {
             Intro = markup;
-            InfoMessage = "Το κείμενο του Word μπήκε στο κείμενο του εντύπου.";
+            IntroEditable = true;
+            InfoMessage = "Το κείμενο του Word μπήκε στο κείμενο του εντύπου." + editable;
             return;
         }
 
         Confirm.Ask("Το κείμενο του Word θα αντικαταστήσει το κείμενο που έχει ήδη το έντυπο.", "Αντικατάσταση", () =>
         {
             Intro = markup;
-            InfoMessage = "Το κείμενο αντικαταστάθηκε από το Word.";
+            IntroEditable = true;
+            InfoMessage = "Το κείμενο αντικαταστάθηκε από το Word." + editable;
             return Task.CompletedTask;
         });
     }
@@ -152,6 +161,7 @@ public partial class FormEditorViewModel : ViewModelBase
                 CoachId = _existing?.CoachId ?? _session.ProfileId ?? Guid.Empty,
                 Title = Title.Trim(),
                 Intro = Intro.TrimEnd(),
+                IntroEditable = IntroEditable && !string.IsNullOrWhiteSpace(Intro),
                 Questions = Questions.Select(q => q.ToModel()).ToList(),
             };
             var saved = await _forms.SaveFormAsync(form);

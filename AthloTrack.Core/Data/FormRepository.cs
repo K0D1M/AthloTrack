@@ -45,6 +45,7 @@ public sealed class FormRepository : IFormRepository
             .Where(x => x.Id == form.Id)
             .Set(x => x.Title, row.Title)
             .Set(x => x.Intro, row.Intro)
+            .Set(x => x.IntroEditable, row.IntroEditable)
             .Set(x => x.Questions, row.Questions)
             .Update());
         return saved.Models.Select(Map).FirstOrDefault() ?? form;
@@ -127,6 +128,7 @@ public sealed class FormRepository : IFormRepository
         {
             var message = ex.Message.Contains("PGRST202") || ex.Message.Contains("PGRST205") || ex.Message.Contains("42P01")
                     ? "Τα έντυπα δεν είναι ακόμα διαθέσιμα (λείπει το 018_forms.sql)."
+                : ex.Message.Contains("intro_editable") ? "Λείπει το 019_form_document.sql: το κείμενο που συμπληρώνει ο αθλητής δεν είναι ακόμα διαθέσιμο."
                 : ex.Message.Contains("already submitted") ? "Το έντυπο έχει ήδη υποβληθεί."
                 : ex.Message.Contains("locked") ? "Κάποιος αθλητής το έχει ήδη υποβάλει: οι ερωτήσεις δεν αλλάζουν πια. Φτιάξε ένα αντίγραφο."
                 : ex.Message.Contains("missing") ? "Συμπλήρωσε όλες τις υποχρεωτικές ερωτήσεις."
@@ -145,6 +147,7 @@ public sealed class FormRepository : IFormRepository
         CoachName = r.CoachName,
         Title = r.Title,
         Intro = r.Intro,
+        IntroEditable = r.IntroEditable,
         Questions = r.Questions.OfType<JObject>().Select(MapQuestion).ToList(),
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt,
@@ -165,6 +168,7 @@ public sealed class FormRepository : IFormRepository
         CoachId = f.CoachId,
         Title = f.Title.Trim(),
         Intro = f.Intro,
+        IntroEditable = f.IntroEditable,
         Questions = new JArray(f.Questions.Select(q => new JObject
         {
             ["id"] = q.Id,

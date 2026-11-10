@@ -48,6 +48,13 @@
                             </Button>
                         </Grid>
                         <controls:MarkupEditor Text="{Binding Intro, Mode=TwoWay}" />
+                        <CheckBox IsChecked="{Binding IntroEditable}">
+                            <StackPanel>
+                                <TextBlock Text="Ο αθλητής συμπληρώνει το κείμενο" FontWeight="SemiBold" />
+                                <TextBlock Text="Παίρνει το κείμενο για να γράψει μέσα του ή να το αλλάξει, και το υποβάλλει. Αλλιώς το βλέπει μόνο."
+                                           FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                        </CheckBox>
                         <TextBlock Text="Μπορείς να κάνεις και επικόλληση από το Word: οι λίστες κρατιούνται, τα έντονα και οι επικεφαλίδες ξαναμπαίνουν από τη γραμμή εργαλείων."
                                    FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
                         <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap"
