@@ -33,7 +33,10 @@ public partial class FormFillView : UserControl
     private void Show(string message, bool ok)
     {
         PdfMessage.Text = message;
-        PdfMessage.Foreground = (Avalonia.Media.IBrush?)this.FindResource(ok ? "SuccessBrush" : "DangerBrush");
+        // The theme's brush (light/dark); a plain cast of FindResource crashed on Android.
+        if (this.TryFindResource(ok ? "SuccessBrush" : "DangerBrush", ActualThemeVariant, out var brush)
+            && brush is Avalonia.Media.IBrush b)
+            PdfMessage.Foreground = b;
         PdfMessage.IsVisible = true;
     }
 }

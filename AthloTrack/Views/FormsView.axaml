@@ -4,46 +4,140 @@
              xmlns:controls="using:AthloTrack.Views.Controls"
              x:Class="AthloTrack.Views.FormsView"
              x:DataType="vm:FormsViewModel">
-    <!-- «Έντυπα» (coach): the forms, with how many athletes submitted each -->
-    <Grid>
-        <ScrollViewer>
+    <UserControl.Styles>
+        <!-- «Όλα | Συμπληρωμένα»: two halves, the chosen one filled -->
+        <Style Selector="Button.download">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.download:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        </Style>
+        <Style Selector="Button.category">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+    </UserControl.Styles>
+    <!-- «Έντυπα» (coach): «Όλα», the forms; «Συμπληρωμένα», every submitted copy by day -->
+    <Grid RowDefinitions="Auto,*">
+        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="16,12,16,10">
+            <Grid ColumnDefinitions="*,8,*">
+                <Button Classes="chip category" Classes.selected="{Binding ShowAll}" Command="{Binding ShowAllFormsCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Όλα" VerticalAlignment="Center" />
+                        <Border Classes="count"><TextBlock Text="{Binding Forms.Count}" /></Border>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Classes="chip category" Classes.selected="{Binding ShowCompleted}"
+                        Command="{Binding ShowCompletedFormsCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Συμπληρωμένα" VerticalAlignment="Center" />
+                        <Border Classes="count"><TextBlock Text="{Binding CompletedCount}" /></Border>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
             <StackPanel Margin="16,12,16,96" Spacing="10">
-                <TextBlock Text="Έντυπα που συμπληρώνουν οι αθλητές σου: ερωτηματολόγια, ιστορικό, συγκαταθέσεις. Τις απαντήσεις τις βλέπεις μόνο εσύ."
-                           TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" />
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                <TextBlock Text="Δεν υπάρχουν έντυπα ακόμη. Πάτησε + για το πρώτο." IsVisible="{Binding IsEmpty}"
-                           TextWrapping="Wrap" Margin="0,24,0,0" HorizontalAlignment="Center"
-                           Foreground="{DynamicResource MutedTextBrush}" />
-                <ItemsControl ItemsSource="{Binding Forms}" Classes="fadeitems">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:FormListItem">
-                            <Button Classes="formrow" Margin="0,0,0,10"
-                                    Command="{Binding $parent[ItemsControl].((vm:FormsViewModel)DataContext).OpenFormCommand}"
-                                    CommandParameter="{Binding}">
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource TintBrush}" Margin="0,0,12,0">
-                                        <PathIcon Data="{StaticResource FormIcon}" Width="20" Height="20" Foreground="{DynamicResource HeadingBrush}" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding QuestionsText}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                <TextBlock x:Name="SavedMessage" IsVisible="False" Foreground="{DynamicResource SuccessBrush}" TextWrapping="Wrap" />
+
+                <!-- «Όλα» -->
+                <StackPanel Spacing="10" IsVisible="{Binding ShowAll}">
+                    <TextBlock Text="Έντυπα που συμπληρώνουν οι αθλητές σου: ερωτηματολόγια, ιστορικό, συγκαταθέσεις. Τις απαντήσεις τις βλέπεις μόνο εσύ."
+                               TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Text="Δεν υπάρχουν έντυπα ακόμη. Πάτησε + για το πρώτο." IsVisible="{Binding IsEmpty}"
+                               TextWrapping="Wrap" Margin="0,24,0,0" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                    <ItemsControl ItemsSource="{Binding Forms}" Classes="fadeitems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FormListItem">
+                                <Button Classes="formrow" Margin="0,0,0,10"
+                                        Command="{Binding $parent[ItemsControl].((vm:FormsViewModel)DataContext).OpenFormCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource TintBrush}" Margin="0,0,12,0">
+                                            <PathIcon Data="{StaticResource FormIcon}" Width="20" Height="20" Foreground="{DynamicResource HeadingBrush}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding QuestionsText}" FontSize="12" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Classes="pill" Margin="8,0,0,0"
+                                                Classes.pending="{Binding !IsAllDone}" Classes.done="{Binding IsAllDone}">
+                                            <TextBlock Text="{Binding Summary}" />
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- «Συμπληρωμένα» -->
+                <StackPanel IsVisible="{Binding ShowCompleted}">
+                    <TextBlock Text="Κανένα έντυπο δεν έχει υποβληθεί ακόμη." IsVisible="{Binding IsCompletedEmpty}"
+                               TextWrapping="Wrap" Margin="0,24,0,0" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                    <ItemsControl ItemsSource="{Binding Completed}" Classes="fadeitems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CompletedFormDay">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="2,10,0,8">
+                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Subtitle}" FontSize="13" VerticalAlignment="Bottom"
+                                                   Foreground="{DynamicResource MutedTextBrush}" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" Classes="pill" Margin="8,0,0,0"
-                                            Classes.pending="{Binding HasPending}" Classes.done="{Binding !HasPending}">
-                                        <TextBlock Text="{Binding Summary}" />
-                                    </Border>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:CompletedFormItem">
+                                                <Button Classes="formrow" Margin="0,0,0,8"
+                                                        Command="{Binding $parent[ScrollViewer].((vm:FormsViewModel)DataContext).OpenCopyCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                        <controls:Avatar Width="36" Height="36" Margin="0,0,12,0" Initial="{Binding Initial}" />
+                                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding AthleteName}" FontSize="15" FontWeight="SemiBold"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding FormTitle}" FontSize="13" TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="2" Spacing="4" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                            <Border Classes="pill done" HorizontalAlignment="Right">
+                                                                <TextBlock Text="{Binding TimeText}" />
+                                                            </Border>
+                                                            <!-- «Κατέβασμα»: the PDF straight from the list; the rest of the row opens the answers -->
+                                                            <Button Classes="download" HorizontalAlignment="Right" Click="OnDownload"
+                                                                    ToolTip.Tip="Κατέβασμα σε PDF">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <PathIcon Data="{StaticResource DownloadIcon}" Width="14" Height="14"
+                                                                              Foreground="{DynamicResource HeadingBrush}" />
+                                                                    <TextBlock Text="Κατέβασμα" FontSize="12" FontWeight="SemiBold"
+                                                                               Foreground="{DynamicResource HeadingBrush}" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <Button Classes="fab" Command="{Binding NewFormCommand}" ToolTip.Tip="Νέο έντυπο"
+        <Button Grid.Row="1" Classes="fab" Command="{Binding NewFormCommand}" ToolTip.Tip="Νέο έντυπο"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20">
             <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
         </Button>
-        <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
+        <ProgressBar Grid.Row="1" Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
     </Grid>
 </UserControl>

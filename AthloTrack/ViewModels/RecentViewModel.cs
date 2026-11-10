@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using AthloTrack.Core.Auth;
 using AthloTrack.Core.Data;
@@ -32,6 +34,7 @@ public partial class RecentViewModel : ViewModelBase
         WelcomeMessage = $"Χαίρε, {_session.DisplayName ?? string.Empty}".TrimEnd(',', ' ') + "!";
         _ = LoadAsync();
         if (session.Role == UserRole.Athlete) _ = LoadOpenFormsAsync();
+        if (session.IsCoach) _ = LoadRecentFormsAsync();
     }
 
     public ObservableCollection<AppNotification> Notifications { get; } = new();
@@ -46,6 +49,55 @@ public partial class RecentViewModel : ViewModelBase
     private void OpenForm(OpenFormItem? item)
     {
         if (item is not null) OpenFormRequested?.Invoke(item.AssignmentId);
+    }
+
+    /// <summary>Coach: the 3 latest submitted copies on the «Έντυπα» card.</summary>
+    public ObservableCollection<CompletedFormItem> RecentForms { get; } = new();
+
+    /// <summary>The coach has sent forms: the card shows.</summary>
+    [ObservableProperty]
+    public partial bool HasFormsCard { get; set; }
+
+    /// <summary>«Υποβλήθηκαν πρόσφατα · 2 σε εκκρεμότητα».</summary>
+    [ObservableProperty]
+    public partial string FormsCardSummary { get; set; } = string.Empty;
+
+    /// <summary>«Όλα τα έντυπα ›»: Έντυπα, on «Συμπληρωμένα».</summary>
+    public event Action? OpenFormsRequested;
+
+    [RelayCommand]
+    private void ShowAllForms() => OpenFormsRequested?.Invoke();
+
+    [RelayCommand]
+    private void OpenRecentForm(CompletedFormItem? item)
+    {
+        if (item is not null) OpenFormRequested?.Invoke(item.CopyId);
+    }
+
+    private async Task LoadRecentFormsAsync()
+    {
+        if (_forms is null) return;
+        try
+        {
+            var copies = await _forms.GetAllAssignmentsAsync();
+            if (copies.Count == 0) return;
+            var titles = (await _forms.GetFormsAsync()).ToDictionary(f => f.Id, f => f.Title);
+            var names = (await _athletes.GetAllAsync()).ToDictionary(a => a.Id, a => a.FullName);
+            RecentForms.Clear();
+            foreach (var c in copies.Where(c => c.SubmittedAt is not null && titles.ContainsKey(c.FormId))
+                         .OrderByDescending(c => c.SubmittedAt).Take(3))
+                RecentForms.Add(new CompletedFormItem(c.Id, names.GetValueOrDefault(c.AthleteId) ?? "—", titles[c.FormId],
+                    c.SubmittedAtLocal!.Value));
+            var pending = copies.Count(c => !c.IsSubmitted);
+            var latest = RecentForms.Count > 0 ? "Υποβλήθηκαν πρόσφατα" : "Κανένα δεν έχει υποβληθεί ακόμη";
+            FormsCardSummary = pending == 0 ? latest : pending == 1 ? $"{latest} · 1 σε εκκρεμότητα" : $"{latest} · {pending} σε εκκρεμότητα";
+            HasFormsCard = true;
+        }
+        catch (Exception ex)
+        {
+            // 018 not run yet, or offline: no card.
+            Console.WriteLine($"[AthloTrack] Recent forms: {ex.Message}");
+        }
     }
 
     private async Task LoadOpenFormsAsync()

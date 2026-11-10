@@ -95,7 +95,8 @@ public partial class FormDetailViewModel : ViewModelBase
     [RelayCommand]
     private void OpenAnswers(FormRecipientItem? item)
     {
-        if (item is { IsSubmitted: true }) OpenAnswersRequested?.Invoke(item.Assignment, Form, item.AthleteName);
+        // Any copy opens: a pending one shows the form as sent, with its answers empty.
+        if (item is not null) OpenAnswersRequested?.Invoke(item.Assignment, Form, item.AthleteName);
     }
 
     /// <summary>«Αντίγραφο»: the same form, new and editable, not sent to anyone.</summary>

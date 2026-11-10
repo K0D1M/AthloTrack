@@ -68,6 +68,75 @@ public partial class AthleteProfileViewModel : ViewModelBase
 
     public bool HasForms => Forms.Count > 0;
 
+    private bool _formsAvailable;
+
+    /// <summary>The «Έντυπα» section: with forms, or always for the coach (to send one from here).</summary>
+    public bool ShowFormsSection => HasForms || (_session.IsCoach && _formsAvailable);
+
+    /// <summary>The coach has no forms yet: the sheet offers «Έντυπα».</summary>
+    public event Action? OpenFormsRequested;
+
+    // ---- «+ Αποστολή εντύπου» (coach): pick one of your forms for this athlete ----
+
+    [ObservableProperty]
+    public partial bool IsSendSheetOpen { get; set; }
+
+    public ObservableCollection<FormSendChoice> SendChoices { get; } = new();
+
+    [ObservableProperty]
+    public partial bool HasNoFormsToSend { get; set; }
+
+    /// <summary>«Στάλθηκε το …» after sending.</summary>
+    [ObservableProperty]
+    public partial string? FormsMessage { get; set; }
+
+    [RelayCommand]
+    private async Task OpenSendSheetAsync()
+    {
+        if (_forms is null || !_session.IsCoach) return;
+        FormsMessage = null;
+        try
+        {
+            var forms = await _forms.GetFormsAsync();
+            var has = Forms.Select(f => f.FormId).ToHashSet();
+            SendChoices.Clear();
+            foreach (var f in forms) SendChoices.Add(new FormSendChoice(f, has.Contains(f.Id)));
+            HasNoFormsToSend = SendChoices.Count == 0;
+            IsSendSheetOpen = true;
+        }
+        catch (Exception ex)
+        {
+            FormsMessage = ex.Message;
+        }
+    }
+
+    [RelayCommand]
+    private void CloseSendSheet() => IsSendSheetOpen = false;
+
+    [RelayCommand]
+    private void GoToForms()
+    {
+        IsSendSheetOpen = false;
+        OpenFormsRequested?.Invoke();
+    }
+
+    [RelayCommand]
+    private async Task SendFormAsync(FormSendChoice? choice)
+    {
+        if (_forms is null || choice is null || choice.AlreadySent) return;
+        IsSendSheetOpen = false;
+        try
+        {
+            await _forms.AssignAsync(choice.Form.Id, [_athleteId]);
+            FormsMessage = $"Στάλθηκε το «{choice.Title}». Ο αθλητής παίρνει ειδοποίηση.";
+            await LoadFormsAsync();
+        }
+        catch (Exception ex)
+        {
+            FormsMessage = ex.Message;
+        }
+    }
+
     /// <summary>A form was tapped: the athlete fills it in; the coach (or a submitted one) reads it.</summary>
     public event Action<Guid>? OpenFormRequested;
 
@@ -83,12 +152,14 @@ public partial class AthleteProfileViewModel : ViewModelBase
         try
         {
             var copies = await _forms.GetAssignmentsForAthleteAsync(_athleteId);
-            if (copies.Count == 0) return;
-            var titles = (await _forms.GetFormsAsync()).ToDictionary(f => f.Id, f => f.Title);
+            var forms = copies.Count == 0 && !_session.IsCoach ? [] : await _forms.GetFormsAsync();
+            var titles = forms.ToDictionary(f => f.Id, f => f.Title);
             Forms.Clear();
             foreach (var c in copies)
                 if (titles.TryGetValue(c.FormId, out var title)) Forms.Add(new ProfileFormItem(c, title));
+            _formsAvailable = true;
             OnPropertyChanged(nameof(HasForms));
+            OnPropertyChanged(nameof(ShowFormsSection));
         }
         catch (Exception ex)
         {

@@ -288,7 +288,8 @@
                             <Border Classes="skeleton" Background="#40FFFFFF" Width="160" Height="20" HorizontalAlignment="Left" />
                             <Border Classes="skeleton" Background="#40FFFFFF" Width="100" Height="12" HorizontalAlignment="Left" />
                         </StackPanel>
-                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
+                        <!-- Whole words only: a long first name moves to its own line instead of breaking («Δοκιμαστικό/ς») -->
+                        <TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="Bold" TextWrapping="WrapWithOverflow"
                                    Foreground="White" />
                         <TextBlock Text="{Binding Subtitle}" Foreground="#CFE3FF" TextWrapping="Wrap"
                                    IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
@@ -320,8 +321,22 @@
                 <Border x:Name="ChartHost" Height="240" IsVisible="{Binding HasChartData}" />
 
                 <!-- «Έντυπα» sent to this athlete -->
-                <StackPanel Spacing="8" IsVisible="{Binding HasForms}">
-                    <TextBlock Text="Έντυπα" FontSize="18" FontWeight="SemiBold" />
+                <StackPanel Spacing="8" IsVisible="{Binding ShowFormsSection}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Έντυπα" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <!-- Coach: send one of your forms to this athlete -->
+                        <Button Grid.Column="1" IsVisible="{Binding CanEdit}" Command="{Binding OpenSendSheetCommand}"
+                                Height="40" CornerRadius="20" Padding="14,0" VerticalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource PlusIcon}" Width="16" Height="16" />
+                                <TextBlock Text="Αποστολή εντύπου" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <TextBlock Text="{Binding FormsMessage}" TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource SuccessBrush}"
+                               IsVisible="{Binding FormsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <TextBlock Text="Δεν του έχει σταλεί έντυπο." IsVisible="{Binding !HasForms}" FontSize="13"
+                               Foreground="{DynamicResource MutedTextBrush}" />
                     <ItemsControl ItemsSource="{Binding Forms}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ProfileFormItem">
@@ -562,6 +577,46 @@
                 Margin="0,0,20,20" Click="OnToggleAddMenu">
             <PathIcon Data="{StaticResource PlusIcon}" Foreground="{StaticResource BrandSecondaryBrush}" />
         </Button>
+
+        <!-- «Αποστολή εντύπου»: the coach's forms; ones this athlete has are greyed -->
+        <Grid RowDefinitions="*,Auto" IsVisible="{Binding IsSendSheetOpen}">
+            <Button Grid.RowSpan="2" Classes="backdrop" Command="{Binding CloseSendSheetCommand}" />
+            <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="20,20,0,0" Padding="8,10,8,20">
+                <StackPanel>
+                    <Border Width="40" Height="4" CornerRadius="2" Background="{DynamicResource DividerBrush}"
+                            HorizontalAlignment="Center" Margin="0,0,0,10" />
+                    <TextBlock Text="{Binding FullName, StringFormat='Αποστολή εντύπου σε {0}'}" FontSize="16" FontWeight="Bold"
+                               Margin="12,4,12,2" TextWrapping="Wrap" />
+                    <TextBlock Text="Παίρνει ειδοποίηση και το συμπληρώνει από το κινητό του." FontSize="12" Margin="12,0,12,8"
+                               TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                    <StackPanel IsVisible="{Binding HasNoFormsToSend}" Spacing="8" Margin="12,4,12,8">
+                        <TextBlock Text="Δεν έχεις έντυπα ακόμη." Foreground="{DynamicResource MutedTextBrush}" />
+                        <Button Classes="primary" HorizontalAlignment="Left" Command="{Binding GoToFormsCommand}" Content="Έντυπα ›" />
+                    </StackPanel>
+                    <ScrollViewer MaxHeight="420">
+                        <ItemsControl ItemsSource="{Binding SendChoices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FormSendChoice">
+                                    <!-- An already-sent form stays faded and does nothing (no grey disabled block) -->
+                                    <Button Classes="sheetrow" Opacity="{Binding RowOpacity}" HorizontalContentAlignment="Stretch"
+                                            Command="{Binding $parent[ItemsControl].((vm:AthleteProfileViewModel)DataContext).SendFormCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Hint}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding StateText}" FontSize="12" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource MutedTextBrush}" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- In-app confirmation (browser/Android have no native message box) -->
         <Grid IsVisible="{Binding IsConfirming}" Background="#66000000">

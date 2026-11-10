@@ -213,6 +213,54 @@
                                 </StackPanel>
                             </StackPanel>
 
+                            <!-- Coach: «Έντυπα», the latest submitted copies -->
+                            <Border IsVisible="{Binding HasFormsCard}" Background="{DynamicResource CardBrush}" CornerRadius="14"
+                                    Padding="14,12,14,4" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,6">
+                                        <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource TintBrush}" Margin="0,0,10,0">
+                                            <PathIcon Data="{StaticResource FormIcon}" Width="18" Height="18" Foreground="{DynamicResource HeadingBrush}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Έντυπα" FontSize="15" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding FormsCardSummary}" FontSize="12" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding RecentForms}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:CompletedFormItem">
+                                                <Button Classes="sheetrow" Padding="2,8" CornerRadius="0" HorizontalContentAlignment="Stretch"
+                                                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                                                        Command="{Binding $parent[ItemsControl].((vm:RecentViewModel)DataContext).OpenRecentFormCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                        <controls:Avatar Width="32" Height="32" Margin="0,0,10,0" Initial="{Binding Initial}" />
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding AthleteName}" FontSize="14" FontWeight="SemiBold"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding FormTitle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" Text="{Binding WhenText}" FontSize="12" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource SuccessBrush}" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Classes="sheetrow" Padding="2,0" CornerRadius="0" MinHeight="44" HorizontalContentAlignment="Stretch"
+                                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0"
+                                            Command="{Binding ShowAllFormsCommand}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Όλα τα έντυπα" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource HeadingBrush}" />
+                                            <PathIcon Grid.Column="1" Data="{StaticResource ChevronRightIcon}" Width="18" Height="18"
+                                                      Foreground="{DynamicResource HeadingBrush}" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Coach: most recent athlete card -->
                             <Border Classes="appear-shown" Classes.shown="{Binding !ShowSkeleton}"
                                     Background="{DynamicResource CardTintGradient}" CornerRadius="14" Padding="16"

@@ -84,6 +84,13 @@ public partial class FormFillViewModel : ViewModelBase
 
     public bool IsSubmitted => SubmittedText.Length > 0;
 
+    /// <summary>The coach (or anyone but the athlete) reading a copy that isn't submitted yet.</summary>
+    [ObservableProperty]
+    public partial bool IsPendingForReader { get; set; }
+
+    /// <summary>«Λήψη PDF» once the form has loaded: blank before submitting, filled in after.</summary>
+    public bool CanDownload => Form is not null && Assignment is not null;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSubmit))]
     public partial bool IsBusy { get; set; }
@@ -120,6 +127,8 @@ public partial class FormFillViewModel : ViewModelBase
             SubmittedText = Assignment.SubmittedAtLocal is { } at
                 ? $"Υποβλήθηκε {at.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}"
                 : string.Empty;
+            IsPendingForReader = !Assignment.IsSubmitted && IsReadOnly;
+            OnPropertyChanged(nameof(CanDownload));
 
             var answers = Assignment.IsSubmitted ? Assignment.Answers : Draft();
             HasDraft = !Assignment.IsSubmitted && answers.Count > 0;
@@ -217,12 +226,16 @@ public partial class FormFillViewModel : ViewModelBase
         });
     }
 
-    /// <summary>«Λήψη PDF»: the submitted copy as a formal PDF, and its suggested file name.</summary>
+    /// <summary>
+    /// «Λήψη PDF» and its suggested file name: the submitted copy, or before that the blank form
+    /// (empty boxes to fill in by hand, for printing).
+    /// </summary>
     public (byte[] Bytes, string FileName)? CreatePdf()
     {
-        if (Form is null || Assignment is not { IsSubmitted: true }) return null;
+        if (Form is null || Assignment is null) return null;
         var pdf = AthloTrack.Services.FormPdf.WithAppFonts();
-        return (pdf.Create(Form, Assignment, AthleteName), AthloTrack.Services.FormPdf.FileName(Form, AthleteName));
+        return (pdf.Create(Form, Assignment, AthleteName),
+            AthloTrack.Services.FormPdf.FileName(Form, AthleteName, blank: !Assignment.IsSubmitted));
     }
 }
 

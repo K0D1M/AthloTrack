@@ -150,7 +150,8 @@ public sealed class FormTests
         var coach = await OpenAsync(Sessions.Coach(_coachId), copy.Id, new InMemoryAppPreferences());
         Assert.True(coach.IsReadOnly);
         Assert.False(coach.CanSubmit);
-        Assert.Null(coach.CreatePdf()); // nothing submitted yet
+        Assert.True(coach.IsPendingForReader); // «Εκκρεμεί: δεν έχει υποβληθεί ακόμη»
+        Assert.True(coach.CanDownload); // the blank form, for printing
 
         var detail = new FormDetailViewModel(_forms, _athletes, _forms.Forms[0]);
         await detail.LoadAsync();
@@ -183,6 +184,76 @@ public sealed class FormTests
         Assert.True(System.Text.RegularExpressions.Regex.Matches(text, @"/Type /Page\b").Count >= 2);
         Assert.Equal("Ιστορικό υγείας - Μαρία.pdf", FormPdf.FileName(form, "Μαρία"));
         await Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Completed_lists_every_submitted_copy_newest_first_and_remembers_the_choice()
+    {
+        var form = await _forms.SaveFormAsync(Form());
+        var other = await _forms.SaveFormAsync(new FormDefinition { CoachId = _coachId, Title = "Συγκατάθεση" });
+        await _forms.AssignAsync(form.Id, [_maria.Id, _nikos.Id]);
+        await _forms.AssignAsync(other.Id, [_maria.Id]);
+        var now = DateTimeOffset.Now;
+        _forms.Copies[0].SubmittedAt = now.AddDays(-1); // Μαρία, Ιστορικό, yesterday
+        _forms.Copies[2].SubmittedAt = now;             // Μαρία, Συγκατάθεση, today
+        // Νίκος hasn't submitted.
+
+        var prefs = new InMemoryAppPreferences();
+        var vm = new FormsViewModel(_forms, _athletes, prefs);
+        await vm.LoadAsync();
+        Assert.True(vm.ShowAll);
+        Assert.Equal(2, vm.CompletedCount);
+        Assert.Equal(["Σήμερα", "Χθες"], vm.Completed.Select(d => d.Title));
+        Assert.Equal(("Μαρία", "Συγκατάθεση"), (vm.Completed[0].Items[0].AthleteName, vm.Completed[0].Items[0].FormTitle));
+        Assert.Equal("Ιστορικό υγείας", vm.Completed[1].Items[0].FormTitle);
+
+        Guid? opened = null;
+        vm.OpenCopyRequested += id => opened = id;
+        vm.OpenCopyCommand.Execute(vm.Completed[0].Items[0]);
+        Assert.Equal(_forms.Copies[2].Id, opened);
+
+        vm.ShowCompletedFormsCommand.Execute(null);
+        var reopened = new FormsViewModel(_forms, _athletes, prefs);
+        Assert.True(reopened.ShowCompleted); // remembered
+        Assert.False(new FormsViewModel(_forms, _athletes, prefs, showCompleted: false).ShowCompleted);
+    }
+
+    [Fact]
+    public async Task The_coach_sends_a_form_from_the_profile_once()
+    {
+        var form = await _forms.SaveFormAsync(Form());
+        var other = await _forms.SaveFormAsync(new FormDefinition { CoachId = _coachId, Title = "Συγκατάθεση" });
+        await _forms.AssignAsync(form.Id, [_maria.Id]);
+        var vm = new AthleteProfileViewModel(_maria.Id, _athletes, new FakeMeasurements(), new FakeWorkouts(),
+            Sessions.Coach(_coachId), new FakeAvatars(), forms: _forms);
+        await Task.Delay(100);
+        Assert.True(vm.ShowFormsSection);
+
+        await vm.OpenSendSheetCommand.ExecuteAsync(null);
+        Assert.True(vm.IsSendSheetOpen);
+        Assert.True(vm.SendChoices.Single(c => c.Form.Id == form.Id).AlreadySent);
+        var choice = vm.SendChoices.Single(c => c.Form.Id == other.Id);
+        Assert.False(choice.AlreadySent);
+
+        await vm.SendFormCommand.ExecuteAsync(choice);
+        Assert.False(vm.IsSendSheetOpen);
+        Assert.Contains(_forms.Copies, c => c.FormId == other.Id && c.AthleteId == _maria.Id);
+        Assert.Equal(2, vm.Forms.Count);
+        await vm.SendFormCommand.ExecuteAsync(choice); // the sheet's old row: not sent twice
+        Assert.Single(_forms.Copies, c => c.FormId == other.Id);
+    }
+
+    [Fact]
+    public void The_blank_pdf_has_room_to_write_and_paginates()
+    {
+        var form = Form();
+        for (var i = 0; i < 25; i++) form.Questions.Add(new() { Id = $"l{i}", Kind = FormQuestionKind.Long, Label = $"Ερώτηση {i}" });
+        var pdf = new FormPdf(SKTypeface.Default, SKTypeface.Default).Create(form, new FormAssignment(), "Μαρία");
+
+        var text = Encoding.Latin1.GetString(pdf);
+        Assert.StartsWith("%PDF-", text);
+        Assert.True(System.Text.RegularExpressions.Regex.Matches(text, @"/Type /Page\b").Count >= 3);
+        Assert.Equal("Ιστορικό υγείας - κενό.pdf", FormPdf.FileName(form, "Μαρία", blank: true));
     }
 
     [Fact]

@@ -365,6 +365,7 @@ public partial class MainView : ContentPage
             else if (n.RelatedFormAssignmentId is { } copyId) ShowFormFill(copyId, back: GoHome);
         };
         vm.OpenFormRequested += copyId => ShowFormFill(copyId, back: GoHome);
+        vm.OpenFormsRequested += () => ShowForms(back: GoHome, showCompleted: true);
         return vm;
     }
 
@@ -486,6 +487,7 @@ public partial class MainView : ContentPage
         profile.EditWorkoutRequested += (w, name) => OnEditWorkout(w, name, Return);
         profile.AthleteDeleted += ShowAthletesList;
         profile.OpenFormRequested += copyId => ShowFormFill(copyId, Return);
+        profile.OpenFormsRequested += () => ShowForms(back: Return);
         Show(profile, "Προφίλ αθλητή", back);
     }
 
@@ -534,12 +536,15 @@ public partial class MainView : ContentPage
 
     // ---- «Έντυπα» ----
 
-    private void ShowForms(Action back)
+    /// <param name="showCompleted">Open on «Συμπληρωμένα» (from Πρόσφατα); null: the last category used.</param>
+    private void ShowForms(Action back, bool? showCompleted = null)
     {
-        var vm = new FormsViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>());
+        var vm = new FormsViewModel(Resolve<AthloTrack.Core.Data.IFormRepository>(),
+            Resolve<AthloTrack.Core.Data.IAthleteRepository>(), Resolve<AthloTrack.Core.Auth.IAppPreferences>(), showCompleted);
         void Return() => ShowForms(back);
         vm.NewFormRequested += () => ShowFormEditor(null, locked: false, back: Return, saved: f => ShowFormDetail(f, Return));
         vm.OpenFormRequested += f => ShowFormDetail(f, Return);
+        vm.OpenCopyRequested += copyId => ShowFormFill(copyId, Return);
         Show(vm, "Έντυπα", back);
     }
 

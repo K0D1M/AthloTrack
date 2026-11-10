@@ -55,10 +55,10 @@ public sealed class FormPdf
         return new FormPdf(Load("Inter-Regular.ttf"), Load("Inter-Bold.ttf"));
     }
 
-    /// <summary>«Τίτλος - Αθλητής.pdf», without characters files can't have.</summary>
-    public static string FileName(FormDefinition form, string athleteName)
+    /// <summary>«Τίτλος - Αθλητής.pdf» («Τίτλος - κενό.pdf» before it is submitted), without characters files can't have.</summary>
+    public static string FileName(FormDefinition form, string athleteName, bool blank = false)
     {
-        var name = $"{form.Title} - {athleteName}";
+        var name = blank ? $"{form.Title} - κενό" : $"{form.Title} - {athleteName}";
         foreach (var c in Path.GetInvalidFileNameChars().Concat(['/', '\\', ':', '*', '?', '"', '<', '>', '|']))
             name = name.Replace(c, ' ');
         return name.Trim() + ".pdf";
@@ -168,6 +168,13 @@ public sealed class FormPdf
                 10.5f, Ink, Left, width, number == 1 ? 18 : 12);
             blocks.Add(label);
 
+            // Not submitted yet: an empty box to write in by hand (the blank form for printing).
+            if (!assignment.IsSubmitted)
+            {
+                blocks.Add(BlankAnswer(q, width));
+                continue;
+            }
+
             var answer = FormAnswers.Display(q, assignment.Answers.GetValueOrDefault(q.Id));
             var lines = answer.Replace("\r", string.Empty).Split('\n')
                 .SelectMany(l => Wrap([new MarkupSpan(l, false)], 10.5f, width - 20)).ToList();
@@ -186,6 +193,97 @@ public sealed class FormPdf
             }));
         }
         return blocks;
+    }
+
+    private static readonly SKColor WriteLine = SKColor.Parse("#C9D2DE");
+
+    /// <summary>
+    /// The blank form's answer space: a line for a short answer, four ruled lines for «Κείμενο»,
+    /// ☐ Ναι / ☐ Όχι, ☐ before each option, «___ / ___ / ______» for a date.
+    /// </summary>
+    private Block BlankAnswer(FormQuestion q, float width)
+    {
+        const float size = 10.5f;
+        switch (q.Kind)
+        {
+            case FormQuestionKind.Long:
+                {
+                    const float rule = 22, h = rule * 4 + 10;
+                    return new Block(h, 4, (c, y) =>
+                    {
+                        Box(c, y, h);
+                        using var line = new SKPaint { Color = WriteLine, StrokeWidth = 0.8f, IsAntialias = true };
+                        for (var i = 1; i <= 4; i++) c.DrawLine(Left + 10, y + 4 + rule * i, Right - 10, y + 4 + rule * i, line);
+                    });
+                }
+            case FormQuestionKind.YesNo:
+            case FormQuestionKind.Choice:
+                {
+                    var options = q.Kind == FormQuestionKind.YesNo ? new List<string> { "Ναι", "Όχι" } : q.Options;
+                    // Options flow left to right, wrapping like words.
+                    using var f = Font(false, size);
+                    var rows = new List<List<(string Text, float X)>> { new() };
+                    var x = 0f;
+                    foreach (var o in options)
+                    {
+                        var w = 10 + 6 + f.MeasureText(o);
+                        if (x > 0 && x + w > width - 20)
+                        {
+                            rows.Add(new());
+                            x = 0;
+                        }
+                        rows[^1].Add((o, x));
+                        x += w + 24;
+                    }
+                    const float rowH = 18;
+                    var h = rows.Count * rowH + 10;
+                    return new Block(h, 4, (c, y) =>
+                    {
+                        Box(c, y, h);
+                        using var font = Font(false, size);
+                        using var ink = Paint(Ink);
+                        using var square = new SKPaint { Color = Muted, StrokeWidth = 0.9f, IsStroke = true, IsAntialias = true };
+                        var ry = y + 5;
+                        foreach (var row in rows)
+                        {
+                            foreach (var (text, ox) in row)
+                            {
+                                var sx = Left + 10 + ox;
+                                c.DrawRoundRect(new SKRoundRect(new SKRect(sx, ry + 4, sx + 10, ry + 14), 1.5f), square);
+                                c.DrawText(text, sx + 16, ry + 13, SKTextAlign.Left, font, ink);
+                            }
+                            ry += rowH;
+                        }
+                    });
+                }
+            case FormQuestionKind.Date:
+                {
+                    const float h = 26;
+                    return new Block(h, 4, (c, y) =>
+                    {
+                        Box(c, y, h);
+                        using var font = Font(false, size);
+                        using var muted = Paint(Muted);
+                        c.DrawText("___ / ___ / ______", Left + 10, y + 17, SKTextAlign.Left, font, muted);
+                    });
+                }
+            default:
+                {
+                    const float h = 26;
+                    return new Block(h, 4, (c, y) =>
+                    {
+                        Box(c, y, h);
+                        using var line = new SKPaint { Color = WriteLine, StrokeWidth = 0.8f, IsAntialias = true };
+                        c.DrawLine(Left + 10, y + h - 6, Right - 10, y + h - 6, line);
+                    });
+                }
+        }
+    }
+
+    private static void Box(SKCanvas c, float y, float h)
+    {
+        using var fill = Paint(AnswerFill);
+        c.DrawRoundRect(new SKRoundRect(new SKRect(Left, y, Right, y + h), 5), fill);
     }
 
     private Block TextBlock(IReadOnlyList<MarkupSpan> spans, float size, SKColor color, float x, float width, float spaceBefore)
@@ -278,7 +376,7 @@ public sealed class FormPdf
             c.DrawText("AthloTrack", box.Right + 8, box.Top + 17, SKTextAlign.Left, f, p);
         using (var f = Font(false, 9))
         using (var p = Paint(Muted))
-            c.DrawText(first ? "Έντυπο" : form.Title, Right, box.Top + 16, SKTextAlign.Right, f, p);
+            c.DrawText(first ? (a.IsSubmitted ? "Έντυπο" : "Κενό έντυπο") : form.Title, Right, box.Top + 16, SKTextAlign.Right, f, p);
         using (var rule = new SKPaint { Color = Blue, StrokeWidth = 1.2f, IsAntialias = true })
             c.DrawLine(Left, Top + 34, Right, Top + 34, rule);
 
@@ -287,7 +385,7 @@ public sealed class FormPdf
         title.Draw(c, BodyTop);
         var submitted = a.SubmittedAtLocal is { } at
             ? $" · Υποβλήθηκε {at.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}"
-            : string.Empty;
+            : " · Κενό έντυπο για συμπλήρωση";
         using var sf = Font(false, 10);
         using var sp = Paint(Muted);
         c.DrawText($"Αθλητής: {athleteName}{submitted}", Left, BodyTop + title.Height + 12, SKTextAlign.Left, sf, sp);

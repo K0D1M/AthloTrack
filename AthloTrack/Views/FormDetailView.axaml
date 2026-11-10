@@ -39,7 +39,7 @@
                 <ItemsControl ItemsSource="{Binding Recipients}" Classes="fadeitems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:FormRecipientItem">
-                            <Button Classes="formrow" Margin="0,0,0,8" IsHitTestVisible="{Binding IsSubmitted}"
+                            <Button Classes="formrow" Margin="0,0,0,8"
                                     Command="{Binding $parent[ItemsControl].((vm:FormDetailViewModel)DataContext).OpenAnswersCommand}"
                                     CommandParameter="{Binding}">
                                 <Grid ColumnDefinitions="Auto,*,Auto">

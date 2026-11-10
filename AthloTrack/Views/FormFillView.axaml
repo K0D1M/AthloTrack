@@ -40,6 +40,9 @@
                     <Border IsVisible="{Binding IsSubmitted}" Classes="pill done" HorizontalAlignment="Left">
                         <TextBlock Text="{Binding SubmittedText}" />
                     </Border>
+                    <Border IsVisible="{Binding IsPendingForReader}" Classes="pill pending" HorizontalAlignment="Left">
+                        <TextBlock Text="Εκκρεμεί: δεν έχει υποβληθεί ακόμη" TextWrapping="Wrap" />
+                    </Border>
                     <Border IsVisible="{Binding HasDraft}" Classes="pill pending" HorizontalAlignment="Left">
                         <TextBlock Text="Πρόχειρο στη συσκευή: δεν το βλέπει ο προπονητής πριν την υποβολή" TextWrapping="Wrap" />
                     </Border>
@@ -93,7 +96,7 @@
             </ScrollViewer>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
-                <Button IsVisible="{Binding IsSubmitted}" Click="OnDownloadPdf" Height="44" CornerRadius="22" Padding="18,0"
+                <Button IsVisible="{Binding CanDownload}" Click="OnDownloadPdf" Height="44" CornerRadius="22" Padding="18,0"
                         VerticalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <PathIcon Data="{StaticResource DownloadIcon}" Width="18" Height="18" />
