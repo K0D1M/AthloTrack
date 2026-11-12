@@ -40,6 +40,47 @@
         <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
     </Style>
 
+    <!-- «Έντυπα» with fields (Views/Controls/FormDocument.cs): the athlete's answer boxes sit in the
+         text, underlined like a blank; a required one left empty turns red. -->
+    <Style Selector="TextBox.blank">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1.5" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryBrush}" />
+        <Setter Property="CornerRadius" Value="6,6,0,0" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="TextBox.blank.missing">
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="TextBox.blank.missing:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="CheckBox.missing /template/ Border#NormalRectangle">
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="DatePicker.missing /template/ Button#PART_FlyoutButton">
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <!-- The coach's view of the fields: a dashed chip per field («Κείμενο *»); tap to change it. -->
+    <Style Selector="Button.fieldchip">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.fieldchip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BrandPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
+    </Style>
+
     <!-- Small round icon button (the reminder bell on Προπονήσεις) -->
     <Style Selector="Button.iconbutton">
         <Setter Property="Background" Value="Transparent" />

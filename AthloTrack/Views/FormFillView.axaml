@@ -49,6 +49,30 @@
 
                     <controls:WorkoutText Text="{Binding Intro}" IsVisible="{Binding HasIntro}" />
 
+                    <!-- Fields in the text: the athlete fills them in place; afterwards the answers read in the text -->
+                    <Border IsVisible="{Binding IsFillingFields}" Background="{DynamicResource CardBrush}" CornerRadius="14"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Padding="14,12">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Συμπληρωμένα πεδία" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding FieldsProgress}" FontWeight="Bold"
+                                           Foreground="{DynamicResource LinkBrush}" />
+                            </Grid>
+                            <ProgressBar Value="{Binding FieldsPercent}" Maximum="100" Height="6" MinHeight="6" CornerRadius="3" />
+                            <TextBlock Text="Το κείμενο δεν αλλάζει· συμπλήρωσε μόνο τα πεδία."
+                                       FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+                    </Border>
+                    <Border IsVisible="{Binding HasFields}" Background="{DynamicResource CardBrush}" CornerRadius="16"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Padding="16,14">
+                        <Panel>
+                            <controls:FormDocument Mode="Fill" Text="{Binding FieldsText}" Values="{Binding Fields}"
+                                                   IsVisible="{Binding IsFillingFields}" />
+                            <controls:FormDocument Mode="Read" Text="{Binding FieldsText}" Values="{Binding Fields}"
+                                                   IsVisible="{Binding IsReadingFields}" />
+                        </Panel>
+                    </Border>
+
                     <!-- The athlete fills in / edits the form's text itself (e.g. a Word document) -->
                     <StackPanel Spacing="6" IsVisible="{Binding CanEditDocument}">
                         <TextBlock Text="Συμπλήρωσε το κείμενο" FontWeight="SemiBold" />

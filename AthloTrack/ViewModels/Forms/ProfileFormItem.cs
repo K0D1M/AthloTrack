@@ -28,6 +28,9 @@ public sealed class FormSendChoice(FormDefinition form, bool alreadySent)
         get
         {
             var questions = Form.Questions.Count == 1 ? "1 ερώτηση" : $"{Form.Questions.Count} ερωτήσεις";
+            var fields = AthloTrack.Core.Forms.FormFields.Parse(Form.Intro).Count;
+            if (fields > 0)
+                return (fields == 1 ? "1 πεδίο" : $"{fields} πεδία") + (Form.Questions.Count > 0 ? $" · {questions}" : "");
             return Form.IntroEditable ? $"Κείμενο για συμπλήρωση · {questions}" : questions;
         }
     }

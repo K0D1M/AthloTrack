@@ -47,8 +47,36 @@
                                 </StackPanel>
                             </Button>
                         </Grid>
-                        <controls:MarkupEditor Text="{Binding Intro, Mode=TwoWay}" />
-                        <CheckBox IsChecked="{Binding IntroEditable}">
+                        <controls:MarkupEditor x:Name="IntroEditor" Text="{Binding Intro, Mode=TwoWay}" />
+
+                        <!-- Fields: a box for the athlete to fill, at the cursor ([[Κείμενο]] in the text) -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Πεδία για τον αθλητή" FontWeight="SemiBold" />
+                            <WrapPanel ItemSpacing="6" LineSpacing="6">
+                                <Button Classes="fieldchip" Tag="Text" Click="OnInsertField" Content="+ Κείμενο" />
+                                <Button Classes="fieldchip" Tag="Long" Click="OnInsertField" Content="+ Πολλές γραμμές" />
+                                <Button Classes="fieldchip" Tag="Date" Click="OnInsertField" Content="+ Ημερομηνία" />
+                                <Button Classes="fieldchip" Tag="Tick" Click="OnInsertField" Content="+ Κουτάκι" />
+                            </WrapPanel>
+                            <TextBlock Text="Μπαίνει εκεί που είναι ο κέρσορας στο κείμενο. Ο αθλητής συμπληρώνει μόνο τα πεδία· το κείμενο μένει όπως το έγραψες."
+                                       FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                        </StackPanel>
+
+                        <!-- How the athlete will see it: each field a chip; tap to change or remove it -->
+                        <Border IsVisible="{Binding HasFields}" Background="{DynamicResource CardBrush}" CornerRadius="14"
+                                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Padding="14,12">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Προεπισκόπηση πεδίων" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding FieldsText}" FontWeight="Bold" Foreground="{DynamicResource LinkBrush}" />
+                                </Grid>
+                                <TextBlock Text="Πάτησε ένα πεδίο για να αλλάξεις το είδος του, αν είναι υποχρεωτικό (*), ή για να το διαγράψεις."
+                                           FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                                <controls:FormDocument x:Name="FieldsPreview" Mode="Design" Text="{Binding Intro}" />
+                            </StackPanel>
+                        </Border>
+
+                        <CheckBox IsChecked="{Binding IntroEditable}" IsVisible="{Binding CanChooseIntroEditable}">
                             <StackPanel>
                                 <TextBlock Text="Ο αθλητής συμπληρώνει το κείμενο" FontWeight="SemiBold" />
                                 <TextBlock Text="Παίρνει το κείμενο για να γράψει μέσα του ή να το αλλάξει, και το υποβάλλει. Αλλιώς το βλέπει μόνο."

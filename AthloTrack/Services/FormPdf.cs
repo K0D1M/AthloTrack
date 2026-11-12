@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using AthloTrack.Core.Forms;
 using AthloTrack.Core.Models;
 using AthloTrack.Core.Workouts;
 using SkiaSharp;
@@ -128,8 +129,15 @@ public sealed class FormPdf
 
         // The intro text, line by line, as in the app.
         // The athlete's edited copy of the text, when they filled it in.
+        // Fields in it: the answers in place (or blanks to fill by hand before it's submitted).
+        var nextField = 0;
         foreach (var line in WorkoutMarkup.Parse(FormAnswers.Document(form, assignment.Answers)))
         {
+            if (line.Spans.Any(s => FormFields.Marker.IsMatch(s.Text)))
+            {
+                blocks.AddRange(FieldLine(line, ref nextField, assignment, width));
+                continue;
+            }
             switch (line.Kind)
             {
                 case MarkupKind.Blank:
@@ -196,6 +204,185 @@ public sealed class FormPdf
     }
 
     private static readonly SKColor WriteLine = SKColor.Parse("#C9D2DE");
+
+    // ---------------- fields in the text ----------------
+
+    private enum PieceKind { Text, Answer, Blank, TickOn, TickOff }
+
+    /// <summary>A word of a field line: text, an answer (underlined), a blank line, or a tick box.</summary>
+    private sealed record Piece(string Text, bool Bold, PieceKind Kind, float Width = 0);
+
+    private static readonly SKColor AnswerInk = SKColor.Parse("#0D2A55");
+    private const float TickSize = 9;
+
+    /// <summary>
+    /// A line of the text with fields: its words and the answers in place (a blank line or an
+    /// empty box while unanswered); a «Πολλές γραμμές» answer goes in a box under the line.
+    /// </summary>
+    private List<Block> FieldLine(MarkupLine line, ref int next, FormAssignment assignment, float width)
+    {
+        const float size = 10.5f;
+        var result = new List<Block>();
+        var answers = assignment.IsSubmitted ? assignment.Answers : new Dictionary<string, string>();
+        var bullet = line.Kind is MarkupKind.Bullet or MarkupKind.Numbered;
+        var heading = line.Kind == MarkupKind.Heading;
+        var x = bullet ? Left + 16 : Left;
+        var w = bullet ? width - 16 : width;
+        var pieces = new List<Piece>();
+        var longs = new List<(FormField Field, string? Value)>();
+
+        foreach (var span in line.Spans)
+        {
+            foreach (var part in FormFields.Split(span.Text, ref next))
+            {
+                if (part.Field is not { } f)
+                {
+                    foreach (var word in SplitKeepingSpaces(part.Text)) pieces.Add(new Piece(word, span.Bold || heading, PieceKind.Text));
+                    continue;
+                }
+                var value = answers.GetValueOrDefault(f.Key);
+                switch (f.Kind)
+                {
+                    case FormFieldKind.Tick:
+                        pieces.Add(new Piece(string.Empty, false, value == FormFields.Ticked ? PieceKind.TickOn : PieceKind.TickOff, TickSize + 4));
+                        break;
+                    case FormFieldKind.Long:
+                        longs.Add((f, value));
+                        break;
+                    default:
+                        var shown = FormFields.Display(f, value);
+                        if (shown.Length == 0)
+                        {
+                            pieces.Add(new Piece(string.Empty, false, PieceKind.Blank, f.Kind == FormFieldKind.Date ? 80 : 130));
+                            break;
+                        }
+                        foreach (var word in SplitKeepingSpaces(shown)) pieces.Add(new Piece(word, true, PieceKind.Answer));
+                        break;
+                }
+            }
+        }
+
+        var rows = WrapPieces(pieces, size, w);
+        var lineH = size * 1.55f;
+        var markerText = line.Kind == MarkupKind.Bullet ? "•" : $"{line.Number}.";
+        result.Add(new Block(Math.Max(1, rows.Count) * lineH, heading ? 10 : 3, (c, y) =>
+        {
+            if (bullet)
+            {
+                using var f = Font(false, size);
+                using var p = Paint(Ink);
+                c.DrawText(markerText, Left + 2, y + f.Size, SKTextAlign.Left, f, p);
+            }
+            foreach (var row in rows)
+            {
+                DrawPieces(c, row, x, y, size, heading ? Navy : Ink);
+                y += lineH;
+            }
+        }));
+
+        foreach (var (field, value) in longs)
+        {
+            var text = FormFields.Display(field, value);
+            if (text.Length == 0)
+            {
+                const float rule = 22, h = rule * (4) + 10;
+                result.Add(new Block(h, 4, (c, y) =>
+                {
+                    Box(c, y, h);
+                    using var ruled = new SKPaint { Color = WriteLine, StrokeWidth = 0.8f, IsAntialias = true };
+                    for (var i = 1; i <= 4; i++) c.DrawLine(Left + 10, y + 4 + rule * i, Right - 10, y + 4 + rule * i, ruled);
+                }));
+                continue;
+            }
+            var lines = text.Replace("\r", string.Empty).Split('\n')
+                .SelectMany(l => Wrap([new MarkupSpan(l, true)], size, width - 20)).ToList();
+            var lh = size * 1.45f;
+            var boxH = Math.Max(1, lines.Count) * lh + 12;
+            result.Add(new Block(boxH, 4, (c, y) =>
+            {
+                Box(c, y, boxH);
+                var ly = y + 6;
+                foreach (var l in lines)
+                {
+                    DrawLine(c, l, Left + 10, ly, size, AnswerInk);
+                    ly += lh;
+                }
+            }));
+        }
+
+        return result;
+    }
+
+    private float PieceWidth(Piece p, float size)
+    {
+        if (p.Kind is PieceKind.Blank or PieceKind.TickOn or PieceKind.TickOff) return p.Width;
+        using var f = Font(p.Bold, size);
+        return f.MeasureText(p.Text);
+    }
+
+    private List<List<Piece>> WrapPieces(List<Piece> pieces, float size, float width)
+    {
+        var rows = new List<List<Piece>> { new() };
+        var used = 0f;
+        foreach (var p in pieces)
+        {
+            var w = PieceWidth(p, size);
+            var isSpace = p.Kind is PieceKind.Text or PieceKind.Answer && p.Text.Trim().Length == 0;
+            if (used + w > width && used > 0 && !isSpace)
+            {
+                rows.Add(new());
+                used = 0;
+            }
+            if (used == 0 && isSpace) continue;
+            rows[^1].Add(p);
+            used += w;
+        }
+        return rows;
+    }
+
+    private void DrawPieces(SKCanvas c, List<Piece> row, float x, float y, float size, SKColor color)
+    {
+        using var ink = Paint(color);
+        using var answerInk = Paint(AnswerInk);
+        using var under = new SKPaint { Color = Muted, StrokeWidth = 0.7f, IsAntialias = true };
+        using var blank = new SKPaint { Color = WriteLine, StrokeWidth = 0.9f, IsAntialias = true };
+        using var square = new SKPaint { Color = Ink, StrokeWidth = 0.9f, IsStroke = true, IsAntialias = true };
+        using var cross = new SKPaint { Color = AnswerInk, StrokeWidth = 1.3f, IsStroke = true, IsAntialias = true, StrokeCap = SKStrokeCap.Round };
+        var baseline = y + size;
+        foreach (var p in row)
+        {
+            var w = PieceWidth(p, size);
+            switch (p.Kind)
+            {
+                case PieceKind.Text:
+                {
+                    using var f = Font(p.Bold, size);
+                    c.DrawText(p.Text, x, baseline, SKTextAlign.Left, f, ink);
+                    break;
+                }
+                case PieceKind.Answer:
+                {
+                    using var f = Font(true, size);
+                    c.DrawText(p.Text, x, baseline, SKTextAlign.Left, f, answerInk);
+                    c.DrawLine(x, baseline + 2.5f, x + w, baseline + 2.5f, under);
+                    break;
+                }
+                case PieceKind.Blank:
+                    c.DrawLine(x + 1, baseline + 2.5f, x + w - 4, baseline + 2.5f, blank);
+                    break;
+                default:
+                    var box = new SKRect(x, baseline - TickSize + 0.5f, x + TickSize, baseline + 0.5f);
+                    c.DrawRoundRect(new SKRoundRect(box, 1.5f), square);
+                    if (p.Kind == PieceKind.TickOn)
+                    {
+                        c.DrawLine(box.Left + 2, box.Top + 2, box.Right - 2, box.Bottom - 2, cross);
+                        c.DrawLine(box.Right - 2, box.Top + 2, box.Left + 2, box.Bottom - 2, cross);
+                    }
+                    break;
+            }
+            x += w;
+        }
+    }
 
     /// <summary>
     /// The blank form's answer space: a line for a short answer, four ruled lines for «Κείμενο»,

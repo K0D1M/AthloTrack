@@ -135,6 +135,22 @@ public partial class MarkupEditor : UserControl
         });
     }
 
+    /// <summary>Puts text at the caret (over a selection), e.g. a form field's marker.</summary>
+    public void Insert(string insert)
+    {
+        var text = Editor.Text ?? string.Empty;
+        var start = Math.Min(Editor.SelectionStart, Editor.SelectionEnd);
+        var end = Math.Max(Editor.SelectionStart, Editor.SelectionEnd);
+        start = Math.Clamp(start, 0, text.Length);
+        end = Math.Clamp(end, start, text.Length);
+        // A space either side, unless there's one already (or the line starts/ends there).
+        if (start > 0 && text[start - 1] is not (' ' or '\n')) insert = " " + insert;
+        if (end < text.Length && text[end] is not (' ' or '\n')) insert += " ";
+        var caret = start + insert.Length;
+        Apply(new TextEdit(text[..start] + insert + text[end..], caret, caret));
+        Editor.Focus();
+    }
+
     private void Apply(TextEdit edit)
     {
         _applying = true;

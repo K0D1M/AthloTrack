@@ -377,21 +377,145 @@ public sealed class FormTests
         Assert.Contains("Μαρία Κ.", FormAnswers.Document(form, copy.Answers)); // what the PDF prints
     }
 
-    [Fact]
-    public void Importing_word_lets_the_athlete_fill_the_text_in()
+    private static MemoryStream Docx(params string[] paragraphs)
     {
-        using var docx = new MemoryStream();
+        var docx = new MemoryStream();
         using (var zip = new ZipArchive(docx, ZipArchiveMode.Create, leaveOpen: true))
         using (var s = new StreamWriter(zip.CreateEntry("word/document.xml").Open()))
             s.Write("<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body>"
-                    + "<w:p><w:r><w:t>Όνομα: ____</w:t></w:r></w:p></w:body></w:document>");
+                    + string.Concat(paragraphs.Select(p => $"<w:p><w:r><w:t xml:space=\"preserve\">{p}</w:t></w:r></w:p>"))
+                    + "</w:body></w:document>");
         docx.Position = 0;
+        return docx;
+    }
 
+    [Fact]
+    public void Importing_word_without_blanks_lets_the_athlete_edit_the_text()
+    {
+        using var docx = Docx("Γράψε λίγα λόγια για σένα.");
         var vm = new FormEditorViewModel(_forms, Sessions.Coach(_coachId));
         vm.ImportDocx(docx);
 
-        Assert.Equal("Όνομα: ____", vm.Intro);
+        Assert.Equal("Γράψε λίγα λόγια για σένα.", vm.Intro);
         Assert.True(vm.IntroEditable);
+        Assert.False(vm.HasFields);
+    }
+
+    [Fact]
+    public void Importing_word_turns_its_blanks_into_fields()
+    {
+        using var docx = Docx("Όνομα: ____", "Γέννηση: __/__/____", "Φάρμακα; ☐ Ναι ☐ Όχι");
+        var vm = new FormEditorViewModel(_forms, Sessions.Coach(_coachId));
+        vm.ImportDocx(docx);
+
+        Assert.Equal("Όνομα: [[Κείμενο]]\nΓέννηση: [[Ημερομηνία]]\nΦάρμακα; [[Κουτάκι (προαιρετικό)]] Ναι [[Κουτάκι (προαιρετικό)]] Όχι", vm.Intro);
+        Assert.False(vm.IntroEditable); // the fields, not the whole text
+        Assert.True(vm.HasFields);
+        Assert.Equal("4 πεδία", vm.FieldsText);
+        Assert.Contains("Βρέθηκαν 4 πεδία", vm.InfoMessage);
+    }
+
+    [Fact]
+    public void The_coach_changes_a_fields_kind_and_removes_one()
+    {
+        var vm = new FormEditorViewModel(_forms, Sessions.Coach(_coachId)) { Intro = "Α: [[Κείμενο]] Β: [[Κείμενο]]" };
+
+        vm.ChangeField(FormFields.Parse(vm.Intro)[1], kind: FormFieldKind.Date, required: false);
+        Assert.Equal("Α: [[Κείμενο]] Β: [[Ημερομηνία (προαιρετικό)]]", vm.Intro);
+
+        vm.ChangeField(FormFields.Parse(vm.Intro)[0], remove: true);
+        Assert.Equal("Α: Β: [[Ημερομηνία (προαιρετικό)]]", vm.Intro);
+    }
+
+    [Fact]
+    public async Task Once_submitted_the_fields_stay_as_they_are()
+    {
+        var form = Form();
+        form.Intro = "Όνομα: [[Κείμενο]]";
+        var vm = new FormEditorViewModel(_forms, Sessions.Coach(_coachId), form, locked: true) { Intro = "Όνομα: [[Ημερομηνία]]" };
+
+        await vm.SaveCommand.ExecuteAsync(null);
+        Assert.Contains("τα πεδία δεν αλλάζουν", vm.FormError);
+
+        vm.Intro = "Ονοματεπώνυμο αθλητή: [[Κείμενο]]"; // the words may change
+        await vm.SaveCommand.ExecuteAsync(null);
+        Assert.Null(vm.FormError);
+    }
+
+    [Fact]
+    public async Task The_athlete_fills_only_the_fields_and_submits()
+    {
+        var form = Form();
+        form.Intro = "Όνομα: [[Κείμενο]]\nΓέννηση: [[Ημερομηνία (προαιρετικό)]]\n[[Κουτάκι]] Συμφωνώ\nΣχόλια: [[Πολλές γραμμές (προαιρετικό)]]";
+        form.Questions.Clear();
+        await _forms.SaveFormAsync(form);
+        await _forms.AssignAsync(form.Id, [_maria.Id]);
+        var copy = _forms.Copies.Single();
+        var prefs = new InMemoryAppPreferences();
+        var athlete = Sessions.Athlete(_maria.Id, _coachId);
+
+        var vm = await OpenAsync(athlete, copy.Id, prefs);
+        Assert.True(vm.HasFields && vm.IsFillingFields);
+        Assert.False(vm.CanEditDocument); // the text itself isn't theirs to change
+        Assert.False(vm.HasIntro);
+        Assert.Equal("0 από 4", vm.FieldsProgress);
+
+        vm.Fields.Set("f1", "Μαρία Κ.");
+        Assert.Equal("1 από 4", vm.FieldsProgress);
+
+        vm = await OpenAsync(athlete, copy.Id, prefs); // the draft keeps it
+        Assert.Equal("Μαρία Κ.", vm.Fields.Get("f1"));
+
+        vm.SubmitCommand.Execute(null); // «Συμφωνώ» is required
+        Assert.Equal("Συμπλήρωσε το υποχρεωτικό πεδίο με κόκκινο.", vm.FormError);
+        Assert.True(vm.Fields.IsMissing("f3"));
+        Assert.Empty(_forms.Submitted);
+
+        vm.Fields.Set("f3", FormFields.Ticked);
+        Assert.False(vm.Fields.IsMissing("f3"));
+        vm.SubmitCommand.Execute(null);
+        await vm.Confirm.ConfirmCommand.ExecuteAsync(null);
+        var (_, answers) = Assert.Single(_forms.Submitted);
+        Assert.Equal("Μαρία Κ.", answers["f1"]);
+        Assert.Equal(FormFields.Ticked, answers["f3"]);
+        Assert.False(answers.ContainsKey("f2"));
+        Assert.False(answers.ContainsKey(FormAnswers.DocumentKey));
+
+        // The coach reads the answers in place
+        var coach = await OpenAsync(Sessions.Coach(_coachId), copy.Id, new InMemoryAppPreferences());
+        Assert.True(coach.IsReadingFields);
+        Assert.Equal("Μαρία Κ.", coach.Fields.Get("f1"));
+    }
+
+    [Fact]
+    public void The_pdf_puts_the_answers_in_the_text_or_blanks_before_submitting()
+    {
+        var form = Form();
+        form.Intro = "## Συγκατάθεση\nΌνομα: [[Κείμενο]] Γέννηση: [[Ημερομηνία]]\n- [[Κουτάκι]] Συμφωνώ\nΣχόλια: [[Πολλές γραμμές]]";
+        form.Questions.Clear();
+        var copy = new FormAssignment { Id = Guid.NewGuid(), FormId = form.Id, AthleteId = _maria.Id };
+        // Real Greek glyphs (the app's own font files), so the rendered pages can be looked at.
+        var fonts = new DirectoryInfo(AppContext.BaseDirectory);
+        while (fonts is not null && !File.Exists(Path.Combine(fonts.FullName, "AthloTrack.slnx"))) fonts = fonts.Parent;
+        var fontDir = Path.Combine(fonts!.FullName, "AthloTrack", "Assets", "Fonts");
+        var pdf = new FormPdf(SKTypeface.FromFile(Path.Combine(fontDir, "Manrope-Regular.ttf")), SKTypeface.FromFile(Path.Combine(fontDir, "Manrope-Bold.ttf")));
+
+        var blank = pdf.Create(form, copy, "Μαρία");
+        copy.SubmittedAt = DateTimeOffset.UtcNow;
+        copy.Answers = new() { ["f1"] = "Μαρία Κωνσταντίνου", ["f2"] = "2004-03-14", ["f3"] = FormFields.Ticked, ["f4"] = "Διάστρεμμα αστραγάλου.\nΚανένα χειρουργείο." };
+        var filled = pdf.Create(form, copy, "Μαρία");
+
+        foreach (var bytes in new[] { blank, filled })
+        {
+            Assert.StartsWith("%PDF", Encoding.ASCII.GetString(bytes, 0, 4));
+            Assert.Contains("/Type /Page", Encoding.ASCII.GetString(bytes));
+        }
+        Assert.NotEqual(blank.Length, filled.Length);
+        if (Environment.GetEnvironmentVariable("ATHLOTRACK_PDF_OUT") is { Length: > 0 } dir)
+        {
+            File.WriteAllBytes(Path.Combine(dir, "fields-blank.pdf"), blank);
+            File.WriteAllBytes(Path.Combine(dir, "fields-filled.pdf"), filled);
+        }
     }
 
     [Fact]

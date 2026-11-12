@@ -55,7 +55,39 @@ public partial class FormEditorViewModel : ViewModelBase
     public partial string Title { get; set; } = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFields), nameof(FieldsText), nameof(CanChooseIntroEditable))]
     public partial string Intro { get; set; } = string.Empty;
+
+    /// <summary>The text has fields (from Word's blanks, or added): the athlete fills only those.</summary>
+    public bool HasFields => FormFields.HasFields(Intro);
+
+    /// <summary>«Βρέθηκαν 9 πεδία» / «9 πεδία»: how many the text has.</summary>
+    public string FieldsText
+    {
+        get
+        {
+            var n = FormFields.Parse(Intro).Count;
+            return n == 1 ? "1 πεδίο" : $"{n} πεδία";
+        }
+    }
+
+    /// <summary>«Ο αθλητής συμπληρώνει το κείμενο» is for text without fields (fields keep the text as is).</summary>
+    public bool CanChooseIntroEditable => !HasFields;
+
+    /// <summary>The coach changes a field from its chip: its kind, required or not, or removes it.</summary>
+    public void ChangeField(FormField field, FormFieldKind? kind = null, bool? required = null, bool remove = false)
+    {
+        if (IsLocked)
+        {
+            FormError = LockedFieldsText;
+            return;
+        }
+        var marker = remove ? string.Empty : FormFields.MarkerFor(kind ?? field.Kind, required ?? field.Required);
+        Intro = FormFields.Replace(Intro, field.Index, marker);
+    }
+
+    internal const string LockedFieldsText =
+        "Κάποιος αθλητής έχει ήδη υποβάλει το έντυπο, οπότε τα πεδία δεν αλλάζουν. Για άλλα πεδία, φτιάξε «Αντίγραφο».";
 
     /// <summary>«Ο αθλητής συμπληρώνει το κείμενο»: the athlete gets the text itself to edit.</summary>
     [ObservableProperty]
@@ -124,21 +156,33 @@ public partial class FormEditorViewModel : ViewModelBase
             return;
         }
 
-        // A Word document is usually there to be filled in: the athlete edits it.
-        const string editable = " Ο αθλητής θα μπορεί να το συμπληρώσει (μπορείς να το αλλάξεις παρακάτω).";
+        // The document's blanks (______, __/__/____, ☐) become fields the athlete fills in place.
+        // A document without blanks is still there to be filled in: the athlete edits the text.
+        var withFields = FormFields.FromBlanks(markup);
+        var count = FormFields.Parse(withFields).Count;
+        if (IsLocked && count > 0)
+        {
+            FormError = LockedFieldsText;
+            return;
+        }
+        void Use(string what)
+        {
+            Intro = count > 0 ? withFields : markup;
+            IntroEditable = count == 0;
+            InfoMessage = count > 0
+                ? $"{what} Βρέθηκαν {(count == 1 ? "1 πεδίο" : $"{count} πεδία")}: ο αθλητής συμπληρώνει μόνο αυτά. Πάτησε ένα πεδίο στην προεπισκόπηση για να το αλλάξεις ή να το διαγράψεις."
+                : $"{what} Ο αθλητής θα μπορεί να το συμπληρώσει (μπορείς να το αλλάξεις παρακάτω).";
+        }
+
         if (string.IsNullOrWhiteSpace(Intro))
         {
-            Intro = markup;
-            IntroEditable = true;
-            InfoMessage = "Το κείμενο του Word μπήκε στο κείμενο του εντύπου." + editable;
+            Use("Το κείμενο του Word μπήκε στο έντυπο.");
             return;
         }
 
         Confirm.Ask("Το κείμενο του Word θα αντικαταστήσει το κείμενο που έχει ήδη το έντυπο.", "Αντικατάσταση", () =>
         {
-            Intro = markup;
-            IntroEditable = true;
-            InfoMessage = "Το κείμενο αντικαταστάθηκε από το Word." + editable;
+            Use("Το κείμενο αντικαταστάθηκε από το Word.");
             return Task.CompletedTask;
         });
     }
@@ -161,7 +205,7 @@ public partial class FormEditorViewModel : ViewModelBase
                 CoachId = _existing?.CoachId ?? _session.ProfileId ?? Guid.Empty,
                 Title = Title.Trim(),
                 Intro = Intro.TrimEnd(),
-                IntroEditable = IntroEditable && !string.IsNullOrWhiteSpace(Intro),
+                IntroEditable = IntroEditable && !string.IsNullOrWhiteSpace(Intro) && !HasFields,
                 Questions = Questions.Select(q => q.ToModel()).ToList(),
             };
             var saved = await _forms.SaveFormAsync(form);
@@ -183,6 +227,10 @@ public partial class FormEditorViewModel : ViewModelBase
         foreach (var q in Questions) q.Error = null;
         if (string.IsNullOrWhiteSpace(Title)) return "Δώσε τίτλο στο έντυπο.";
         if (Questions.Count == 0 && string.IsNullOrWhiteSpace(Intro)) return "Γράψε κείμενο ή πρόσθεσε τουλάχιστον μία ερώτηση.";
+        // Submitted copies keep their answers by field number: the fields stay as they were.
+        if (IsLocked && _existing is not null
+            && !FormFields.Parse(_existing.Intro).SequenceEqual(FormFields.Parse(Intro)))
+            return LockedFieldsText;
         foreach (var q in Questions)
         {
             if (string.IsNullOrWhiteSpace(q.Label)) q.Error = "Γράψε την ερώτηση.";

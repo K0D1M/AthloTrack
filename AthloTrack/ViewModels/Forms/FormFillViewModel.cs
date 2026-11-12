@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AthloTrack.Core.Auth;
 using AthloTrack.Core.Data;
+using AthloTrack.Core.Forms;
 using AthloTrack.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -35,7 +36,46 @@ public partial class FormFillViewModel : ViewModelBase
         _session = session;
         _assignmentId = assignmentId;
         _preferences = preferences ?? new InMemoryAppPreferences();
+        Fields.Changed += () =>
+        {
+            SaveDraft();
+            UpdateFieldsProgress();
+        };
         _ = LoadAsync();
+    }
+
+    // ---------------- Fields: the form's text with boxes to fill ----------------
+
+    /// <summary>The athlete's answers to the text's fields ("f1", …).</summary>
+    public FormFieldValues Fields { get; } = new();
+
+    private IReadOnlyList<FormField> _fieldList = [];
+
+    /// <summary>The form's text has fields: the athlete fills those in place (the text itself stays).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIntro), nameof(IsFillingFields), nameof(IsReadingFields))]
+    public partial bool HasFields { get; set; }
+
+    /// <summary>The text with its fields, as the document view shows it.</summary>
+    [ObservableProperty]
+    public partial string? FieldsText { get; set; }
+
+    public bool IsFillingFields => HasFields && !IsReadOnly;
+    public bool IsReadingFields => HasFields && IsReadOnly;
+
+    /// <summary>«4 από 9».</summary>
+    [ObservableProperty]
+    public partial string FieldsProgress { get; set; } = string.Empty;
+
+    /// <summary>The «συμπληρωμένα» bar, 0–100.</summary>
+    [ObservableProperty]
+    public partial double FieldsPercent { get; set; }
+
+    private void UpdateFieldsProgress()
+    {
+        var filled = Fields.FilledCount(_fieldList);
+        FieldsProgress = $"{filled} από {_fieldList.Count}";
+        FieldsPercent = _fieldList.Count == 0 ? 0 : 100.0 * filled / _fieldList.Count;
     }
 
     private string DraftKey => $"form.draft.{_assignmentId}";
@@ -53,7 +93,7 @@ public partial class FormFillViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(HasIntro))]
     public partial string Intro { get; set; } = string.Empty;
 
-    public bool HasIntro => !string.IsNullOrWhiteSpace(Intro) && !CanEditDocument;
+    public bool HasIntro => !string.IsNullOrWhiteSpace(Intro) && !CanEditDocument && !HasFields;
 
     /// <summary>The athlete's own copy of the text, while they fill it in.</summary>
     [ObservableProperty]
@@ -72,7 +112,7 @@ public partial class FormFillViewModel : ViewModelBase
     public ObservableCollection<FormAnswerItem> Items { get; } = new();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanEdit), nameof(CanSubmit))]
+    [NotifyPropertyChangedFor(nameof(CanEdit), nameof(CanSubmit), nameof(IsFillingFields), nameof(IsReadingFields))]
     public partial bool IsReadOnly { get; set; } = true;
 
     public bool CanEdit => !IsReadOnly;
@@ -133,7 +173,14 @@ public partial class FormFillViewModel : ViewModelBase
             var answers = Assignment.IsSubmitted ? Assignment.Answers : Draft();
             HasDraft = !Assignment.IsSubmitted && answers.Count > 0;
             _restoring = true;
-            CanEditDocument = Form.IntroEditable && !IsReadOnly;
+            // Fields in the text: the athlete fills them in place; the text itself isn't theirs to edit.
+            _fieldList = FormFields.Parse(Form.Intro);
+            HasFields = _fieldList.Count > 0;
+            Fields.Load(answers);
+            FieldsText = null; // the document view rebuilds with the values just loaded
+            FieldsText = HasFields ? Form.Intro : null;
+            UpdateFieldsProgress();
+            CanEditDocument = Form.IntroEditable && !IsReadOnly && !HasFields;
             Document = answers.GetValueOrDefault(FormAnswers.DocumentKey) ?? Form.Intro;
             // Read-only: the athlete's submitted copy; before that, the coach sees the form's text.
             Intro = FormAnswers.Document(Form, Assignment.Answers);
@@ -178,6 +225,8 @@ public partial class FormFillViewModel : ViewModelBase
         foreach (var i in Items)
             if (!string.IsNullOrEmpty(i.Value)) json[i.Question.Id] = i.Value;
         if (CanEditDocument && Form is not null && Document != Form.Intro) json[FormAnswers.DocumentKey] = Document;
+        if (HasFields)
+            foreach (var (key, value) in Fields.Answers()) json[key] = value;
         _preferences.Set(DraftKey, json.HasValues ? json.ToString(Newtonsoft.Json.Formatting.None) : null);
         HasDraft = json.HasValues;
     }
@@ -187,6 +236,8 @@ public partial class FormFillViewModel : ViewModelBase
         var answers = Items.Where(i => !string.IsNullOrWhiteSpace(i.Value)).ToDictionary(i => i.Question.Id, i => i.Value!.Trim());
         // The athlete's copy of the text goes with the answers, as they left it.
         if (CanEditDocument && !string.IsNullOrWhiteSpace(Document)) answers[FormAnswers.DocumentKey] = Document.TrimEnd();
+        if (HasFields)
+            foreach (var (key, value) in Fields.Answers()) answers[key] = value;
         return answers;
     }
 
@@ -198,11 +249,11 @@ public partial class FormFillViewModel : ViewModelBase
         var answers = Answers();
         var missing = FormAnswers.Missing(Form.Questions, answers);
         foreach (var i in Items) i.IsMissing = missing.Contains(i.Question);
-        if (missing.Count > 0)
+        var missingFields = HasFields ? FormFields.Missing(Form.Intro, answers) : [];
+        Fields.SetMissing(missingFields.Select(f => f.Key));
+        if (missing.Count > 0 || missingFields.Count > 0)
         {
-            FormError = missing.Count == 1
-                ? "Συμπλήρωσε την υποχρεωτική ερώτηση με κόκκινο."
-                : $"Συμπλήρωσε τις {missing.Count} υποχρεωτικές ερωτήσεις με κόκκινο.";
+            FormError = MissingText(missing.Count, missingFields.Count);
             return;
         }
 
@@ -225,6 +276,16 @@ public partial class FormFillViewModel : ViewModelBase
             }
         });
     }
+
+    /// <summary>What's left to fill, in one sentence.</summary>
+    public static string MissingText(int questions, int fields) => (questions, fields) switch
+    {
+        (1, 0) => "Συμπλήρωσε την υποχρεωτική ερώτηση με κόκκινο.",
+        (_, 0) => $"Συμπλήρωσε τις {questions} υποχρεωτικές ερωτήσεις με κόκκινο.",
+        (0, 1) => "Συμπλήρωσε το υποχρεωτικό πεδίο με κόκκινο.",
+        (0, _) => $"Συμπλήρωσε τα {fields} υποχρεωτικά πεδία με κόκκινο.",
+        _ => $"Συμπλήρωσε ό,τι είναι με κόκκινο ({fields} πεδία, {questions} ερωτήσεις).",
+    };
 
     /// <summary>
     /// «Λήψη PDF» and its suggested file name: the submitted copy, or before that the blank form
