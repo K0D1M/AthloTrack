@@ -16,8 +16,11 @@ namespace AthloTrack.ViewModels;
 /// Προπονήσεις — all workout programs across athletes: search, filter chips, sorting (remembered),
 /// grouped by day, athlete or status. The athlete's next open workout is shown on its own card.
 /// </summary>
-public partial class WorkoutsViewModel : ViewModelBase
+public partial class WorkoutsViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     internal const string FilterKey = "workouts.filter";
     internal const string SortKey = "workouts.sort";
 

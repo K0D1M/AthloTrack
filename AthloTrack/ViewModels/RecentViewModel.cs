@@ -12,8 +12,11 @@ using CommunityToolkit.Mvvm.Input;
 namespace AthloTrack.ViewModels;
 
 /// <summary>Πρόσφατα — welcome screen: recent athlete (coach) or unread notifications (athlete).</summary>
-public partial class RecentViewModel : ViewModelBase
+public partial class RecentViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     private readonly SessionState _session;
     private readonly IAthleteRepository _athletes;
     private readonly INotificationRepository _notifications;

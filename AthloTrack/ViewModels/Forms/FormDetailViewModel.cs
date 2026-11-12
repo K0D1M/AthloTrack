@@ -14,8 +14,11 @@ namespace AthloTrack.ViewModels;
 /// A form's page (coach): who it went to and who has submitted it, and the form's actions:
 /// «Αποστολή σε…», «Επεξεργασία», «Αντίγραφο», «Διαγραφή». A submitted copy opens read-only.
 /// </summary>
-public partial class FormDetailViewModel : ViewModelBase
+public partial class FormDetailViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     private readonly IFormRepository _forms;
     private readonly IAthleteRepository _athletes;
 

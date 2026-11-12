@@ -16,8 +16,11 @@ namespace AthloTrack.ViewModels;
 /// «Έντυπα» (coach), in two categories: «Όλα», the forms with how many athletes submitted each,
 /// and «Συμπληρωμένα», every athlete's submitted copy, newest first, by day. The choice is remembered.
 /// </summary>
-public partial class FormsViewModel : ViewModelBase
+public partial class FormsViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     internal const string CategoryKey = "forms.category";
     private static readonly string[] Days = ["Κυριακή", "Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο"];
 

@@ -62,7 +62,7 @@
                         </StackPanel>
                     </Grid>
                     <controls:CoachPresence Present="{Binding CoachPresent}" />
-                    <controls:WorkoutText Text="{Binding Content}" />
+                    <controls:WorkoutPreview Text="{Binding Content}" Title="{Binding WhenText, StringFormat='Ασκησιολόγιο · {0}'}" />
                     <!-- cancelled by the coach / the athlete's choice (everyone sees it) -->
                     <StackPanel IsVisible="{Binding IsCancelled}" Orientation="Horizontal" Spacing="6">
                         <PathIcon Data="{StaticResource CancelIcon}" Width="14" Height="14"
@@ -263,6 +263,7 @@
     </UserControl.Styles>
 
     <Grid>
+        <controls:PullRefresh>
         <ScrollViewer>
             <StackPanel Margin="16" Spacing="16">
 
@@ -546,6 +547,7 @@
                 <Border Height="72" />
             </StackPanel>
         </ScrollViewer>
+        </controls:PullRefresh>
         <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
 
         <!-- Floating "+" button (coach only) -->

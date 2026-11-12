@@ -24,6 +24,8 @@
             <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="BrandSupportBrush" Color="#333333" />
             <SolidColorBrush x:Key="HeadingBrush" Color="#003366" />
+            <!-- A text button that reads as a link («Εμφάνιση ολόκληρου») -->
+            <SolidColorBrush x:Key="LinkBrush" Color="#1565C0" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
             <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="TintBrush" Color="#EEF3FB" />
@@ -62,6 +64,7 @@
             <SolidColorBrush x:Key="SurfaceBrush" Color="#121417" />
             <SolidColorBrush x:Key="BrandSupportBrush" Color="#E6E8EB" />
             <SolidColorBrush x:Key="HeadingBrush" Color="#9CC3FF" />
+            <SolidColorBrush x:Key="LinkBrush" Color="#9CC3FF" />
             <SolidColorBrush x:Key="MutedTextBrush" Color="#9AA3AE" />
             <SolidColorBrush x:Key="CardBrush" Color="#1E2228" />
             <SolidColorBrush x:Key="TintBrush" Color="#1D2735" />
@@ -159,5 +162,9 @@
       avares://AthloTrack/Assets/Fonts#Gabriola
     -->
     <FontFamily x:Key="GreekAccentFont">avares://AthloTrack/Assets/Fonts#GFS Didot</FontFamily>
+
+    <!-- The app's typeface (AppFonts.cs): Manrope, with Inter behind it for the symbols Manrope
+         lacks (⌫ ✓ ✕ ☐ …). Fluent styles every control with this key (its own default is Inter). -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">avares://AthloTrack/Assets/Fonts#Manrope, fonts:Inter#Inter</FontFamily>
 
 </ResourceDictionary>

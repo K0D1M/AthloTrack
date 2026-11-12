@@ -7,6 +7,7 @@
              x:DataType="vm:FormDetailViewModel">
     <!-- A form (coach): its actions, then who it went to and who submitted it -->
     <Grid>
+        <controls:PullRefresh>
         <ScrollViewer>
             <StackPanel Margin="16,12,16,24" Spacing="12">
                 <StackPanel Spacing="2">
@@ -56,6 +57,7 @@
                 </ItemsControl>
             </StackPanel>
         </ScrollViewer>
+        </controls:PullRefresh>
         <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
         <views:ConfirmOverlay DataContext="{Binding Confirm}" />
     </Grid>

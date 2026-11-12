@@ -233,7 +233,11 @@ public partial class MainView : ContentPage
             return;
         }
 
-        if (PhotoOverlay.IsVisible)
+        if (Controls.WorkoutPreview.CloseOpen())
+        {
+            e.Handled = true; // a workout's «Εμφάνιση ολόκληρου» window
+        }
+        else if (PhotoOverlay.IsVisible)
         {
             HidePhoto();
             e.Handled = true;
@@ -272,6 +276,25 @@ public partial class MainView : ContentPage
     }
 
     private void OnPhotoOverlayTapped(object? sender, Avalonia.Input.TappedEventArgs e) => HidePhoto();
+
+    /// <summary>⟳: reload the page in place; its progress line shows while it loads.</summary>
+    private async void OnRefreshClick(object? sender, RoutedEventArgs e)
+    {
+        if (ContentPage.Content is not IRefreshable page || !RefreshButton.IsEnabled) return;
+        RefreshButton.IsEnabled = false;
+        try
+        {
+            await page.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AthloTrack] Refresh failed: {ex.Message}");
+        }
+        finally
+        {
+            RefreshButton.IsEnabled = true;
+        }
+    }
 
     private void OnBackClick(object? sender, RoutedEventArgs e)
     {
@@ -409,6 +432,7 @@ public partial class MainView : ContentPage
     {
         _back = back;
         BackButton.IsVisible = back is not null;
+        RefreshButton.IsVisible = page is IRefreshable && !OperatingSystem.IsAndroid();
         ContentPage.Content = page;
         TitleText.Text = title;
         Motion.FadeInPage(ContentPage);

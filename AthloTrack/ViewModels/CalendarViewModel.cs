@@ -11,8 +11,11 @@ using CommunityToolkit.Mvvm.Input;
 namespace AthloTrack.ViewModels;
 
 /// <summary>Ημερολόγιο — month grid with athlete photos on workout days, plus an agenda list.</summary>
-public partial class CalendarViewModel : ViewModelBase
+public partial class CalendarViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     private readonly IWorkoutRepository _workouts;
     private readonly IAthleteRepository _athletes;
     private readonly IAvatarService _avatars;

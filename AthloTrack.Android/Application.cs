@@ -28,7 +28,7 @@ namespace AthloTrack.Android
             AthloTrack.Services.UpdateChecker.Channel = "android";
 
             return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+            .WithAppFonts();
         }
     }
 }

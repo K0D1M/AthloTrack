@@ -109,7 +109,7 @@
     <!-- Top bar: Up arrow on sub-pages, the page title, and the signed-in user's photo (opens Ρυθμίσεις). -->
     <StackPanel Grid.Row="0">
     <Border x:Name="TopBar" Background="{StaticResource BrandBarGradient}">
-        <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56" Margin="8,0">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" MinHeight="56" Margin="8,0">
             <Button x:Name="BackButton" Grid.Column="0" Classes="bar" IsVisible="False"
                     Click="OnBackClick" ToolTip.Tip="Πίσω">
                 <PathIcon Data="{StaticResource ArrowLeftIcon}" Width="22" Height="22" />
@@ -117,7 +117,12 @@
             <TextBlock x:Name="TitleText" Grid.Column="1" Text="AthloTrack" Foreground="White"
                        FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" Margin="8,0" />
-            <Button x:Name="AvatarButton" Grid.Column="2" Classes="bar" Padding="4"
+            <!-- ⟳: reload the page in place (shown on pages that can; not on Android, where you pull down) -->
+            <Button x:Name="RefreshButton" Grid.Column="2" Classes="bar" IsVisible="False"
+                    Click="OnRefreshClick" ToolTip.Tip="Ανανέωση">
+                <PathIcon Data="{StaticResource RefreshIcon}" Width="22" Height="22" />
+            </Button>
+            <Button x:Name="AvatarButton" Grid.Column="3" Classes="bar" Padding="4"
                     Click="OnAvatarClick" ToolTip.Tip="Ρυθμίσεις">
                 <controls:Avatar x:Name="TopAvatar" x:DataType="vm:CurrentUserViewModel" Width="34" Height="34"
                                  BorderBrush="White" BorderThickness="2"
@@ -148,6 +153,7 @@
                         <PathIcon Data="{StaticResource ClockIcon}" />
                     </ContentPage.Icon>
                     <Grid>
+                    <controls:PullRefresh>
                     <ScrollViewer>
                         <StackPanel Margin="16,20" Spacing="16">
                             <!-- Gradient welcome banner -->
@@ -372,6 +378,7 @@
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
+                    </controls:PullRefresh>
                     <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
                     </Grid>
                 </ContentPage>
@@ -383,6 +390,7 @@
                         <PathIcon Data="{StaticResource PersonIcon}" />
                     </ContentPage.Icon>
                     <Grid>
+                        <controls:PullRefresh>
                         <ScrollViewer>
                         <StackPanel>
                         <!-- Coach: «Έντυπα», the forms the athletes fill in -->
@@ -424,6 +432,7 @@
                         </ItemsControl>
                         </StackPanel>
                         </ScrollViewer>
+                        </controls:PullRefresh>
 
                         <!-- First load: rows shaped like the athlete list -->
                         <StackPanel Margin="20,20,20,0" Spacing="22" IsVisible="{Binding ShowSkeleton}">
@@ -551,7 +560,8 @@
                             </StackPanel>
                         </Border>
 
-                        <ScrollViewer Grid.Row="1">
+                        <controls:PullRefresh Grid.Row="1">
+                        <ScrollViewer>
                             <StackPanel Margin="16,0,16,96">
                                 <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
                                            Margin="0,12,0,0"
@@ -595,7 +605,7 @@
                                             </StackPanel>
                                         </WrapPanel>
                                         <TextBlock Text="{Binding NextHint}" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
-                                        <controls:WorkoutText Text="{Binding Next.Content}" />
+                                        <controls:WorkoutPreview Text="{Binding Next.Content}" Title="{Binding NextDayText, StringFormat='Ασκησιολόγιο · {0}'}" />
                                         <WrapPanel Margin="0,4,0,0" IsVisible="{Binding Next.CanAccept}">
                                             <Button Classes="primary answer" Margin="0,0,8,6"
                                                     Command="{Binding AcceptWorkoutCommand}" CommandParameter="{Binding Next}">
@@ -689,7 +699,7 @@
                                                                             <TextBlock Text="{Binding StatusText}" />
                                                                         </Border>
                                                                     </Grid>
-                                                                    <controls:WorkoutText Text="{Binding Content}" />
+                                                                    <controls:WorkoutPreview Text="{Binding Content}" Title="{Binding DayText, StringFormat='Ασκησιολόγιο · {0}'}" />
                                                                     <TextBlock Text="{Binding ReasonText}" IsVisible="{Binding HasReason}" FontSize="13"
                                                                                TextWrapping="Wrap" Foreground="{DynamicResource PillDeclinedTextBrush}" />
                                                                     <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding ShowReminderSent}">
@@ -786,6 +796,7 @@
                                 </ItemsControl>
                             </StackPanel>
                         </ScrollViewer>
+                        </controls:PullRefresh>
 
                         <!-- First load: cards shaped like the workouts -->
                         <StackPanel Grid.Row="1" Margin="16,22,16,0" Spacing="26" IsVisible="{Binding ShowSkeleton}">
@@ -942,6 +953,7 @@
                     </ContentPage.Styles>
 
                     <Grid>
+                    <controls:PullRefresh>
                     <ScrollViewer>
                         <StackPanel Margin="12" Spacing="10" MaxWidth="560" HorizontalAlignment="Stretch">
 
@@ -1092,6 +1104,7 @@
                                        IsVisible="{Binding HasNoAgendaEntries}" />
                         </StackPanel>
                     </ScrollViewer>
+                    </controls:PullRefresh>
                     <ProgressBar Classes="topline" IsIndeterminate="True" IsVisible="{Binding IsLoading}" />
                     </Grid>
                 </ContentPage>

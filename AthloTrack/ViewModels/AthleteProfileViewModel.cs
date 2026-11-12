@@ -16,8 +16,11 @@ public sealed record ProgressChart(string[] Labels, System.Collections.Generic.I
 /// <summary>A metric over time; null values are measurements without that metric.</summary>
 public sealed record ChartLine(string Name, string ColorHex, double?[] Values, double Width = 2, bool Fill = false);
 
-public partial class AthleteProfileViewModel : ViewModelBase
+public partial class AthleteProfileViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     private readonly Guid _athleteId;
     private readonly IAthleteRepository _athletes;
     private readonly IMeasurementRepository _measurements;

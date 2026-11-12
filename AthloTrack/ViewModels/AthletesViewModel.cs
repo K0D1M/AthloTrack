@@ -9,8 +9,11 @@ using CommunityToolkit.Mvvm.Input;
 namespace AthloTrack.ViewModels;
 
 /// <summary>Αθλητές — list of athletes.</summary>
-public partial class AthletesViewModel : ViewModelBase
+public partial class AthletesViewModel : ViewModelBase, IRefreshable
 {
+    /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
+    public Task RefreshAsync() => IsLoading ? Task.CompletedTask : LoadAsync();
+
     private readonly IAthleteRepository _athletes;
     private readonly SessionState _session;
     private readonly IAvatarService _avatars;
