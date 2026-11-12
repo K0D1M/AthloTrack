@@ -1339,6 +1339,10 @@
         </ListBox>
     </Border>
 
+    <!-- Windows over the app (OverlayDialog: «Εμφάνιση ολόκληρου», «Τι νέο υπάρχει»); empty, it lets taps through.
+         Inside MainView, so the PIN lock always covers them. -->
+    <Panel x:Name="DialogLayer" Grid.RowSpan="3" />
+
     <!-- A tapped photo, large (PhotoPreview). Tapping anywhere, or back, closes it. -->
     <Grid x:Name="PhotoOverlay" Grid.RowSpan="3" IsVisible="False" Background="#D9000000"
           Tapped="OnPhotoOverlayTapped" Cursor="Hand">

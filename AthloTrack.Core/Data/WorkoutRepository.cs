@@ -110,6 +110,43 @@ public sealed class WorkoutRepository : IWorkoutRepository
         await update.Update();
     }
 
+    public async Task CoachAnswerAsync(Guid id, bool completed)
+    {
+        var client = await _factory.GetClientAsync();
+        try
+        {
+            await client.Rpc("coach_answer_workout", new Dictionary<string, object> { ["p_workout"] = id, ["p_completed"] = completed });
+        }
+        catch (global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+        {
+            throw CoachAnswerError(ex) ?? (Exception)ex;
+        }
+    }
+
+    public async Task CoachUndoAnswerAsync(Guid id)
+    {
+        var client = await _factory.GetClientAsync();
+        try
+        {
+            await client.Rpc("coach_undo_answer", new Dictionary<string, object> { ["p_workout"] = id });
+        }
+        catch (global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+        {
+            throw CoachAnswerError(ex) ?? (Exception)ex;
+        }
+    }
+
+    private static CoachAnswerException? CoachAnswerError(global::Supabase.Postgrest.Exceptions.PostgrestException ex)
+    {
+        var message = ex.Message.Contains("already answered") ? "Έχει ήδη απαντηθεί (ίσως μόλις απάντησε ο αθλητής)."
+            : ex.Message.Contains("cancelled") ? "Το ασκησιολόγιο έχει ακυρωθεί."
+            : ex.Message.Contains("not the coach") ? "Αυτή την απάντηση την έδωσε ο αθλητής· δεν αναιρείται."
+            : ex.Message.Contains("not allowed") ? "Μόνο ο προπονητής του αθλητή μπορεί να το σημειώσει."
+            : ex.Message.Contains("PGRST202") ? "Η σημείωση από τον προπονητή δεν είναι ακόμα διαθέσιμη (λείπει το 020_coach_workout_answers.sql)."
+            : null;
+        return message is null ? null : new CoachAnswerException(message, ex);
+    }
+
     public Task CancelAsync(Guid id) => CancelRpcAsync("cancel_workout", id);
 
     public Task RestoreAsync(Guid id) => CancelRpcAsync("restore_workout", id);
@@ -203,6 +240,7 @@ public sealed class WorkoutRepository : IWorkoutRepository
         CreatedAt = r.CreatedAt,
         CompletedAt = r.CompletedAt,
         NotCompletedAt = r.NotCompletedAt,
+        AnsweredBy = r.AnsweredBy,
         LastRemindedAt = r.LastRemindedAt,
         AcceptedAt = r.AcceptedAt,
         DeclinedAt = r.DeclinedAt,

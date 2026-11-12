@@ -57,9 +57,10 @@ public sealed class WorkoutListItemViewModel
     private static (string Text, int Rank) Status(WorkoutProgram p, bool isCoach, bool overdue)
     {
         if (p.IsCancelled) return ("Ακυρώθηκε", 6);
-        if (p.IsDeclined) return (isCoach ? "Δεν θα το κάνει" : "Δεν θα το κάνεις", 5);
+        // The outcome first: a declined workout the coach then marked done shows «Ολοκληρώθηκε».
         if (p.IsCompleted) return ("Ολοκληρώθηκε", 3);
         if (p.IsNotCompleted) return ("Δεν ολοκληρώθηκε", 4);
+        if (p.IsDeclined) return (isCoach ? "Δεν θα το κάνει" : "Δεν θα το κάνεις", 5);
         if (overdue) return ("Εκπρόθεσμο", 0);
         if (p.IsAccepted) return (isCoach ? "Θα το κάνει" : "Θα το κάνεις", 2);
         return (isCoach ? "Αναμένει απάντηση" : "Νέο", 1);

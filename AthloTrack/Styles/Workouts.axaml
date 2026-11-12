@@ -27,6 +27,19 @@
         <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
     </Style>
 
+    <!-- The coach's «Ολοκληρώθηκε» for the athlete: outlined in green (quieter than the athlete's own blue). -->
+    <Style Selector="Button.answer.done">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+    <Style Selector="Button.answer.done:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TintBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+    </Style>
+
     <!-- Small round icon button (the reminder bell on Προπονήσεις) -->
     <Style Selector="Button.iconbutton">
         <Setter Property="Background" Value="Transparent" />

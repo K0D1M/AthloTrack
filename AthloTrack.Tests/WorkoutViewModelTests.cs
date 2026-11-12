@@ -209,6 +209,57 @@ public sealed class AthleteProfileViewModelTests
         Assert.False(editRequested);
         Assert.False(vm.IsConfirming);
     }
+
+    [Fact]
+    public async Task The_coach_marks_an_unaccepted_workout_done_after_confirming_and_can_undo_it()
+    {
+        var vm = await Profile(Sessions.Coach(_coachId));
+        var workout = vm.Workouts[0];
+        Assert.True(workout.IsPending && workout.CanCoachAnswer); // never accepted: the coach can still mark it
+
+        vm.CoachCompleteWorkoutCommand.Execute(workout);
+        Assert.True(vm.IsConfirming);
+        Assert.Empty(_workouts.CoachAnswered);
+
+        await vm.ConfirmCommand.ExecuteAsync(null);
+        Assert.Equal(new[] { (workout.Id, true) }, _workouts.CoachAnswered);
+        var marked = vm.Workouts[0];
+        Assert.True(marked.IsCompleted && marked.IsAnsweredByCoach);
+        Assert.False(marked.IsPending); // no «Θα το κάνω» for the athlete any more
+        Assert.False(marked.CanCoachAnswer);
+
+        await vm.CoachUndoAnswerCommand.ExecuteAsync(marked);
+        Assert.Equal(new[] { workout.Id }, _workouts.CoachUndone);
+        Assert.False(vm.Workouts[0].IsAnswered);
+        Assert.True(vm.Workouts[0].IsPending);
+    }
+
+    [Fact]
+    public async Task The_athlete_cannot_mark_for_the_coach_and_the_coach_cannot_undo_the_athletes_answer()
+    {
+        _workouts.Items[0].CompletedAt = DateTimeOffset.UtcNow;
+        _workouts.Items[0].AnsweredBy = "athlete";
+
+        var coachView = await Profile(Sessions.Coach(_coachId));
+        Assert.False(coachView.Workouts[0].CanCoachAnswer);
+        await coachView.CoachUndoAnswerCommand.ExecuteAsync(coachView.Workouts[0]);
+        Assert.Empty(_workouts.CoachUndone);
+
+        _workouts.Items[0].CompletedAt = null;
+        _workouts.Items[0].AnsweredBy = null;
+        var ownView = await Profile(Sessions.Athlete(_athleteId, _coachId));
+        ownView.CoachCompleteWorkoutCommand.Execute(ownView.Workouts[0]);
+        Assert.False(ownView.IsConfirming);
+    }
+
+    [Fact]
+    public void The_question_mentions_the_notification_only_for_an_athlete_with_the_app()
+    {
+        Assert.Equal("Να σημειωθεί το ασκησιολόγιο της 01/10 ως «Ολοκληρώθηκε»; Ο αθλητής θα ειδοποιηθεί. Μπορείς να το αναιρέσεις.",
+            AthleteProfileViewModel.CoachAnswerText(new DateOnly(2026, 10, 1), completed: true, athleteHasApp: true));
+        Assert.Equal("Να σημειωθεί το ασκησιολόγιο της 01/10 ως «Δεν ολοκληρώθηκε»; Μπορείς να το αναιρέσεις.",
+            AthleteProfileViewModel.CoachAnswerText(new DateOnly(2026, 10, 1), completed: false, athleteHasApp: false));
+    }
 }
 
 public sealed class AddWorkoutViewModelTests

@@ -9,6 +9,8 @@
   
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <!-- «Τι νέο υπάρχει» (Services/WhatsNew.cs): the same changelog athlotrack.gr/version shows -->
+    <AvaloniaResource Include="..\AthloTrack.Browser\wwwroot\version\changelog.json" Link="Assets\changelog.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -304,6 +304,45 @@ public sealed class FormTests
     }
 
     [Fact]
+    public void A_docx_keeps_its_blanks_word_fields_and_tick_boxes()
+    {
+        const string w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        static string P(string inner) => "<w:p>" + inner + "</w:p>";
+        static string R(string text) => $"<w:r><w:t xml:space=\"preserve\">{text}</w:t></w:r>";
+        static string Tc(string inner) => "<w:tc>" + inner + "</w:tc>";
+        const string Placeholder = "<w:sdtPr><w:showingPlcHdr/></w:sdtPr>";
+
+        var document = $"<w:document xmlns:w=\"{w}\"><w:body>"
+            // a label with an empty answer cell, and one whose answer cell is an empty form control
+            + "<w:tbl><w:tr>" + Tc(P(R("Ύψος (cm)"))) + Tc("<w:p/>") + "</w:tr>"
+            + "<w:tr>" + Tc(P(R("Ομάδα αίματος"))) + Tc($"<w:sdt>{Placeholder}<w:sdtContent>" + P(R("Επιλέξτε")) + "</w:sdtContent></w:sdt>") + "</w:tr>"
+            + "<w:tr>" + Tc("<w:p/>") + Tc("<w:p/>") + "</w:tr></w:tbl>"
+            // text inside a form control is kept; an empty control is a blank
+            + "<w:sdt><w:sdtPr/><w:sdtContent>" + P(R("Μέσα σε πεδίο.")) + "</w:sdtContent></w:sdt>"
+            + P(R("Σχόλια: ") + $"<w:sdt>{Placeholder}<w:sdtContent>" + R("Κάντε κλικ εδώ.") + "</w:sdtContent></w:sdt>")
+            // old-style text field and tick box
+            + P(R("Τηλέφωνο: ") + "<w:r><w:fldChar w:fldCharType=\"begin\"><w:ffData><w:textInput/></w:ffData></w:fldChar></w:r>"
+                + "<w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>" + R("     ") + "<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>")
+            + P("<w:r><w:fldChar w:fldCharType=\"begin\"><w:ffData><w:checkBox><w:default w:val=\"1\"/></w:checkBox></w:ffData></w:fldChar></w:r>"
+                + "<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>" + R("Συμφωνώ"))
+            // a Wingdings box
+            + P("<w:r><w:sym w:font=\"Wingdings\" w:char=\"F0A8\"/></w:r>" + R(" Ναι"))
+            + "</w:body></w:document>";
+
+        using var docx = new MemoryStream();
+        using (var zip = new ZipArchive(docx, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            using var s = new StreamWriter(zip.CreateEntry("word/document.xml").Open());
+            s.Write(document);
+        }
+        docx.Position = 0;
+
+        Assert.Equal(
+            "Ύψος (cm): ______\nΟμάδα αίματος: ______\n\nΜέσα σε πεδίο.\nΣχόλια: ______\nΤηλέφωνο: ______\n☒ Συμφωνώ\n☐ Ναι",
+            DocxImport.ToMarkup(docx));
+    }
+
+    [Fact]
     public async Task The_athlete_edits_the_document_and_the_coach_reads_their_copy()
     {
         var form = Form();

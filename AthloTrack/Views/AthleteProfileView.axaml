@@ -98,6 +98,15 @@
                                Text="{Binding CompletedAtLocal, StringFormat='✓ Ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
                     <TextBlock IsVisible="{Binding IsNotCompleted}" Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold"
                                Text="{Binding NotCompletedAtLocal, StringFormat='✗ Δεν ολοκληρώθηκε {0:dd/MM/yyyy}'}" />
+                    <!-- the coach answered for the athlete (everyone sees it; the coach can undo it) -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsAnsweredByCoach}">
+                        <TextBlock Text="σημειώθηκε από τον προπονητή" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MutedTextBrush}" />
+                        <Button Classes="showmore" Content="Αναίρεση" Padding="6,0" Margin="4,0,0,0"
+                                IsVisible="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit}"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CoachUndoAnswerCommand}"
+                                CommandParameter="{Binding}" />
+                    </StackPanel>
                     <!-- reminder sent (coach only) -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <StackPanel.IsVisible>
@@ -146,6 +155,29 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <PathIcon Data="{StaticResource CloseCircleIcon}" />
                                 <TextBlock Text="Δεν θα το κάνω" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                    <!-- the coach answers for the athlete: any open workout (asked first; can be undone) -->
+                    <WrapPanel Margin="0,2,0,0">
+                        <WrapPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="CanCoachAnswer" />
+                                <Binding Path="$parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CanEdit" />
+                            </MultiBinding>
+                        </WrapPanel.IsVisible>
+                        <Button Classes="answer done" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CoachCompleteWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CheckCircleIcon}" />
+                                <TextBlock Text="Ολοκληρώθηκε" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="answer notdone" Margin="0,0,8,6"
+                                Command="{Binding $parent[UserControl].((vm:AthleteProfileViewModel)DataContext).CoachNotCompleteWorkoutCommand}" CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CloseCircleIcon}" />
+                                <TextBlock Text="Δεν ολοκληρώθηκε" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </WrapPanel>

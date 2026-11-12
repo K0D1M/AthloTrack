@@ -223,6 +223,50 @@ public partial class AthleteProfileViewModel : ViewModelBase, IRefreshable
     private Task NotCompleteWorkoutAsync(WorkoutProgram? workout) =>
         AnswerAsync(workout, w => w.CanAnswerOutcome, "Δεν ολοκληρώθηκε", id => _workouts.MarkNotCompletedAsync(id));
 
+    /// <summary>The coach marks it «Ολοκληρώθηκε» for the athlete (asked first); the athlete is notified.</summary>
+    [RelayCommand]
+    private void CoachCompleteWorkout(WorkoutProgram? workout) => CoachAnswer(workout, completed: true);
+
+    /// <summary>The coach marks it «Δεν ολοκληρώθηκε» for the athlete (asked first); the athlete is notified.</summary>
+    [RelayCommand]
+    private void CoachNotCompleteWorkout(WorkoutProgram? workout) => CoachAnswer(workout, completed: false);
+
+    private void CoachAnswer(WorkoutProgram? workout, bool completed)
+    {
+        if (workout is null || !workout.CanCoachAnswer || !CanEdit) return;
+        Ask(CoachAnswerText(workout.TargetDate, completed, CanRemind),
+            () => CoachAnswerRunAsync(() => _workouts.CoachAnswerAsync(workout.Id, completed)),
+            completed ? "Ολοκληρώθηκε" : "Δεν ολοκληρώθηκε", danger: !completed);
+    }
+
+    public static string CoachAnswerText(DateOnly date, bool completed, bool athleteHasApp) =>
+        $"Να σημειωθεί το ασκησιολόγιο της {date:dd/MM} ως «{(completed ? "Ολοκληρώθηκε" : "Δεν ολοκληρώθηκε")}»;"
+        + (athleteHasApp ? " Ο αθλητής θα ειδοποιηθεί." : "")
+        + " Μπορείς να το αναιρέσεις.";
+
+    /// <summary>The coach takes back their own mark (the athlete's own answer stays final).</summary>
+    [RelayCommand]
+    private Task CoachUndoAnswerAsync(WorkoutProgram? workout)
+    {
+        if (workout is null || !workout.IsAnsweredByCoach || !CanEdit) return Task.CompletedTask;
+        return CoachAnswerRunAsync(() => _workouts.CoachUndoAnswerAsync(workout.Id));
+    }
+
+    private async Task CoachAnswerRunAsync(Func<Task> send)
+    {
+        ErrorMessage = null;
+        InfoMessage = null;
+        try
+        {
+            await send();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message; // CoachAnswerException says why, in Greek
+        }
+        await LoadAsync();
+    }
+
     /// <summary>The athlete's «Θα το κάνω» on a new workout; the DB then notifies the coach.</summary>
     [RelayCommand]
     private Task AcceptWorkoutAsync(WorkoutProgram? workout) =>

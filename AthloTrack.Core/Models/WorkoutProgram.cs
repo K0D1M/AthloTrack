@@ -47,8 +47,8 @@ public sealed class WorkoutProgram
     public bool IsCancelled => CancelledAt is not null;
     public bool HasDeclineReason => IsDeclined && !string.IsNullOrWhiteSpace(DeclineReason);
 
-    /// <summary>Waiting for the athlete's «Θα το κάνω / Δεν θα το κάνω».</summary>
-    public bool IsPending => !IsAccepted && !IsDeclined && !IsCancelled;
+    /// <summary>Waiting for the athlete's «Θα το κάνω / Δεν θα το κάνω» (not once the coach answered for them).</summary>
+    public bool IsPending => !IsAccepted && !IsDeclined && !IsCancelled && !IsAnswered;
 
     /// <summary>Accepted and open: the athlete can give the final «Ολοκληρώθηκε / Δεν ολοκληρώθηκε».</summary>
     public bool CanAnswerOutcome => IsAccepted && !IsDeclined && !IsCancelled && !IsAnswered;
@@ -74,8 +74,17 @@ public sealed class WorkoutProgram
 
     public bool IsNotCompleted => NotCompletedAt is not null;
 
-    /// <summary>The athlete gave either answer; it's final.</summary>
+    /// <summary>Either answer was given (by the athlete, final; or by the coach, who can undo it).</summary>
     public bool IsAnswered => CompletedAt is not null || NotCompletedAt is not null;
+
+    /// <summary>020: who answered, "athlete" or "coach"; null while open (and for archived workouts).</summary>
+    public string? AnsweredBy { get; set; }
+
+    /// <summary>The coach marked it (the «από τον προπονητή» line; the coach can undo it).</summary>
+    public bool IsAnsweredByCoach => IsAnswered && AnsweredBy == "coach";
+
+    /// <summary>The coach can answer for the athlete: not cancelled, not answered (accepted or not, even declined).</summary>
+    public bool CanCoachAnswer => !IsCancelled && !IsAnswered;
 
     /// <summary>When the coach last sent a reminder (at most once an hour).</summary>
     public DateTimeOffset? LastRemindedAt { get; set; }

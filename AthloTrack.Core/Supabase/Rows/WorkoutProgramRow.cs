@@ -58,6 +58,10 @@ public sealed class WorkoutProgramRow : BaseModel
     [Column("cancelled_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset? CancelledAt { get; set; }
 
+    // 020: set by the database with the answer ('athlete' / 'coach').
+    [Column("answered_by", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public string? AnsweredBy { get; set; }
+
     // 017: set only by add_past_workout().
     [Column("from_archive", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public bool FromArchive { get; set; }

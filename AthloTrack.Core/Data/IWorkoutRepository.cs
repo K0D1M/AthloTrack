@@ -42,6 +42,9 @@ public sealed class WorkoutCancelException : Exception
 /// <summary>The server refused an old workout (not before today, not the coach's athlete, 017 not run).</summary>
 public sealed class PastWorkoutException(string message, Exception? inner = null) : Exception(message, inner);
 
+/// <summary>020: the server refused the coach's answer or its undo; the message says why, in Greek.</summary>
+public sealed class CoachAnswerException(string message, Exception? inner = null) : Exception(message, inner);
+
 public interface IWorkoutRepository
 {
     /// <summary>
@@ -69,6 +72,13 @@ public interface IWorkoutRepository
     Task MarkCompletedAsync(Guid id);
     /// <summary>The athlete answers «Δεν ολοκληρώθηκε» (final); the DB then notifies the coach.</summary>
     Task MarkNotCompletedAsync(Guid id);
+    /// <summary>
+    /// 020: the coach answers for the athlete (any open workout); the DB notifies the athlete.
+    /// Throws <see cref="CoachAnswerException"/> when the server refuses.
+    /// </summary>
+    Task CoachAnswerAsync(Guid id, bool completed);
+    /// <summary>020: the coach takes back their own answer (never the athlete's).</summary>
+    Task CoachUndoAnswerAsync(Guid id);
     /// <summary>
     /// The coach asks the athlete whether it was done: only for an unanswered workout, at most
     /// once an hour. Throws <see cref="WorkoutReminderException"/> when the server refuses.

@@ -171,6 +171,21 @@ public partial class MainView : ContentPage
             as Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime;
         if (_activatable is not null) _activatable.Activated += OnAppActivated;
         _ = CheckForUpdateAsync();
+
+        // Windows over the app open here, under the PIN lock; then «Τι νέο υπάρχει» after an update.
+        Controls.OverlayDialog.Host = DialogLayer;
+        Avalonia.Threading.Dispatcher.UIThread.Post(ShowWhatsNew, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
+    /// <summary>«Τι νέο υπάρχει»: the releases since the version used before; nothing new, no window.</summary>
+    private void ShowWhatsNew()
+    {
+        if (_isAdmin) return; // the changelog is the coaches' and athletes' app
+        var releases = AthloTrack.Services.WhatsNew.TakePending(
+            Resolve<AthloTrack.Core.Auth.IAppPreferences>(), AppInfo.Version, AthloTrack.Services.WhatsNew.LoadBuiltIn());
+        if (releases.Count == 0) return;
+        Controls.OverlayDialog.Show(this, "Τι νέο υπάρχει",
+            new Controls.WorkoutText { Text = AthloTrack.Services.WhatsNew.ToMarkup(releases) });
     }
 
     private Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime? _activatable;
@@ -220,6 +235,8 @@ public partial class MainView : ContentPage
         if (_activatable is not null) _activatable.Activated -= OnAppActivated;
         _activatable = null;
         _topLevel = null;
+        Controls.OverlayDialog.CloseOpen(); // e.g. signed out with a window open
+        if (Controls.OverlayDialog.Host == DialogLayer) Controls.OverlayDialog.Host = null;
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -233,9 +250,9 @@ public partial class MainView : ContentPage
             return;
         }
 
-        if (Controls.WorkoutPreview.CloseOpen())
+        if (Controls.OverlayDialog.CloseOpen())
         {
-            e.Handled = true; // a workout's «Εμφάνιση ολόκληρου» window
+            e.Handled = true; // «Εμφάνιση ολόκληρου», «Τι νέο υπάρχει»
         }
         else if (PhotoOverlay.IsVisible)
         {
