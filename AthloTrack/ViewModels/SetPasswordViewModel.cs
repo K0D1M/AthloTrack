@@ -38,7 +38,8 @@ public partial class SetPasswordViewModel : ObservableValidator
     /// <summary>User chose to sign out instead.</summary>
     public event Action? LoggedOut;
 
-    public string Greeting => $"Καλώς ήρθες, {_session.DisplayName}!";
+    /// <summary>In the vocative: «Καλώς ήρθες, Γιώργο!».</summary>
+    public string Greeting => $"Καλώς ήρθες, {AthloTrack.Core.Text.GreekVocative.Of(_session.DisplayName)}!";
 
     [ObservableProperty]
     [NotifyDataErrorInfo]

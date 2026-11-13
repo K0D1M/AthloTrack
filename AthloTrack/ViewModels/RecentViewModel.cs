@@ -34,7 +34,8 @@ public partial class RecentViewModel : ViewModelBase, IRefreshable
         _session = session;
         _athletes = athletes;
         _notifications = notifications;
-        WelcomeMessage = $"Χαίρε, {_session.DisplayName ?? string.Empty}".TrimEnd(',', ' ') + "!";
+        // Greek greets in the vocative: «Χαίρε, Γιώργο!» (not «Γιώργος»).
+        WelcomeMessage = $"Χαίρε, {AthloTrack.Core.Text.GreekVocative.Of(_session.DisplayName)}".TrimEnd(',', ' ') + "!";
         _ = LoadAsync();
         if (session.Role == UserRole.Athlete) _ = LoadOpenFormsAsync();
         if (session.IsCoach) _ = LoadRecentFormsAsync();
