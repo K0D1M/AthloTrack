@@ -24,6 +24,10 @@ public sealed class MeasurementRow : BaseModel
     [Column("fat_hgt")]
     public decimal? FatHgt { get; set; }
 
+    // 021: optional title, null when empty.
+    [Column("title")]
+    public string? Title { get; set; }
+
     // 016: free text (Ασκησιολόγιο markup), null when empty.
     [Column("notes")]
     public string? Notes { get; set; }

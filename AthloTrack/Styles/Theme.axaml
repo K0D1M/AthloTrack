@@ -30,6 +30,9 @@
             <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="TintBrush" Color="#EEF3FB" />
             <SolidColorBrush x:Key="TintStrongBrush" Color="#DCE7F7" />
+            <!-- Ημερολόγιο: a measurement's ruler (background, icon) -->
+            <SolidColorBrush x:Key="MeasureTintBrush" Color="#FFF1DE" />
+            <SolidColorBrush x:Key="MeasureBrush" Color="#9A4D00" />
             <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0" />
             <SolidColorBrush x:Key="NoticeBrush" Color="#FFF8E1" />
             <SolidColorBrush x:Key="NoticeBorderBrush" Color="#FFE082" />
@@ -69,6 +72,8 @@
             <SolidColorBrush x:Key="CardBrush" Color="#1E2228" />
             <SolidColorBrush x:Key="TintBrush" Color="#1D2735" />
             <SolidColorBrush x:Key="TintStrongBrush" Color="#2A3A52" />
+            <SolidColorBrush x:Key="MeasureTintBrush" Color="#3A2A16" />
+            <SolidColorBrush x:Key="MeasureBrush" Color="#F0B46A" />
             <SolidColorBrush x:Key="DividerBrush" Color="#2E343C" />
             <SolidColorBrush x:Key="NoticeBrush" Color="#3A3220" />
             <SolidColorBrush x:Key="NoticeBorderBrush" Color="#7A6420" />

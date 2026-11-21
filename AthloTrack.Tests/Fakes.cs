@@ -182,6 +182,8 @@ internal sealed class FakeMeasurements : IMeasurementRepository
 
     public Task<IReadOnlyList<Measurement>> GetForAthleteAsync(Guid athleteId) =>
         Task.FromResult<IReadOnlyList<Measurement>>(Items.Where(m => m.AthleteId == athleteId).ToList());
+    public Task<IReadOnlyList<Measurement>> GetAllAsync() =>
+        Task.FromResult<IReadOnlyList<Measurement>>(Items.OrderBy(m => m.MeasuredAt).ThenBy(m => m.CreatedAt).ToList());
     public Task<Measurement> AddAsync(Measurement measurement) { Items.Add(measurement); return Task.FromResult(measurement); }
     public Task<Measurement> UpdateAsync(Measurement measurement) => Task.FromResult(measurement);
     public Task DeleteAsync(Guid id) { Items.RemoveAll(m => m.Id == id); return Task.CompletedTask; }

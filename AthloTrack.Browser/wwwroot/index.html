@@ -49,6 +49,67 @@
         </div>
     </div>
 </div>
+<!--
+    Boot guard (plain old JavaScript, so it runs where main.js can't): if the app fails to start
+    (a dropped download, a browser too old, out of memory) the loading screen says so and offers
+    a reload, instead of animating forever. main.js calls athloBootFailed on an error.
+-->
+<script>
+(function () {
+    function splashUp() {
+        var s = document.querySelector('.avalonia-splash');
+        return s && !/(^|\s)splash-close(\s|$)/.test(s.className);
+    }
+    // One message at a time; a failure replaces the «slow» one. keepBar: still loading.
+    function show(text, button, keepBar) {
+        if (!splashUp()) return;
+        var old = document.querySelector('.athlo-boot-error');
+        if (old) old.parentNode.removeChild(old);
+        var bar = document.querySelector('.athlo-splash-bar');
+        if (bar) bar.style.display = keepBar ? '' : 'none';
+        var box = document.createElement('div');
+        box.className = 'athlo-boot-error';
+        box.setAttribute('role', 'alert');
+        var p = document.createElement('div');
+        p.textContent = text;
+        box.appendChild(p);
+        if (button) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = button;
+            b.onclick = function () { location.reload(); };
+            box.appendChild(b);
+        }
+        (document.querySelector('.athlo-splash-name') || document.body).appendChild(box);
+    }
+    var failed = false;
+    window.athloBootFailed = function (err) {
+        if (err && window.console) console.error('[AthloTrack] the app did not start', err);
+        failed = true;
+        show('Η εφαρμογή δεν φόρτωσε. Έλεγξε τη σύνδεση και δοκίμασε ξανά.', 'Δοκίμασε ξανά', false);
+    };
+    var tooOld = 'Αυτός ο browser είναι πολύ παλιός για το AthloTrack. Ενημέρωσέ τον ή άνοιξε τη σελίδα σε Chrome, Safari, Edge ή Firefox.';
+
+    // No WebAssembly or no JavaScript modules: main.js can never run here.
+    if (typeof WebAssembly !== 'object' || !('noModule' in document.createElement('script'))) {
+        document.addEventListener('DOMContentLoaded', function () { show(tooOld, null, false); });
+        return;
+    }
+
+    // main.js runs before the page's load event (module scripts are deferred). Not started by
+    // then: it didn't download, or this browser can't read it.
+    window.addEventListener('load', function () {
+        setTimeout(function () {
+            if (!window.athloBootStarted && !failed) window.athloBootFailed();
+        }, 1000);
+    });
+
+    // Still loading after 30 s: keep loading, but offer a reload.
+    setTimeout(function () {
+        if (!failed) show('Η φόρτωση αργεί. Αν δεν προχωρά, ανανέωσε τη σελίδα.', 'Ανανέωση', true);
+    }, 30000);
+})();
+</script>
 <script type='module' src="./main.js"></script>
 </body>
 

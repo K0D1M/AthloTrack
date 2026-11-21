@@ -47,9 +47,11 @@ public partial class AthleteProfileViewModel : ViewModelBase, IRefreshable
         AthloTrack.Services.WorkoutAnswerSettings? answerSettings = null,
         Guid? focusWorkoutId = null,
         IMeasurementFieldRepository? fields = null,
-        IFormRepository? forms = null)
+        IFormRepository? forms = null,
+        Guid? focusMeasurementId = null)
     {
         _athleteId = athleteId;
+        _focusMeasurementId = focusMeasurementId;
         _fields = fields;
         _forms = forms;
         _answerSettings = answerSettings;
@@ -210,6 +212,13 @@ public partial class AthleteProfileViewModel : ViewModelBase, IRefreshable
     /// <summary>The workout a notification pointed at, once loaded (the view scrolls to it).</summary>
     [ObservableProperty]
     public partial WorkoutProgram? FocusedWorkout { get; set; }
+
+    /// <summary>The measurement tapped in Ημερολόγιο, once loaded (the view scrolls to it).</summary>
+    [ObservableProperty]
+    public partial Measurement? FocusedMeasurement { get; set; }
+
+    /// <summary>Opened from Ημερολόγιο at a measurement: open its month and point the view at it.</summary>
+    private Guid? _focusMeasurementId;
 
     /// <summary>A short confirmation, e.g. «Στάλθηκε υπενθύμιση».</summary>
     [ObservableProperty]
@@ -685,6 +694,16 @@ public partial class AthleteProfileViewModel : ViewModelBase, IRefreshable
                     }
                 }
                 FocusedWorkout = focus;
+            }
+
+            if (_focusMeasurementId is { } measureId && Measurements.FirstOrDefault(m => m.Id == measureId) is { } measure)
+            {
+                _focusMeasurementId = null;
+                foreach (var month in MeasurementGroups)
+                {
+                    if (month.Items.Contains(measure)) month.IsExpanded = true;
+                }
+                FocusedMeasurement = measure;
             }
         }
         catch (Exception ex)

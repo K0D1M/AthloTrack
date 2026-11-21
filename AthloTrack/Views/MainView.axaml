@@ -997,13 +997,16 @@
                                                 Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).SelectDayCommand}"
                                                 CommandParameter="{Binding}">
                                             <StackPanel Spacing="3">
-                                                <!-- The day, with «+N» in the corner when more than two athletes train that day -->
+                                                <!-- The day, with «+N» in the corner when more athletes train that day than fit -->
                                                 <Panel>
                                                     <TextBlock Text="{Binding DayNumber}" FontSize="13" HorizontalAlignment="Center" />
                                                     <TextBlock Text="{Binding MoreText}" IsVisible="{Binding HasMore}" FontSize="10" FontWeight="SemiBold"
                                                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0" />
                                                 </Panel>
-                                                <ItemsControl ItemsSource="{Binding Avatars}" HorizontalAlignment="Center"
+                                                <!-- Photos of the athletes training, then a ruler on a measurement day (a count when several) -->
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2"
+                                                            IsVisible="{Binding HasMarks}">
+                                                <ItemsControl ItemsSource="{Binding Avatars}"
                                                               IsVisible="{Binding HasWorkouts}">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
@@ -1028,6 +1031,21 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
+                                                <Panel IsVisible="{Binding HasMeasurements}" Width="23" Height="23">
+                                                    <Border Width="19" Height="19" CornerRadius="5" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                                            Background="{DynamicResource MeasureTintBrush}">
+                                                        <PathIcon Data="{StaticResource RulerIcon}" Width="12" Height="12"
+                                                                  Foreground="{DynamicResource MeasureBrush}" />
+                                                    </Border>
+                                                    <Border IsVisible="{Binding HasManyMeasurements}" Background="{DynamicResource MeasureBrush}"
+                                                            MinWidth="12" Height="12" CornerRadius="6" Padding="2,0"
+                                                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                            BorderBrush="White" BorderThickness="1">
+                                                        <TextBlock Text="{Binding MeasurementCountText}" FontSize="8" FontWeight="Bold"
+                                                                   Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                </Panel>
+                                                </StackPanel>
                                             </StackPanel>
                                         </Button>
                                     </DataTemplate>
@@ -1072,7 +1090,13 @@
                                                 Command="{Binding $parent[ItemsControl].((vm:CalendarViewModel)DataContext).OpenEntryCommand}"
                                                 CommandParameter="{Binding}">
                                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                                <Panel Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top">
+                                                <!-- A measurement: the ruler instead of the athlete's photo -->
+                                                <Border Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" CornerRadius="12"
+                                                        Background="{DynamicResource MeasureTintBrush}" IsVisible="{Binding IsMeasurement}">
+                                                    <PathIcon Data="{StaticResource RulerIcon}" Width="22" Height="22"
+                                                              Foreground="{DynamicResource MeasureBrush}" />
+                                                </Border>
+                                                <Panel Grid.Column="0" Width="40" Height="40" VerticalAlignment="Top" IsVisible="{Binding IsWorkout}">
                                                     <controls:Avatar Width="40" Height="40"
                                                                      Photo="{Binding Photo}" Initial="{Binding Initial}" />
                                                     <Border Classes="answerbadge done" IsVisible="{Binding IsDone}"
@@ -1085,12 +1109,15 @@
                                                     </Border>
                                                 </Panel>
                                                 <StackPanel Grid.Column="1" Spacing="2">
-                                                    <TextBlock Text="{Binding AthleteName}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding KindText}" IsVisible="{Binding IsMeasurement}" FontSize="11"
+                                                               FontWeight="Bold" Foreground="{DynamicResource MeasureBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Heading}" FontWeight="SemiBold" TextWrapping="Wrap" />
                                                     <TextBlock Text="{Binding DateText}" FontSize="12"
                                                                Foreground="{DynamicResource BrandSupportBrush}" />
                                                     <TextBlock Text="{Binding StatusText}" IsVisible="{Binding IsAnswered}" FontSize="13"
                                                                FontWeight="SemiBold" Classes.done="{Binding IsDone}" Classes.notdone="{Binding IsNotDone}" Classes="answer" />
-                                                    <TextBlock Text="{Binding Content}" FontSize="13" TextWrapping="Wrap"
+                                                    <TextBlock Text="{Binding Content}" FontSize="13" TextWrapping="Wrap" IsVisible="{Binding HasContent}"
                                                                MaxLines="2" TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
                                             </Grid>
@@ -1099,7 +1126,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="Καμία προπόνηση για αυτό το διάστημα."
+                            <TextBlock Text="Καμία προπόνηση ή μέτρηση για αυτό το διάστημα."
                                        Foreground="{DynamicResource BrandSupportBrush}"
                                        IsVisible="{Binding HasNoAgendaEntries}" />
                         </StackPanel>

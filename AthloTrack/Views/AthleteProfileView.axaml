@@ -448,12 +448,14 @@
                             <ItemsControl ItemsSource="{Binding Items}" Classes="fadeitems" IsVisible="{Binding IsExpanded}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:Measurement">
-                                        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="0,6">
+                                        <Border Classes="measureitem" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="0,6">
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <TextBlock Grid.Column="0" Text="{Binding MeasuredAt, StringFormat='{}{0:dd/MM/yyyy}'}"
                                                            FontWeight="SemiBold" Width="100" VerticalAlignment="Center" />
                                                 <!-- WrapPanel: on a phone the values don't fit one line. Only what was measured. -->
                                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}" IsVisible="{Binding HasTitle}" FontWeight="Bold"
+                                                               TextWrapping="Wrap" Foreground="{DynamicResource HeadingBrush}" />
                                                     <WrapPanel Orientation="Horizontal" ItemSpacing="16" LineSpacing="2">
                                                         <TextBlock Text="{Binding WeightKg, StringFormat='Βάρος: {0} kg'}"
                                                                    IsVisible="{Binding HasWeight}" />

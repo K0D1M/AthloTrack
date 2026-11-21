@@ -488,6 +488,8 @@ public partial class MainView : ContentPage
             _ = vm.LoadAsync();
         }
         vm.OpenWorkoutRequested += (athleteId, workoutId) => ShowAthleteProfile(athleteId, Back, focusWorkoutId: workoutId);
+        vm.OpenMeasurementRequested += (athleteId, measurementId) =>
+            ShowAthleteProfile(athleteId, Back, focusMeasurementId: measurementId);
         return vm;
     }
 
@@ -517,9 +519,9 @@ public partial class MainView : ContentPage
     }
 
     /// <param name="back">Back to the page the profile was opened from (Αθλητές or Ημερολόγιο).</param>
-    private void ShowAthleteProfile(Guid athleteId, Action back, Guid? focusWorkoutId = null)
+    private void ShowAthleteProfile(Guid athleteId, Action back, Guid? focusWorkoutId = null, Guid? focusMeasurementId = null)
     {
-        var profile = Resolve<AthleteProfileViewModelFactory>().Create(athleteId, focusWorkoutId);
+        var profile = Resolve<AthleteProfileViewModelFactory>().Create(athleteId, focusWorkoutId, focusMeasurementId);
         void Return() => ShowAthleteProfile(athleteId, back);
         profile.AddMeasurementRequested += id => OnAddMeasurement(id, Return);
         profile.AddWorkoutRequested += (id, name) => OnAddWorkout(id, name, Return);

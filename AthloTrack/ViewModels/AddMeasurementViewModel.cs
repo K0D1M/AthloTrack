@@ -170,7 +170,8 @@ public partial class AddMeasurementViewModel : ObservableValidator
         MeasuredAt = new DateTimeOffset(measurement.MeasuredAt.ToDateTime(TimeOnly.MinValue));
         WeightKg = measurement.WeightKg?.ToString(culture) ?? string.Empty;
         Notes = measurement.Notes ?? string.Empty;
-        if (measurement.HasNotes) ShowCustom = true;
+        MeasurementTitle = measurement.Title ?? string.Empty;
+        if (measurement.HasNotes || measurement.HasTitle) ShowCustom = true;
         FatMassWt = measurement.FatMassWt?.ToString(culture) ?? string.Empty;
         FatHgt = measurement.FatHgt?.ToString(culture) ?? string.Empty;
         ShowFat = measurement.HasFat;
@@ -191,6 +192,14 @@ public partial class AddMeasurementViewModel : ObservableValidator
     /// <summary>«Σημειώσεις» in «Άλλες μετρήσεις»: free text with the Ασκησιολόγιο markup.</summary>
     [ObservableProperty]
     public partial string Notes { get; set; } = string.Empty;
+
+    /// <summary>«Τίτλος» in «Άλλες μετρήσεις» (021): the whole measurement's name, e.g. «Τεστ Cooper».</summary>
+    [ObservableProperty]
+    [NotifyDataErrorInfo]
+    [MaxLength(TitleMaxLength, ErrorMessage = "Έως 80 χαρακτήρες.")]
+    public partial string MeasurementTitle { get; set; } = string.Empty;
+
+    public const int TitleMaxLength = 80;
 
     public const string NothingText = "Συμπλήρωσε τουλάχιστον μία τιμή.";
 
@@ -249,6 +258,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
     {
         CustomRows.Clear();
         Notes = string.Empty;
+        MeasurementTitle = string.Empty;
         CancelNewField();
         RefreshAvailable();
         ShowCustom = false;
@@ -521,6 +531,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
         }
 
         var notes = ShowCustom && !string.IsNullOrWhiteSpace(Notes) ? Notes.Trim() : null;
+        var title = ShowCustom && !string.IsNullOrWhiteSpace(MeasurementTitle) ? MeasurementTitle.Trim() : null;
         var extraNow = BuildExtra();
         if (ParseNullable(WeightKg) is null
             && !(ShowFat && (ParseNullable(FatMassWt) is not null || ParseNullable(FatHgt) is not null))
@@ -547,6 +558,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
                 existing.FatHgt = fatHgt;
                 existing.Extra = extra;
                 existing.Notes = notes;
+                existing.Title = title;
                 await _measurements.UpdateAsync(existing);
             }
             else
@@ -560,6 +572,7 @@ public partial class AddMeasurementViewModel : ObservableValidator
                     FatHgt = fatHgt,
                     Extra = extra,
                     Notes = notes,
+                    Title = title,
                     CreatedBy = _session.ProfileId,
                 });
             }

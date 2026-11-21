@@ -74,19 +74,55 @@ public partial class LoginViewModel : ObservableValidator
     public bool LastLoginWasRestored { get; private set; }
 
     /// <summary>
+    /// How long the saved sign-in may take before the login form is given back: on a slow or
+    /// stuck connection each request could otherwise wait 100 s, with the form disabled.
+    /// </summary>
+    public TimeSpan RestoreTimeout { get; set; } = TimeSpan.FromSeconds(8);
+
+    /// <summary>The restore ran past <see cref="RestoreTimeout"/>: its late result is ignored.</summary>
+    private bool _restoreAbandoned;
+
+    /// <summary>
     /// Signs back in from the stored session (the app remembers the login until the user logs
     /// out). The role isn't stored: RLS only lets a user's token see their own admins/coaches/
-    /// athletes row, so whichever profile lookup succeeds decides it. Silent on failure.
+    /// athletes row, so whichever profile lookup succeeds decides it. Silent on failure, and
+    /// after <see cref="RestoreTimeout"/> the form is usable whatever the network does.
     /// </summary>
     public async Task TryRestoreSessionAsync()
     {
         IsBusy = true;
         try
         {
+            var restore = RestoreAsync();
+            if (await Task.WhenAny(restore, Task.Delay(RestoreTimeout)) != restore)
+            {
+                _restoreAbandoned = true;
+                Console.WriteLine("[AthloTrack] saved sign-in timed out: showing the login form");
+                return;
+            }
+
+            if (await restore is { } role)
+            {
+                LastLoginWasRestored = true; // the app may ask for the PIN (PinLock)
+                LoginSucceeded?.Invoke(role);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+            IsReady = true;
+        }
+    }
+
+    /// <summary>The restored session's role, or null (no session, no profile, offline).</summary>
+    private async Task<UserRole?> RestoreAsync()
+    {
+        try
+        {
             var result = await _authService.RestoreSessionAsync();
             if (!result.Success || result.UserId is null)
             {
-                return;
+                return null;
             }
 
             foreach (var role in new[] { UserRole.Admin, UserRole.Coach, UserRole.Athlete })
@@ -103,23 +139,19 @@ public partial class LoginViewModel : ObservableValidator
 
                 if (found)
                 {
-                    LastLoginWasRestored = true; // the app may ask for the PIN (PinLock)
-                    LoginSucceeded?.Invoke(role);
-                    return;
+                    return role;
                 }
             }
 
-            // Token is valid but no profile row matches: don't keep reusing it.
-            await _authService.SignOutAsync();
+            // Token is valid but no profile row matches: don't keep reusing it (unless the form
+            // took over meanwhile and the user may be signing in).
+            if (!_restoreAbandoned) await _authService.SignOutAsync();
+            return null;
         }
         catch
         {
             // Offline or expired: fall back to the normal login form.
-        }
-        finally
-        {
-            IsBusy = false;
-            IsReady = true;
+            return null;
         }
     }
 

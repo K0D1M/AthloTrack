@@ -20,6 +20,18 @@ public sealed class MeasurementRepository : IMeasurementRepository
         var response = await client.From<MeasurementRow>()
             .Where(x => x.AthleteId == athleteId)
             .Order(x => x.MeasuredAt, Constants.Ordering.Ascending)
+            .Order(x => x.CreatedAt, Constants.Ordering.Ascending)
+            .Get();
+        return response.Models.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<Measurement>> GetAllAsync()
+    {
+        // Row level security returns the coach's athletes' measurements, or the athlete's own.
+        var client = await _factory.GetClientAsync();
+        var response = await client.From<MeasurementRow>()
+            .Order(x => x.MeasuredAt, Constants.Ordering.Ascending)
+            .Order(x => x.CreatedAt, Constants.Ordering.Ascending)
             .Get();
         return response.Models.Select(Map).ToList();
     }
@@ -48,6 +60,7 @@ public sealed class MeasurementRepository : IMeasurementRepository
     {
         Id = r.Id,
         AthleteId = r.AthleteId,
+        Title = r.Title,
         MeasuredAt = DateOnly.FromDateTime(r.MeasuredAt),
         WeightKg = r.WeightKg,
         FatMassWt = r.FatMassWt,
@@ -62,6 +75,7 @@ public sealed class MeasurementRepository : IMeasurementRepository
     {
         Id = m.Id,
         AthleteId = m.AthleteId,
+        Title = string.IsNullOrWhiteSpace(m.Title) ? null : m.Title.Trim(),
         MeasuredAt = m.MeasuredAt.ToDateTime(TimeOnly.MinValue),
         WeightKg = m.WeightKg,
         FatMassWt = m.FatMassWt,

@@ -134,6 +134,15 @@
                             </Button>
                         </Grid>
 
+                        <!-- The whole measurement's title (021), shown in the profile and Ημερολόγιο -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Τίτλος" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding MeasurementTitle, Mode=TwoWay}" MaxLength="80"
+                                     PlaceholderText="π.χ. Τεστ Cooper, Άλμα εις μήκος" />
+                            <TextBlock Text="Προαιρετικό. Φαίνεται στο προφίλ και στο Ημερολόγιο."
+                                       FontSize="12" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+
                         <ItemsControl ItemsSource="{Binding CustomRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:CustomValueRow">

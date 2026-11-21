@@ -4,6 +4,14 @@ public sealed class Measurement
 {
     public Guid Id { get; set; }
     public Guid AthleteId { get; set; }
+
+    /// <summary>Optional (021): «Τεστ Cooper». Shown instead of plain «Μέτρηση».</summary>
+    public string? Title { get; set; }
+
+    public bool HasTitle => !string.IsNullOrWhiteSpace(Title);
+
+    /// <summary>The title, or «Μέτρηση».</summary>
+    public string DisplayTitle => HasTitle ? Title!.Trim() : "Μέτρηση";
     public DateOnly MeasuredAt { get; set; }
     /// <summary>Optional since 016: a measurement may be only fat, custom values or notes.</summary>
     public decimal? WeightKg { get; set; }

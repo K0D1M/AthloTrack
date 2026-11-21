@@ -42,9 +42,14 @@ public partial class AthleteProfileView : UserControl, IHandlesBack
                     {
                         ShowFocused(focus);
                     }
+                    else if (e.PropertyName is nameof(AthleteProfileViewModel.FocusedMeasurement) && vm.FocusedMeasurement is { } measure)
+                    {
+                        ShowFocused(measure, "measureitem");
+                    }
                 };
                 BuildChart(vm.Chart);
                 if (vm.FocusedWorkout is { } focused) ShowFocused(focused); // loaded before the view existed
+                if (vm.FocusedMeasurement is { } measured) ShowFocused(measured, "measureitem");
             }
         };
         // Light/Dark switched in Ρυθμίσεις: redraw the chart image in the new colours.
@@ -52,18 +57,18 @@ public partial class AthleteProfileView : UserControl, IHandlesBack
     }
 
     /// <summary>Opened from a notification: scroll to that workout and tint it for a moment.</summary>
-    private void ShowFocused(AthloTrack.Core.Models.WorkoutProgram workout)
+    private void ShowFocused(object item, string itemClass = "workoutitem")
     {
         // After the month has opened and been laid out.
         Avalonia.Threading.DispatcherTimer.RunOnce(() =>
         {
-            var item = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(this)
+            var border = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(this)
                 .OfType<Border>()
-                .FirstOrDefault(b => b.Classes.Contains("workoutitem") && ReferenceEquals(b.DataContext, workout));
-            if (item is null) return;
-            item.BringIntoView();
-            item.Classes.Add("focused");
-            Avalonia.Threading.DispatcherTimer.RunOnce(() => item.Classes.Remove("focused"), TimeSpan.FromSeconds(2));
+                .FirstOrDefault(b => b.Classes.Contains(itemClass) && ReferenceEquals(b.DataContext, item));
+            if (border is null) return;
+            border.BringIntoView();
+            border.Classes.Add("focused");
+            Avalonia.Threading.DispatcherTimer.RunOnce(() => border.Classes.Remove("focused"), TimeSpan.FromSeconds(2));
         }, TimeSpan.FromMilliseconds(350));
     }
 

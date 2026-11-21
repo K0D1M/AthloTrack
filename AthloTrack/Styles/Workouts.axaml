@@ -375,4 +375,16 @@
     <Style Selector="Border.workoutitem.focused">
         <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
     </Style>
+
+    <!-- The measurement tapped in Ημερολόγιο: tinted for a moment too. -->
+    <Style Selector="Border.measureitem">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.6" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.measureitem.focused">
+        <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
+    </Style>
 </Styles>

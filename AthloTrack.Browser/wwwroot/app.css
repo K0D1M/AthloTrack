@@ -99,6 +99,29 @@
     opacity: 0;
 }
 
+/* The app didn't start (index.html's boot guard): a message and a reload button on the splash */
+.athlo-boot-error {
+    max-width: 320px;
+    margin: 20px auto 0;
+    padding: 0 16px;
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    color: #FFFFFF;
+}
+
+.athlo-boot-error button {
+    margin-top: 14px;
+    border: 0;
+    border-radius: 20px;
+    padding: 10px 22px;
+    background: linear-gradient(135deg, #FFD54F, #FFB300);
+    color: #222222;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 /* "New version" banner (update.js), above the app */
 .athlo-update {
     position: fixed;

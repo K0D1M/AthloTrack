@@ -40,6 +40,8 @@ public sealed class AthleteProfileViewModelFactory
     }
 
     /// <param name="focusWorkoutId">Opened from a notification: show this workout.</param>
-    public AthleteProfileViewModel Create(Guid athleteId, Guid? focusWorkoutId = null) =>
-        new(athleteId, _athletes, _measurements, _workouts, _session, _avatars, _currentUser, _answerSettings, focusWorkoutId, _fields, _forms);
+    /// <param name="focusMeasurementId">Opened from Ημερολόγιο: show this measurement.</param>
+    public AthleteProfileViewModel Create(Guid athleteId, Guid? focusWorkoutId = null, Guid? focusMeasurementId = null) =>
+        new(athleteId, _athletes, _measurements, _workouts, _session, _avatars, _currentUser, _answerSettings, focusWorkoutId, _fields, _forms,
+            focusMeasurementId);
 }

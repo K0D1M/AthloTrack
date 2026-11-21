@@ -10,7 +10,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AthloTrack.ViewModels;
 
-/// <summary>Ημερολόγιο — month grid with athlete photos on workout days, plus an agenda list.</summary>
+/// <summary>
+/// Ημερολόγιο — month grid with athlete photos on workout days and a ruler on measurement days,
+/// plus an agenda list.
+/// </summary>
 public partial class CalendarViewModel : ViewModelBase, IRefreshable
 {
     /// <summary>Pull down / ⟳: reload in place (a load already running covers it).</summary>
@@ -19,15 +22,20 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
     private readonly IWorkoutRepository _workouts;
     private readonly IAthleteRepository _athletes;
     private readonly IAvatarService _avatars;
+    private readonly IMeasurementRepository? _measurements;
+    private readonly IMeasurementFieldRepository? _fields;
     private readonly CultureInfo _greek = CultureInfo.GetCultureInfo("el-GR");
 
     private DateOnly _month = FirstOfMonth(DateOnly.FromDateTime(DateTime.Today));
 
-    public CalendarViewModel(IWorkoutRepository workouts, IAthleteRepository athletes, IAvatarService avatars)
+    public CalendarViewModel(IWorkoutRepository workouts, IAthleteRepository athletes, IAvatarService avatars,
+        IMeasurementRepository? measurements = null, IMeasurementFieldRepository? fields = null)
     {
         _workouts = workouts;
         _athletes = athletes;
         _avatars = avatars;
+        _measurements = measurements;
+        _fields = fields;
 
         // Monday-first short day names: Δε Τρ Τε Πε Πα Σα Κυ.
         var names = _greek.DateTimeFormat.ShortestDayNames;
@@ -38,6 +46,9 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
 
     /// <summary>Every workout program, oldest first (the WinUI head lists these directly).</summary>
     public ObservableCollection<CalendarEntryViewModel> Entries { get; } = new();
+
+    /// <summary>Every measurement, oldest first (by date, then by when it was added).</summary>
+    public ObservableCollection<CalendarEntryViewModel> MeasurementEntries { get; } = new();
 
     /// <summary>The 42 cells (6 weeks) of the displayed month, Monday first.</summary>
     public ObservableCollection<CalendarDayViewModel> Days { get; } = new();
@@ -78,6 +89,9 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
     /// </summary>
     public event Action<Guid, Guid?>? OpenWorkoutRequested;
 
+    /// <summary>A measurement was tapped: the shell opens the athlete's profile at it.</summary>
+    public event Action<Guid, Guid>? OpenMeasurementRequested;
+
     [RelayCommand]
     private void PreviousMonth() => ShowMonth(_month.AddMonths(-1));
 
@@ -108,10 +122,11 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
     [RelayCommand]
     private void OpenEntry(CalendarEntryViewModel? entry)
     {
-        if (entry is not null && entry.AthleteId != Guid.Empty)
-        {
+        if (entry is null || entry.AthleteId == Guid.Empty) return;
+        if (entry.MeasurementId is { } measurementId)
+            OpenMeasurementRequested?.Invoke(entry.AthleteId, measurementId);
+        else
             OpenWorkoutRequested?.Invoke(entry.AthleteId, entry.WorkoutId);
-        }
     }
 
     public async Task LoadAsync()
@@ -135,6 +150,8 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
                     completed: p.IsCompleted ? true : p.IsNotCompleted ? false : null, workoutId: p.Id));
             }
 
+            await LoadMeasurementsAsync(byId);
+
             // A reload (back from a workout) keeps the month and the day that were shown.
             ShowMonth(_month, _selectedDay?.Date);
         }
@@ -149,11 +166,57 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
         }
 
         // Photos last: one download per athlete, shared by all of their entries.
-        foreach (var group in Entries.Where(e => e.ProfileImagePath is not null).GroupBy(e => e.ProfileImagePath))
+        foreach (var group in Entries.Concat(MeasurementEntries).Where(e => e.ProfileImagePath is not null).GroupBy(e => e.ProfileImagePath))
         {
             var photo = await _avatars.GetAsync(group.Key);
             foreach (var entry in group) entry.Photo = photo;
         }
+    }
+
+    private async Task LoadMeasurementsAsync(Dictionary<Guid, AthloTrack.Core.Models.Athlete> athletes)
+    {
+        MeasurementEntries.Clear();
+        if (_measurements is null) return;
+
+        System.Collections.Generic.IReadOnlyList<AthloTrack.Core.Models.Measurement> measurements;
+        try
+        {
+            measurements = await _measurements.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            // 021 not run yet, or offline: the workouts still show.
+            Console.WriteLine($"[AthloTrack] calendar measurements failed to load: {ex.Message}");
+            return;
+        }
+
+        System.Collections.Generic.IReadOnlyList<AthloTrack.Core.Models.MeasurementField> fields = [];
+        if (_fields is not null && measurements.Any(m => m.Extra.Count > 0))
+        {
+            try { fields = await _fields.GetAllAsync(); }
+            catch (Exception ex) { Console.WriteLine($"[AthloTrack] measurement fields failed to load: {ex.Message}"); }
+        }
+
+        foreach (var m in measurements.OrderBy(m => m.MeasuredAt).ThenBy(m => m.CreatedAt))
+        {
+            athletes.TryGetValue(m.AthleteId, out var athlete);
+            MeasurementEntries.Add(CalendarEntryViewModel.ForMeasurement(
+                m.MeasuredAt, m.AthleteId, athlete?.FullName ?? "—", athlete?.ProfileImagePath,
+                m.Id, m.DisplayTitle, Summary(m, fields)));
+        }
+    }
+
+    /// <summary>«57.6 kg · Fat Mass/WT 20.4 · Απόσταση: 2450 m», or the notes when there are no values.</summary>
+    public static string Summary(AthloTrack.Core.Models.Measurement m,
+        System.Collections.Generic.IReadOnlyList<AthloTrack.Core.Models.MeasurementField> fields)
+    {
+        var bits = new List<string>();
+        if (m.WeightKg is { } w) bits.Add($"{w} kg");
+        if (m.FatMassWt is { } fm) bits.Add($"Fat Mass/WT {fm}");
+        if (m.FatHgt is { } fh) bits.Add($"fat/hgt {fh}");
+        bits.AddRange(AthleteProfileViewModel.ExtraLinesFor(m, fields));
+        if (bits.Count == 0 && m.HasNotes) return AthloTrack.Core.Workouts.WorkoutMarkup.PlainPreview(m.Notes!);
+        return string.Join(" · ", bits);
     }
 
     private void ShowMonth(DateOnly month, DateOnly? select = null)
@@ -165,6 +228,7 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
         var offset = ((int)_month.DayOfWeek + 6) % 7; // Monday = 0
         var start = _month.AddDays(-offset);
         var byDate = Entries.GroupBy(e => e.Date).ToDictionary(g => g.Key, g => (IReadOnlyList<CalendarEntryViewModel>)g.ToList());
+        var measuresByDate = MeasurementEntries.GroupBy(e => e.Date).ToDictionary(g => g.Key, g => (IReadOnlyList<CalendarEntryViewModel>)g.ToList());
 
         _selectedDay = null;
         Days.Clear();
@@ -172,7 +236,8 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
         {
             var date = start.AddDays(i);
             var entries = byDate.TryGetValue(date, out var list) ? list : Array.Empty<CalendarEntryViewModel>();
-            var day = new CalendarDayViewModel(date, date.Month == _month.Month, date == today, entries);
+            var measures = measuresByDate.TryGetValue(date, out var mlist) ? mlist : null;
+            var day = new CalendarDayViewModel(date, date.Month == _month.Month, date == today, entries, measures);
             if (select == date)
             {
                 day.IsSelected = true;
@@ -190,12 +255,15 @@ public partial class CalendarViewModel : ViewModelBase, IRefreshable
         if (_selectedDay is { } day)
         {
             AgendaTitle = Capitalize(day.Date.ToString("dddd d MMMM", _greek));
-            items = day.Entries;
+            items = day.AllEntries;
         }
         else
         {
-            AgendaTitle = $"Προπονήσεις — {MonthTitle}";
-            items = Entries.Where(e => e.Date.Year == _month.Year && e.Date.Month == _month.Month);
+            bool InMonth(CalendarEntryViewModel e) => e.Date.Year == _month.Year && e.Date.Month == _month.Month;
+            var measures = MeasurementEntries.Where(InMonth).ToList();
+            AgendaTitle = measures.Count > 0 ? $"Προπονήσεις και μετρήσεις — {MonthTitle}" : $"Προπονήσεις — {MonthTitle}";
+            // Each day: its workouts, then its measurements.
+            items = Entries.Where(InMonth).Concat(measures).OrderBy(e => e.Date).ThenBy(e => e.IsMeasurement);
         }
 
         AgendaEntries.Clear();
