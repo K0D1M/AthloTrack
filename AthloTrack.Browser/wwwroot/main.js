@@ -3,8 +3,6 @@ globalThis.athloBootStarted = true;
 
 // Notices a new deploy and reloads (or offers to) — see update.js.
 import('./update.js').then(m => m.start()).catch(() => { });
-// Phone keyboards: finish the word being typed before another field takes the focus — see ime-fix.js.
-import('./ime-fix.js').catch(() => { });
 
 const is_browser = typeof window != "undefined";
 if (!is_browser) throw new Error(`Expected to be running in a browser`);

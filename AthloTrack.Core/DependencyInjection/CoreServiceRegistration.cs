@@ -17,6 +17,7 @@ public static class CoreServiceRegistration
         services.AddSingleton<SupabaseClientFactory>();
         services.AddSingleton<SessionState>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IAccountService, AccountService>();
         services.AddSingleton<ISessionInitializer, SessionInitializer>();
 
         services.AddSingleton<ICoachRepository, CoachRepository>();

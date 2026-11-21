@@ -71,23 +71,14 @@ dotnet test --project AthloTrack.Tests
 ```
 
 ## Android keyboards
-Avalonia's Android TextBox can lose keystrokes when the keyboard **composes** words, which Gboard and Samsung do with suggestions on. You get e.g. only «te» of «test», or nothing at all, especially on slower phones or a busy first launch. `App.axaml` therefore sets `TextInputOptions.ShowSuggestions = False` on every TextBox, so the keyboard types each key directly. Greek, including accents via long-press, still works. Don't add `TextInputOptions.ContentType="Email"` to a field: combined with that setting, it produces an input type in which Gboard composes again. Upstream, Avalonia is rewriting this code ([PR #20890](https://github.com/AvaloniaUI/Avalonia/pull/20890)); once a release fixes it, the style can go.
+Since 1.29 the app uses Avalonia's text boxes as they are, with no keyboard workarounds (the user's choice, on Avalonia 12.1.6):
+- word suggestions and autocorrect are on again in every field;
+- the email boxes declare `TextInputOptions.ContentType="Email"` (the keyboard shows @), the password boxes `Password`, and the code boxes `Digits`;
+- on the website there is no `ime-fix.js` any more.
 
-The app is drawn edge-to-edge, so Android doesn't shrink it for the keyboard. `App.OnInputPaneChanged` does: the root's bottom padding becomes the keyboard's height (`TopLevel.ClientSize.Height - EndRect.Top`, already in device-independent units), and the focused control is brought into view. `MainView` hides the tab bar while the keyboard is open. `KeyboardInset` only tells views whether it is open (the login motto, the workout editor's caret); it no longer adds margins of its own.
+Earlier versions turned suggestions off (`ShowSuggestions=False`), declared multi-line boxes to Android, and replayed Samsung Keyboard's text on the web, because Avalonia then lost keystrokes while the keyboard composed words. If lost or doubled letters come back (e.g. only «te» of «test», an email without @, the email landing in the password box), test on the emulator with Gboard and Samsung Keyboard, and see git history before 1.29 for those fixes.
 
-**In the browser on Android** the `ShowSuggestions` setting doesn't reach the keyboard, so Gboard composes words there.
-- **The fault:** Avalonia's web text boxes share one hidden `<input>`, and Avalonia moves its focus on the touch that picks another field, before the browser has finished the word. The word then went into the new field (the email into the password box), and the old field lost it.
-- **The fix:** `wwwroot/ime-fix.js` ends the composition on that touch, by blurring the hidden input, while the old field still has the focus.
-- **Why not stop the composing:** `autocomplete`/`autocorrect=off` sets the no-suggestions flag, but Gboard keeps composing in web fields, so that alone doesn't help.
-
-Avalonia's web code takes text only from `keydown` events with a real key and from `compositionend`. Samsung Keyboard sends digits, symbols and some words as a plain `beforeinput insertText` with an "Unidentified" (229) keydown, which Avalonia dropped: an email arrived without `@` and `.`, and a password box stayed empty. `ime-fix.js` cancels that event and replays its text as `keydown`/`keyup` events, which Avalonia handles like desktop typing. Desktop keydowns are cancelled by Avalonia before any `beforeinput`, so nothing is typed twice.
-
-**Diagnosing on a phone:** open the site with `?imelog` to see the keyboard events on screen, and add `&noimefix` to turn both fixes off.
-
-Multi-line boxes (`AcceptsReturn`, e.g. the workout text) also get `TextInputOptions.Multiline` and `ReturnKeyType=Return` from a second `App.axaml` style:
-- **Why:** Avalonia didn't tell Android they were multi-line, so Gboard showed a ✓ "Done" key. Avalonia turned that action into a line break Gboard didn't know about, and Gboard then dropped the next key.
-- **Result:** with the style, Gboard shows ⏎ and every key arrives.
-- **Cost:** Avalonia drops the no-suggestions flag on multi-line boxes, so Gboard composes words there again. Tests with fast typing lost nothing; the losses seen before were on the login screen during a busy first launch.
+The app is drawn edge-to-edge, so Android doesn't shrink it for the keyboard. `App.OnInputPaneChanged` does: the root's bottom padding becomes the keyboard's height (`TopLevel.ClientSize.Height - EndRect.Top`, already in device-independent units), and the focused control is brought into view. `MainView` hides the tab bar while the keyboard is open. `KeyboardInset` only tells views whether it is open (the login motto, the workout editor's caret); it adds no margins of its own.
 
 The phone's keyboard doesn't resize the app's view. `AddWorkoutView` therefore listens to `TopLevel.InputPane` and, while the keyboard is open, ends the form above it and scrolls the line being typed into view.
 

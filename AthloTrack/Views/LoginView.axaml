@@ -4,266 +4,279 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:AthloTrack.ViewModels"
              xmlns:controls="using:AthloTrack.Views.Controls"
-             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="720"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="800"
              x:Class="AthloTrack.Views.LoginView"
              x:DataType="vm:LoginViewModel">
 
+    <!-- One screen: the brand band (or, on a wide window, the brand half) and the card. The card's
+         step (σύνδεση, νέος λογαριασμός, ξέχασα τον κωδικό, κωδικός, επιβεβαίωση email) comes
+         from LoginViewModel.Step. Wide or narrow is set in code (LoginView.axaml.cs). -->
     <UserControl.Styles>
         <Style Selector="Button.login">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="Height" Value="46" />
-            <Setter Property="CornerRadius" Value="23" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="CornerRadius" Value="25" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
-        <!-- Step 1: the two role cards -->
-        <Style Selector="Button.rolecard">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="Padding" Value="12,20" />
+        <!-- Text links: «Ξέχασα τον κωδικό», «Δημιουργία λογαριασμού» (44 px tall for a finger) -->
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Top" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="14" />
         </Style>
-        <Style Selector="Button.rolecard:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+        </Style>
+        <Style Selector="Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource TintBrush}" />
         </Style>
-        <Style Selector="Button.rolecard:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource TintStrongBrush}" />
-        </Style>
-        <Style Selector="Button.rolecard TextBlock.title">
-            <Setter Property="FontSize" Value="17" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Button.rolecard TextBlock.hint">
-            <Setter Property="FontSize" Value="12" />
+        <Style Selector="Button.link:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="TextAlignment" Value="Center" />
         </Style>
 
-        <!-- Step 1: outlined "new athlete" pill on the gradient -->
-        <Style Selector="Button.signup">
-            <Setter Property="Background" Value="#1FFFFFFF" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="BorderBrush" Value="#80FFFFFF" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="23" />
-            <Setter Property="Height" Value="46" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Button.signup:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#33FFFFFF" />
-            <Setter Property="BorderBrush" Value="White" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-        <Style Selector="Button.signup:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#4DFFFFFF" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-
-        <!-- Step 2: back arrow in the form header -->
+        <!-- ← in the card's title -->
         <Style Selector="Button.back">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Width" Value="38" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="CornerRadius" Value="19" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="22" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
         </Style>
         <Style Selector="Button.back:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource TintBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource BrandSupportBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
         </Style>
-        <Style Selector="Button.back:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Opacity" Value="0.4" />
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Margin" Value="2,0,0,0" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="MinHeight" Value="50" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <!-- The 6-digit code: one box, large and spaced (pasting «481 927» works) -->
+        <Style Selector="TextBox.code">
+            <Setter Property="MinHeight" Value="58" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="LetterSpacing" Value="8" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="MaxLength" Value="7" />
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="*,Auto" Background="{StaticResource BrandHeroGradient}">
+    <Grid x:Name="Root" ColumnDefinitions="*" Background="{DynamicResource PageBackdropGradient}">
+      <ScrollViewer x:Name="FormArea" HorizontalScrollBarVisibility="Disabled">
+        <!-- Rows: brand band, card, links under it, room, motto. On a wide window the brand moves to
+             its own column and the motto into it (LoginView.axaml.cs). -->
+        <Grid x:Name="FormGrid" RowDefinitions="Auto,Auto,Auto,*,Auto">
 
-        <!-- Soft glows for depth -->
-        <Ellipse Grid.RowSpan="2" Width="520" Height="520" Opacity="0.18"
-                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-220,-240,0,0"
-                 IsHitTestVisible="False">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#FFFFFFFF" Offset="0" />
-                    <GradientStop Color="#00FFFFFF" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-        <Ellipse Grid.RowSpan="2" Width="440" Height="440" Opacity="0.22"
-                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-180,-200"
-                 IsHitTestVisible="False">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#FFFFD700" Offset="0" />
-                    <GradientStop Color="#00FFD700" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
+        <!-- The brand: a band on a phone, the left half on a wide window -->
+        <Border x:Name="Brand" Grid.Row="0" Background="{StaticResource BrandHeroGradient}" ClipToBounds="True">
+            <Panel>
+                <Ellipse Width="320" Height="320" Opacity="0.08" Fill="White" IsHitTestVisible="False"
+                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-150,-120,0" />
+                <Ellipse Width="220" Height="220" Opacity="0.12" Fill="#FFD700" IsHitTestVisible="False"
+                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-90,0,0,-110" />
 
-        <!-- Stretch + MaxWidth: fixed-width form on desktop, 16px gutters on a phone. -->
-        <StackPanel x:Name="Content" Grid.Row="0"
-                    MaxWidth="380"
-                    Margin="16,24"
-                    Spacing="18"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center">
-
-            <Border x:Name="Logo" Width="88" Height="88" CornerRadius="26"
-                    Background="{StaticResource BrandLogoGradient}"
-                    BoxShadow="0 8 24 0 #40000000"
-                    HorizontalAlignment="Center">
-                <PathIcon Data="{StaticResource LogoIcon}" Width="44" Height="44"
-                          Foreground="{StaticResource BrandPrimaryDarkBrush}" />
-            </Border>
-
-            <StackPanel Spacing="2" HorizontalAlignment="Center">
-                <TextBlock Text="AthloTrack" FontSize="32" FontWeight="Bold"
-                           Foreground="White" HorizontalAlignment="Center" />
-                <TextBlock Text="Παρακολούθηση προόδου αθλητών" FontSize="14"
-                           Foreground="#CFE3FF" HorizontalAlignment="Center" />
-                <!-- Release stage from <Version> in AthloTrack.csproj (e.g. 1.10-alpha); hidden for a stable release. -->
-                <Border IsVisible="{x:Static vm:AppInfo.IsPreRelease}" HorizontalAlignment="Center" Margin="0,6,0,0"
-                        Background="#40FFFFFF" CornerRadius="8" Padding="8,2">
-                    <TextBlock Text="{x:Static vm:AppInfo.Stage}" FontSize="12" FontWeight="SemiBold" Foreground="White" />
-                </Border>
-            </StackPanel>
-
-            <!-- Step 1: who is logging in (decides which profile the login is checked against) -->
-            <StackPanel Spacing="14" IsVisible="{Binding IsChoosingRole}"
-                        Classes="appear-shown" Classes.shown="{Binding IsChoosingRole}">
-                <TextBlock Text="Σύνδεση ως..." FontSize="16" FontWeight="SemiBold"
-                           Foreground="White" HorizontalAlignment="Center" />
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Button Grid.Column="0" Classes="rolecard"
-                            Command="{Binding ChooseCoachCommand}"
-                            AutomationProperties.Name="Προπονητής">
-                        <StackPanel Spacing="10">
-                            <Border Width="60" Height="60" CornerRadius="30"
-                                    Background="{StaticResource BrandButtonGradient}"
-                                    HorizontalAlignment="Center">
-                                <PathIcon Data="{StaticResource WhistleIcon}" Width="30" Height="30"
-                                          Foreground="White" />
-                            </Border>
-                            <TextBlock Classes="title" Text="Προπονητής" />
-                            <TextBlock Classes="hint" Text="Αθλητές, μετρήσεις και προγράμματα" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Grid.Column="1" Classes="rolecard"
-                            Command="{Binding ChooseAthleteCommand}"
-                            AutomationProperties.Name="Αθλητής">
-                        <StackPanel Spacing="10">
-                            <Border Width="60" Height="60" CornerRadius="30"
-                                    Background="{StaticResource BrandAccentGradient}"
-                                    HorizontalAlignment="Center">
-                                <PathIcon Data="{StaticResource RunnerIcon}" Width="30" Height="30"
-                                          Foreground="{StaticResource OnAccentBrush}" />
-                            </Border>
-                            <TextBlock Classes="title" Text="Αθλητής" />
-                            <TextBlock Classes="hint" Text="Οι προπονήσεις και η πρόοδός μου" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-
-                <Button Classes="signup" Command="{Binding ChooseSignUpCommand}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <PathIcon Data="{StaticResource AccountPlusIcon}" Width="18" Height="18" />
-                        <TextBlock Text="Νέος αθλητής; Δημιουργία λογαριασμού" FontSize="13"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-
-                <!-- Shown while a saved session is being restored -->
-                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
-            </StackPanel>
-
-            <!-- Step 2: the form for the chosen role -->
-            <Border Background="{DynamicResource CardBrush}" CornerRadius="18" Padding="20"
-                    BoxShadow="0 12 32 0 #33000000"
-                    IsVisible="{Binding IsForm}"
-                    Classes="appear-shown" Classes.shown="{Binding IsForm}">
-                <StackPanel Spacing="14">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Margin="-8,-6,0,0">
-                        <Button Classes="back" Command="{Binding BackCommand}"
-                                IsEnabled="{Binding !IsBusy}"
-                                AutomationProperties.Name="Πίσω"
-                                ToolTip.Tip="Πίσω">
-                            <PathIcon Data="{StaticResource ArrowLeftIcon}" Width="20" Height="20" />
-                        </Button>
-                        <TextBlock Grid.Column="1" Text="{Binding FormTitle}"
-                                   FontSize="18" FontWeight="Bold"
-                                   Foreground="{DynamicResource BrandSupportBrush}"
-                                   VerticalAlignment="Center" />
-                    </Grid>
-
-                    <TextBlock FontSize="12" Foreground="{DynamicResource BrandSupportBrush}" TextWrapping="Wrap"
-                               IsVisible="{Binding IsSignUp}"
-                               Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου, ώστε ο λογαριασμός να συνδεθεί με το προφίλ σου." />
-
-                    <!-- (No ContentType="Email": combined with ShowSuggestions=False from App.axaml it
-                         gives an input type in which Gboard composes again; see App.axaml.) -->
-                    <TextBox x:Name="EmailBox" PlaceholderText="Email"
-                             Text="{Binding Email, Mode=TwoWay}"
-                             UseFloatingPlaceholder="True" />
-
-                    <TextBox PlaceholderText="Κωδικός"
-                             PasswordChar="●"
-                             Text="{Binding Password, Mode=TwoWay}"
-                             UseFloatingPlaceholder="True"
-                             TextInputOptions.IsSensitive="True">
-                        <TextBox.KeyBindings>
-                            <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
-                        </TextBox.KeyBindings>
-                    </TextBox>
-
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="{DynamicResource DangerBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-
-                    <TextBlock Text="{Binding InfoMessage}"
-                               Foreground="{StaticResource BrandPrimaryBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-
-                    <!-- Blue for the coach, gold for the athlete forms (like the role cards) -->
-                    <Button Classes="primary login"
-                            Command="{Binding SubmitCommand}"
-                            IsEnabled="{Binding !IsBusy}"
-                            IsVisible="{Binding IsCoachForm}">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"><controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" /><TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" /></StackPanel>
-                    </Button>
-                    <Button Classes="gold login"
-                            Command="{Binding SubmitCommand}"
-                            IsEnabled="{Binding !IsBusy}"
-                            IsVisible="{Binding !IsCoachForm}">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"><controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" /><TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" /></StackPanel>
-                    </Button>
+                <StackPanel x:Name="BrandContent" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Margin="16,28,16,48">
+                    <!-- The app's logo, where the opening screen's logo lands (SplashView) -->
+                    <Border x:Name="Logo" Width="88" Height="88" CornerRadius="26"
+                            Background="{StaticResource BrandLogoGradient}"
+                            BoxShadow="0 8 24 0 #40000000"
+                            HorizontalAlignment="Center">
+                        <PathIcon Data="{StaticResource LogoIcon}" Width="44" Height="44"
+                                  Foreground="{StaticResource BrandPrimaryDarkBrush}" />
+                    </Border>
+                    <TextBlock x:Name="AppName" Text="AthloTrack" FontSize="30" FontWeight="ExtraBold"
+                               Foreground="White" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="Tagline" Text="Παρακολούθηση προόδου αθλητών" FontSize="14"
+                               Foreground="#CFE3FF" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                    <!-- Release stage from <Version> in AthloTrack.csproj (e.g. 1.29-alpha); hidden for a stable release. -->
+                    <Border IsVisible="{x:Static vm:AppInfo.IsPreRelease}" HorizontalAlignment="Center"
+                            Background="#29FFFFFF" CornerRadius="10" Padding="10,3">
+                        <TextBlock Text="{x:Static vm:AppInfo.Stage}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                    </Border>
                 </StackPanel>
-            </Border>
-        </StackPanel>
+            </Panel>
+        </Border>
 
-        <!-- Bottom-center Greek motto -->
-        <TextBlock x:Name="Motto" Grid.Row="1"
-                   Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ"
-                   FontFamily="{StaticResource GreekAccentFont}"
-                   FontStyle="Italic"
-                   FontSize="20"
-                   Foreground="White"
-                   HorizontalAlignment="Center"
-                   Margin="0,0,0,24" />
+                <!-- The card overlaps the band -->
+                <Border x:Name="Card" Grid.Row="1" Margin="16,-28,16,0" MaxWidth="420"
+                        Background="{DynamicResource CardBrush}" CornerRadius="22" Padding="20,18,20,20"
+                        BoxShadow="0 12 32 0 #24003366">
+                    <StackPanel Spacing="14">
+                        <!-- Title, with ← on the inner steps -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="-10,-4,0,0">
+                            <Button Classes="back" Command="{Binding BackCommand}" IsVisible="{Binding HasBack}"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    AutomationProperties.Name="Πίσω" ToolTip.Tip="Πίσω">
+                                <PathIcon Data="{StaticResource ArrowLeftIcon}" Width="20" Height="20" />
+                            </Button>
+                            <TextBlock Grid.Column="1" Text="{Binding FormTitle}" FontSize="20" FontWeight="ExtraBold"
+                                       Foreground="{DynamicResource HeadingBrush}" VerticalAlignment="Center"
+                                       TextWrapping="Wrap" Margin="10,0,0,0" />
+                        </Grid>
+
+                        <TextBlock IsVisible="{Binding IsSignUp}" FontSize="14" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource BrandSupportBrush}"
+                                   Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου." />
+                        <TextBlock IsVisible="{Binding IsForgot}" FontSize="14" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource BrandSupportBrush}"
+                                   Text="Γράψε το email σου. Θα σου στείλουμε έναν κωδικό 6 ψηφίων για να ορίσεις νέο κωδικό." />
+
+                        <!-- Email -->
+                        <StackPanel Spacing="6" IsVisible="{Binding ShowsEmail}">
+                            <TextBlock Classes="label" Text="Email" />
+                            <TextBox x:Name="EmailBox" Classes="field"
+                                     Text="{Binding Email, Mode=TwoWay}"
+                                     TextInputOptions.ContentType="Email"
+                                     AutomationProperties.Name="Email" />
+                        </StackPanel>
+
+                        <!-- Κωδικός, with the eye that shows it -->
+                        <StackPanel Spacing="6" IsVisible="{Binding ShowsPassword}">
+                            <TextBlock Classes="label" Text="Κωδικός" />
+                            <TextBox x:Name="PasswordBox" Classes="field revealPasswordButton"
+                                     PasswordChar="●"
+                                     Text="{Binding Password, Mode=TwoWay}"
+                                     TextInputOptions.ContentType="Password"
+                                     TextInputOptions.IsSensitive="True"
+                                     AutomationProperties.Name="Κωδικός">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
+                        </StackPanel>
+
+                        <Button Classes="link" HorizontalAlignment="Right" Margin="0,-10,-6,-8"
+                                Content="Ξέχασα τον κωδικό" Command="{Binding ShowForgotCommand}"
+                                IsVisible="{Binding IsSignIn}" IsEnabled="{Binding CanResetPassword}" />
+
+                        <!-- «Επιβεβαίωσε το email σου»: whose profile, and where the code went -->
+                        <StackPanel Spacing="10" IsVisible="{Binding IsVerifyLink}">
+                            <TextBlock Text="{Binding LinkIntro}" FontSize="15" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource BrandSupportBrush}" LineHeight="22" />
+                            <Border Background="{DynamicResource TintBrush}" CornerRadius="10" Padding="12,10">
+                                <TextBlock Text="{Binding Email}" FontSize="15" FontWeight="ExtraBold"
+                                           Foreground="{DynamicResource HeadingBrush}" TextWrapping="Wrap" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- The 6-digit code (new password, or linking) -->
+                        <StackPanel Spacing="6" IsVisible="{Binding IsCodeStep}">
+                            <TextBlock Classes="label" Text="Κωδικός από το email" />
+                            <TextBox x:Name="CodeBox" Classes="code" Text="{Binding Code, Mode=TwoWay}"
+                                     TextInputOptions.ContentType="Digits"
+                                     AutomationProperties.Name="Κωδικός 6 ψηφίων από το email">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
+                        </StackPanel>
+
+                        <!-- New password -->
+                        <StackPanel Spacing="14" IsVisible="{Binding IsResetCode}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="label" Text="Νέος κωδικός" />
+                                <TextBox Classes="field revealPasswordButton" PasswordChar="●"
+                                         Text="{Binding NewPassword, Mode=TwoWay}"
+                                         TextInputOptions.ContentType="Password" TextInputOptions.IsSensitive="True"
+                                         AutomationProperties.Name="Νέος κωδικός" />
+                            </StackPanel>
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="label" Text="Ξανά ο νέος κωδικός" />
+                                <TextBox Classes="field revealPasswordButton" PasswordChar="●"
+                                         Text="{Binding NewPasswordAgain, Mode=TwoWay}"
+                                         TextInputOptions.ContentType="Password" TextInputOptions.IsSensitive="True"
+                                         AutomationProperties.Name="Ξανά ο νέος κωδικός">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
+                                    </TextBox.KeyBindings>
+                                </TextBox>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <TextBlock Text="{Binding InfoMessage}" Foreground="{DynamicResource LinkBrush}" TextWrapping="Wrap"
+                                   IsVisible="{Binding InfoMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                        <!-- Blue for sign-in and passwords, gold for the athlete's own steps -->
+                        <Button Classes="primary login" Command="{Binding SubmitCommand}"
+                                IsEnabled="{Binding !IsBusy}" IsVisible="{Binding !IsGoldButton}">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="gold login" Command="{Binding SubmitCommand}"
+                                IsEnabled="{Binding !IsBusy}" IsVisible="{Binding IsGoldButton}">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <controls:Spinner IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding SubmitText}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- «Στείλε ξανά» under a code -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2" Margin="0,-6,0,-8"
+                                    IsVisible="{Binding IsCodeStep}">
+                            <TextBlock Text="Δεν ήρθε;" VerticalAlignment="Center" FontSize="14"
+                                       Foreground="{DynamicResource MutedTextBrush}" />
+                            <Button Classes="link" Content="{Binding ResendText}" Command="{Binding ResendCommand}"
+                                    IsEnabled="{Binding CanResend}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Under the card -->
+                <StackPanel x:Name="UnderCard" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2" Margin="16,10,16,0">
+                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsSignIn}">
+                        <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding CanSignUp}">
+                            <TextBlock Text="Νέος αθλητής;" VerticalAlignment="Center" FontSize="14"
+                                       Foreground="{DynamicResource BrandSupportBrush}" />
+                            <Button Classes="link" Content="Δημιουργία λογαριασμού" Command="{Binding ShowSignUpCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsSignUp}">
+                        <TextBlock Text="Έχεις ήδη λογαριασμό;" VerticalAlignment="Center" FontSize="14"
+                                   Foreground="{DynamicResource BrandSupportBrush}" />
+                        <Button Classes="link" Content="Σύνδεση" Command="{Binding ShowSignInCommand}" />
+                    </StackPanel>
+                    <Button Classes="link" Content="Αποσύνδεση" Command="{Binding CancelLinkCommand}"
+                            IsVisible="{Binding IsVerifyLink}"
+                            Foreground="{DynamicResource BrandSupportBrush}" />
+                </StackPanel>
+
+                <!-- Bottom-center Greek motto -->
+                <TextBlock x:Name="Motto" Grid.Row="4"
+                           Text="νοῦς ὑγιής ἐν σώματι ὑγιεῖ"
+                           FontFamily="{StaticResource GreekAccentFont}"
+                           FontStyle="Italic" FontSize="18"
+                           Foreground="{DynamicResource HeadingBrush}" Opacity="0.8"
+                           HorizontalAlignment="Center" Margin="16,24,16,22" />
+        </Grid>
+      </ScrollViewer>
     </Grid>
 </UserControl>

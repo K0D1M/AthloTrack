@@ -21,7 +21,7 @@
 	# (push files too: the service worker and the Firebase config must update with the site;
 	# version.txt is what the open app checks to notice a new deploy, see update.js;
 	# /version/ is the public changelog page, with changelog.json updated on each release.)
-	@entry path / /index.html /main.js /update.js /ime-fix.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js /version /version/ /version/index.html /version/changelog.json /version/latest.json
+	@entry path / /index.html /main.js /update.js /version.txt /_framework/dotnet.js /push.js /firebase-config.js /firebase-messaging-sw.js /version /version/ /version/index.html /version/changelog.json /version/latest.json
 	header @entry Cache-Control "no-cache"
 
 	# latest.json, what the installed apps read for «Νέα έκδοση», is kept in MEGA S4 next to the APK
