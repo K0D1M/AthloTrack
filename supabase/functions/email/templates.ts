@@ -59,8 +59,11 @@ const button = (text: string, url: string) =>
     <a href="${url}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:800;color:${TEXT};text-decoration:none;">${text}</a>
   </td></tr></table>`;
 
-/** «481927» → «481 927», easier to read and type. */
-const spaced = (code: string) => (code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code);
+/** «481927» → «481 927», «64794670» → «6479 4670»: easier to read and type. */
+const spaced = (code: string) => {
+  const half = Math.ceil(code.length / 2);
+  return code.length >= 6 ? `${code.slice(0, half)} ${code.slice(half)}` : code;
+};
 
 export type Email = { subject: string; html: string; text: string };
 
@@ -69,7 +72,7 @@ export type Email = { subject: string; html: string; text: string };
 export function resetEmail(v: { code: string }): Email {
   const e = esc(v);
   return {
-    subject: `Ο κωδικός σου για νέο κωδικό πρόσβασης: ${v.code}`,
+    subject: `Ο κωδικός σου για νέο κωδικό πρόσβασης: ${spaced(v.code)}`,
     html: layout(
       title("Νέος κωδικός πρόσβασης") +
         para("Γεια σου! Ζήτησες να αλλάξεις τον κωδικό σου στο AthloTrack.<br>Γράψε αυτόν τον κωδικό στην εφαρμογή:") +

@@ -52,7 +52,7 @@ public class LoginViewModelTests
 
         public Task<AuthResult> ResetPasswordAsync(string email, string code, string newPassword)
         {
-            if (code != "123456") return Task.FromResult(AuthResult.Fail(AccountService.WrongResetCode));
+            if (code is not ("123456" or "64794670")) return Task.FromResult(AuthResult.Fail(AccountService.WrongResetCode));
             NewPassword = newPassword;
             return Task.FromResult(AuthResult.Ok(UserId, "a", "r"));
         }
@@ -216,14 +216,15 @@ public class LoginViewModelTests
         Assert.Equal(AccountService.WrongResetCode, vm.ErrorMessage);
         Assert.Null(loggedIn);
 
-        vm.Code = "123 456";
+        vm.Code = "6479 4670"; // this project's codes have 8 digits
         await vm.SubmitCommand.ExecuteAsync(null);
         Assert.Equal("newpass1", accounts.NewPassword);
         Assert.Equal(UserRole.Athlete, loggedIn); // straight in
     }
 
     [Theory]
-    [InlineData("12345", "newpass1", "newpass1", "Γράψε τον 6ψήφιο κωδικό από το email.")]
+    [InlineData("12345", "newpass1", "newpass1", "Γράψε τον κωδικό από το email.")]
+    [InlineData("123456789", "newpass1", "newpass1", "Γράψε τον κωδικό από το email.")]
     [InlineData("123456", "abc", "abc", "Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.")]
     [InlineData("123456", "newpass1", "newpass2", "Οι δύο κωδικοί δεν είναι ίδιοι.")]
     public async Task The_new_password_card_checks_its_fields(string code, string password, string again, string error)

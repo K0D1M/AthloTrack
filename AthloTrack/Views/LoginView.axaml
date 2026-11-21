@@ -71,7 +71,7 @@
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
-        <!-- The 6-digit code: one box, large and spaced (pasting «481 927» works) -->
+        <!-- The code from the email (6 to 8 digits): one box, large and spaced (pasting «6479 4670» works) -->
         <Style Selector="TextBox.code">
             <Setter Property="MinHeight" Value="58" />
             <Setter Property="FontSize" Value="26" />
@@ -81,7 +81,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="MaxLength" Value="7" />
+            <Setter Property="MaxLength" Value="10" />
         </Style>
     </UserControl.Styles>
 
@@ -144,7 +144,7 @@
                                    Text="Χρησιμοποίησε το email που έδωσες στον προπονητή σου." />
                         <TextBlock IsVisible="{Binding IsForgot}" FontSize="14" TextWrapping="Wrap"
                                    Foreground="{DynamicResource BrandSupportBrush}"
-                                   Text="Γράψε το email σου. Θα σου στείλουμε έναν κωδικό 6 ψηφίων για να ορίσεις νέο κωδικό." />
+                                   Text="Γράψε το email σου. Θα σου στείλουμε έναν κωδικό για να ορίσεις νέο κωδικό." />
 
                         <!-- Email -->
                         <StackPanel Spacing="6" IsVisible="{Binding ShowsEmail}">
@@ -189,7 +189,7 @@
                             <TextBlock Classes="label" Text="Κωδικός από το email" />
                             <TextBox x:Name="CodeBox" Classes="code" Text="{Binding Code, Mode=TwoWay}"
                                      TextInputOptions.ContentType="Digits"
-                                     AutomationProperties.Name="Κωδικός 6 ψηφίων από το email">
+                                     AutomationProperties.Name="Κωδικός από το email">
                                 <TextBox.KeyBindings>
                                     <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
                                 </TextBox.KeyBindings>

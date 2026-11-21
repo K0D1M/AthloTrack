@@ -489,10 +489,11 @@ public partial class LoginViewModel : ObservableValidator
     private async Task ResetPasswordAsync()
     {
         ErrorMessage = null;
+        // Supabase's recovery code: 6 to 8 digits, as the project's «Email OTP length» says.
         var code = AccountService.Digits(Code);
-        if (code.Length != 6)
+        if (code.Length is < 6 or > 8)
         {
-            ErrorMessage = "Γράψε τον 6ψήφιο κωδικό από το email.";
+            ErrorMessage = "Γράψε τον κωδικό από το email.";
             return;
         }
         if (NewPassword.Length < 6)
