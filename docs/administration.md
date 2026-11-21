@@ -2,7 +2,7 @@
 
 Most of these tasks can now be done in the app's admin dashboard («Διαχείριση», see [below](#admin-dashboard)). The steps in the Supabase dashboard and SQL Editor still work as a fallback.
 
-All of the fallback steps are done in the Supabase dashboard of the project. No email provider is configured, so Supabase can't send confirmation or password-recovery emails. The steps below avoid email completely.
+All of the fallback steps are done in the Supabase dashboard of the project. Account emails (password reset, link codes, invites) go through the Edge Function `email` and Resend; see [Email](#email). Supabase's own mailer isn't used.
 
 ## Admin dashboard
 
@@ -46,8 +46,9 @@ To remove an admin: `delete from admins where email = 'you@mail.com';`
 
 ## Auth settings
 
-- **Authentication → Sign In / Providers → Email → Confirm email: off.** New athlete accounts can then sign in straight away, without a confirmation email.
-- Don't use the dashboard's "Send password recovery" button. Its link points to the Site URL (by default `http://localhost:3000`), and the app has no recovery page. To reset a password, follow [Resetting a password](#resetting-a-password) below.
+- **Authentication → Sign In / Providers → Email → Confirm email: off.** New athlete accounts can then sign in straight away. Their link to an athlete profile is protected by the link code instead (see [Linking](#linking-athletes-to-their-accounts)).
+- **Email OTP length:** this project's recovery codes have 8 digits. The app accepts 6 to 8, so changing the setting is fine.
+- Don't use the dashboard's "Send password recovery" button. Its email comes from Supabase's own mailer, with a link to the Site URL, and the app has no recovery page. Users reset their own password with «Ξέχασα τον κωδικό» (see [Resetting a password](#resetting-a-password)).
 
 ## Creating a coach
 
@@ -68,14 +69,15 @@ update coaches set must_set_password = true where email = 'coach@mail.com';
 
 ## Linking athletes to their accounts
 
-Linking works by email and happens automatically, whichever step comes first:
+Since 1.29 (`supabase/022_email_and_linking.sql`) a login links to an athlete profile only with a code sent to that profile's email. Before, matching emails linked automatically, so anyone who signed up with an athlete's email got that athlete's data. Accounts linked before 022 stay linked.
 
-- **The coach adds the athlete first** (with an email), and **the athlete signs up later** with the same email. On signup, trigger `link_athlete_on_signup` links the account to the profile.
-- **The athlete signs up first**, and **the coach adds the athlete or sets their email later**. Trigger `link_athlete_on_email` finds the existing login and links it.
+- **The coach adds the athlete** with an email. If no login has it yet, the athlete gets an invite email (once per email address, recorded in `athletes.invited_email`).
+- **The athlete signs in** (or signs up) with that email. The app finds no profile for the login, asks the `email` function for a link code, and shows «Επιβεβαίωσε το email σου». The code is valid for 15 minutes and allows 5 tries. «Στείλε ξανά» works after a minute.
+- **The right code** links the login to the profile, and the app continues as that athlete.
 
-Emails are compared case-insensitively. Each login links to at most one athlete, and each athlete email must be unique.
+The order doesn't matter: an athlete who signed up before the coach added them gets the code at their next sign-in. Emails are compared case-insensitively. Each login links to at most one athlete, and each athlete email must be unique.
 
-A login without a matching athlete profile can sign in but has nothing to see until the coach adds them.
+A login without a matching athlete profile is signed out with a message to ask their coach.
 
 To check which athletes have a linked account:
 ```sql
@@ -84,13 +86,47 @@ select full_name, email, auth_user_id is not null as linked from athletes order 
 
 ## Resetting a password
 
-Run this in the **SQL Editor**, with the new password and the user's email:
+Users do it themselves: **Ξέχασα τον κωδικό** on the login screen sends a code to their email, and they set a new password with it.
+
+If that isn't possible (e.g. no access to the mailbox), run this in the **SQL Editor**, with the new password and the user's email:
 ```sql
 update auth.users
 set encrypted_password = crypt('NewPassword123', gen_salt('bf'))
 where email = 'user@mail.com';
 ```
 For a coach, also run the `must_set_password = true` update above, so they replace the temporary password with their own.
+
+## Email
+
+Every account email is sent by the Edge Function `email` (`supabase/functions/email/`) through Resend, from **Εφαρμογή Athlotrack <no-reply@athlotrack.gr>**. The domain `athlotrack.gr` is verified in Resend (DNS records in Cloudflare, region eu-west-1).
+
+| Email | When | Sent by |
+|---|---|---|
+| Password reset code | «Ξέχασα τον κωδικό» | the app → `email` (action `reset`). Supabase generates the code (`generateLink`) without sending anything. |
+| Link code | An athlete login with a waiting profile | the app → `email` (`link-code`, `link-verify`) |
+| Invite | The coach adds an athlete's email | trigger `trg_queue_athlete_invite` → `email` (`invite`), through `pg_net` |
+
+Limits: one email of a kind per address a minute, five an hour (table `email_log`, which also records what was sent). A reset for an unknown email answers like a known one, so it doesn't reveal which accounts exist.
+
+### Setting it up (once)
+1. **Resend:** the domain `athlotrack.gr`, and an API key with *Sending access* for it.
+2. **Edge Functions → Deploy a new function** named `email` with the three files `index.ts`, `templates.ts` and `vocative.ts` from `supabase/functions/email/`. Turn **Enforce JWT verification off**: each action checks its caller itself.
+3. **Edge Functions → Secrets:** `RESEND_API_KEY` (the key from step 1), and `EMAIL_HOOK_SECRET` (a long random value).
+4. **SQL Editor:** store the same value in Vault, then run `supabase/022_email_and_linking.sql`:
+   ```sql
+   select vault.create_secret('<the EMAIL_HOOK_SECRET value>', 'email_hook_secret');
+   ```
+
+### Changing how the emails look
+The look and the words are in `supabase/functions/email/templates.ts`: `layout` is the frame every email shares (logo, colours, footer), and each email has its own function (`resetEmail`, `linkCodeEmail`, `inviteEmail`, `newCoachEmail`) with an HTML and a plain-text part. They use tables and inline styles on purpose, so Gmail, Outlook and phone mail apps show them alike.
+1. Edit `templates.ts`.
+2. Preview: `node supabase/functions/email/preview.mjs` writes every email, filled with sample data, to `supabase/functions/email/preview/` (open the `.html` files in a browser). Nothing is sent.
+3. Redeploy the `email` function with **all three files**. If one is missing, the function doesn't start, and every call hangs until it times out.
+
+### When an email doesn't arrive
+- **Resend → Emails** shows each send and whether it was delivered.
+- **Supabase → Edge Functions → email → Logs** shows errors (e.g. a missing secret).
+- **Invites:** `select * from net._http_response order by created desc limit 5;` shows the trigger's calls. Without the Vault secret, the trigger logs a warning and sends nothing.
 
 ## Removing people
 
