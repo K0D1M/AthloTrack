@@ -105,6 +105,9 @@ public sealed class WorkoutProgram
     /// <summary>The coach's word on being at this workout: true Παρών, false Απών, null not said.</summary>
     public bool? CoachPresent { get; set; }
 
+    /// <summary>Answered without internet: the answer is shown, and sent when the internet returns.</summary>
+    public bool IsPendingSync { get; set; }
+
     /// <summary>When the athlete first saw it (read receipt for the coach); null while unseen.</summary>
     public DateTimeOffset? ReadAt { get; set; }
 

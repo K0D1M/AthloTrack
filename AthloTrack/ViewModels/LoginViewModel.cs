@@ -264,6 +264,14 @@ public partial class LoginViewModel : ObservableValidator
             if (await Task.WhenAny(restore, Task.Delay(RestoreTimeout)) != restore)
             {
                 _restoreAbandoned = true;
+                // A connection that answers nothing: open from the offline copy if there is one.
+                if (await _authService.StoredUserIdAsync() is { } stored && OfflineRole(stored) is { } offlineRole)
+                {
+                    Console.WriteLine("[AthloTrack] saved sign-in timed out: opening the offline copy");
+                    LastLoginWasRestored = true;
+                    LoginSucceeded?.Invoke(offlineRole);
+                    return;
+                }
                 Console.WriteLine("[AthloTrack] saved sign-in timed out: showing the login form");
                 return;
             }
@@ -287,6 +295,11 @@ public partial class LoginViewModel : ObservableValidator
         try
         {
             var result = await _authService.RestoreSessionAsync();
+            // No internet: the saved sign-in stays, and the app opens from its offline copy.
+            if (result.IsOffline && result.UserId is { } offlineUser)
+            {
+                return OfflineRole(offlineUser);
+            }
             if (!result.Success || result.UserId is null)
             {
                 return null;
@@ -308,6 +321,10 @@ public partial class LoginViewModel : ObservableValidator
             return null;
         }
     }
+
+    /// <summary>The role saved at this login's last sign-in (offline start), if this app allows it.</summary>
+    private UserRole? OfflineRole(Guid userId) =>
+        _sessionInitializer.RestoreOffline(userId) is { } role && SignInRoles.Contains(role) ? role : null;
 
     /// <summary>The first of <see cref="SignInRoles"/> with a profile for this login, or null.</summary>
     private async Task<UserRole?> FindRoleAsync(Guid userId)

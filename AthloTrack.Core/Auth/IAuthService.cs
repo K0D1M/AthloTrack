@@ -17,4 +17,7 @@ public interface IAuthService
     Task<AuthResult> UpdatePasswordAsync(string newPassword);
 
     Task SignOutAsync();
+
+    /// <summary>The login of the saved session (from its token), without asking the server.</summary>
+    Task<Guid?> StoredUserIdAsync() => Task.FromResult<Guid?>(null);
 }

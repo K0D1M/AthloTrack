@@ -6,11 +6,14 @@ public sealed class AuthService : IAuthService
 {
     private readonly SupabaseClientFactory _clientFactory;
     private readonly ICredentialStore _credentialStore;
+    private readonly AthloTrack.Core.Offline.OfflineCache? _offline;
 
-    public AuthService(SupabaseClientFactory clientFactory, ICredentialStore credentialStore)
+    public AuthService(SupabaseClientFactory clientFactory, ICredentialStore credentialStore,
+        AthloTrack.Core.Offline.OfflineCache? offline = null)
     {
         _clientFactory = clientFactory;
         _credentialStore = credentialStore;
+        _offline = offline;
     }
 
     public async Task<AuthResult> SignInAsync(string email, string password)
@@ -62,10 +65,14 @@ public sealed class AuthService : IAuthService
             return AuthResult.Fail("Δεν υπάρχει αποθηκευμένη σύνδεση.");
         }
 
-        var client = await _clientFactory.GetClientAsync();
         try
         {
-            var session = await client.Auth.SetSession(accessToken, refreshToken, false);
+            // The client factory takes up the saved session itself (renewed if needed); setting it
+            // again here would reuse a refresh token that was just rotated.
+            var client = await _clientFactory.GetClientAsync();
+            var session = client.Auth.CurrentSession?.User?.Id is not null
+                ? client.Auth.CurrentSession
+                : await client.Auth.SetSession(accessToken, refreshToken, false);
             if (session?.AccessToken is null || session.RefreshToken is null || session.User?.Id is null)
             {
                 return AuthResult.Fail("Η σύνδεση έληξε, παρακαλώ συνδεθείτε ξανά.");
@@ -74,11 +81,24 @@ public sealed class AuthService : IAuthService
             await _credentialStore.SaveSessionAsync(session.AccessToken, session.RefreshToken);
             return AuthResult.Ok(Guid.Parse(session.User.Id), session.AccessToken, session.RefreshToken);
         }
+        catch (Exception ex) when (AthloTrack.Core.Offline.OfflineState.IsNetworkError(ex)
+                                   && Jwt.Subject(accessToken) is { } offlineUser)
+        {
+            // No internet: keep the saved sign-in (it was signing people out); the app may open
+            // from its offline copy and check the session once the internet is back.
+            return AuthResult.Offline(offlineUser);
+        }
         catch (Exception ex)
         {
             await _credentialStore.ClearAsync();
             return AuthResult.Fail(AuthErrors.Describe(ex));
         }
+    }
+
+    public async Task<Guid?> StoredUserIdAsync()
+    {
+        var (accessToken, _) = await _credentialStore.LoadSessionAsync();
+        return Jwt.Subject(accessToken);
     }
 
     public async Task<AuthResult> UpdatePasswordAsync(string newPassword)
@@ -107,6 +127,7 @@ public sealed class AuthService : IAuthService
         finally
         {
             await _credentialStore.ClearAsync();
+            _offline?.ClearAll(); // nobody else on this phone sees the copies
         }
     }
 }

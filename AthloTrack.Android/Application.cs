@@ -21,6 +21,8 @@ namespace AthloTrack.Android
             {
                 services.AddSingleton<ICredentialStore, AndroidCredentialStore>();
                 services.AddSingleton<IAppPreferences, AndroidAppPreferences>();
+                // Προπονήσεις and Ημερολόγιο without internet (Core.Offline).
+                services.AddSingleton<AthloTrack.Core.Offline.IOfflineStore, AndroidOfflineStore>();
                 services.AddSingleton<AthloTrack.Core.Push.IPushTokenProvider, FirebaseTokenProvider>();
             };
             PushNotifications.EnsureChannel(this);

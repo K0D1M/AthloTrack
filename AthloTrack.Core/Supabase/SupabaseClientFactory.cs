@@ -63,6 +63,11 @@ public sealed class SupabaseClientFactory
 
     private async Task EnsureFreshSessionAsync(Client client)
     {
+        if (client.Auth.CurrentSession is null && _credentialStore is not null)
+        {
+            await ResumeSavedSessionAsync(client);
+            return;
+        }
         if (!NeedsRefresh(client.Auth.CurrentSession?.AccessToken, client.Auth.CurrentSession?.RefreshToken)) return;
 
         await _refreshLock.WaitAsync();
@@ -89,27 +94,37 @@ public sealed class SupabaseClientFactory
         }
     }
 
+    /// <summary>
+    /// The app opened without internet, from its offline copy: the client has no session yet.
+    /// Once a request can reach the server, the saved session is taken up again (renewed if needed).
+    /// </summary>
+    private async Task ResumeSavedSessionAsync(Client client)
+    {
+        await _refreshLock.WaitAsync();
+        try
+        {
+            if (client.Auth.CurrentSession is not null) return;
+            var (access, refresh) = await _credentialStore!.LoadSessionAsync();
+            if (string.IsNullOrEmpty(access) || string.IsNullOrEmpty(refresh)) return;
+            var session = await client.Auth.SetSession(access, refresh, false);
+            if (session?.AccessToken is { } a && session.RefreshToken is { } r)
+                await _credentialStore.SaveSessionAsync(a, r);
+        }
+        catch (Exception ex)
+        {
+            // Still offline: the request reports it, and the offline copy is shown.
+            Console.WriteLine($"[AthloTrack] saved session not resumed: {ex.Message}");
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+
     private static bool NeedsRefresh(string? accessToken, string? refreshToken) =>
         refreshToken is not null && ExpiresAt(accessToken) is { } expires
         && expires - DateTimeOffset.UtcNow < RefreshMargin;
 
     /// <summary>The access token's expiry («exp» in the JWT), or null when it can't be read.</summary>
-    public static DateTimeOffset? ExpiresAt(string? accessToken)
-    {
-        var parts = accessToken?.Split('.');
-        if (parts is not { Length: 3 }) return null;
-        try
-        {
-            var payload = parts[1].Replace('-', '+').Replace('_', '/');
-            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-            using var json = JsonDocument.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(payload)));
-            return json.RootElement.TryGetProperty("exp", out var exp) && exp.TryGetInt64(out var seconds)
-                ? DateTimeOffset.FromUnixTimeSeconds(seconds)
-                : null;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
+    public static DateTimeOffset? ExpiresAt(string? accessToken) => Jwt.ExpiresAt(accessToken);
 }

@@ -45,6 +45,67 @@ public partial class MainView : ContentPage
         _tabs = _isAdmin ? AdminTabs() : MemberTabs();
         foreach (var tab in _tabs) TabBar.Items.Add(BuildTabItem(tab));
         TabBar.SelectedIndex = HomeTab;
+
+        _offline = Resolve<AthloTrack.Core.Offline.OfflineState>();
+        _offlineRetry = new Avalonia.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _offlineRetry.Tick += (_, _) => RetryOnline();
+    }
+
+    // ---- «Χωρίς σύνδεση» (Android keeps copies of Προπονήσεις and Ημερολόγιο) ----
+
+    private readonly AthloTrack.Core.Offline.OfflineState _offline;
+
+    /// <summary>While offline, the page on screen tries again now and then (and sends queued answers).</summary>
+    private readonly Avalonia.Threading.DispatcherTimer _offlineRetry;
+
+    private string? _notice;
+
+    private void OnOfflineChanged() => Avalonia.Threading.Dispatcher.UIThread.Post(ShowOffline);
+
+    private void OnReconnected() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        ShowOffline();
+        // Back online: the page shows the server's data again (and the answers that were sent).
+        if (ContentPage.Content is IRefreshable page) _ = page.RefreshAsync();
+    });
+
+    private void OnOfflineNotice(string message) => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        _notice = message;
+        ShowOffline();
+        Avalonia.Threading.DispatcherTimer.RunOnce(() => { _notice = null; ShowOffline(); }, TimeSpan.FromSeconds(10));
+    });
+
+    private void ShowOffline()
+    {
+        if (_offline.IsOffline)
+        {
+            OfflineTitle.Text = "Χωρίς σύνδεση";
+            var saved = _offline.SavedAt is { } at ? $"Αποθηκευμένα από {at.ToLocalTime():dd/MM HH:mm}." : "Αποθηκευμένα δεδομένα.";
+            OfflineText.Text = _offline.PendingAnswers > 0
+                ? $"{saved} Οι απαντήσεις σου θα σταλούν μόλις συνδεθείς."
+                : saved;
+            OfflineBanner.IsVisible = true;
+            _offlineRetry.Start();
+        }
+        else if (_notice is not null)
+        {
+            OfflineTitle.Text = "Μια απάντηση δεν στάλθηκε";
+            OfflineText.Text = _notice;
+            OfflineBanner.IsVisible = true;
+            _offlineRetry.Stop();
+        }
+        else
+        {
+            OfflineBanner.IsVisible = false;
+            _offlineRetry.Stop();
+        }
+    }
+
+    private void RetryOnline()
+    {
+        if (!_offline.IsOffline) return;
+        if (ContentPage.Content is IRefreshable page) _ = page.RefreshAsync();
     }
 
     // Coaches and athletes. NotificationNavigation.WorkoutsSection relies on Προπονήσεις being 2.
@@ -172,6 +233,11 @@ public partial class MainView : ContentPage
         if (_activatable is not null) _activatable.Activated += OnAppActivated;
         _ = CheckForUpdateAsync();
 
+        _offline.Changed += OnOfflineChanged;
+        _offline.Reconnected += OnReconnected;
+        _offline.Notice += OnOfflineNotice;
+        ShowOffline();
+
         // Windows over the app open here, under the PIN lock; then «Τι νέο υπάρχει» after an update.
         Controls.OverlayDialog.Host = DialogLayer;
         Avalonia.Threading.Dispatcher.UIThread.Post(ShowWhatsNew, Avalonia.Threading.DispatcherPriority.Background);
@@ -192,7 +258,9 @@ public partial class MainView : ContentPage
 
     private void OnAppActivated(object? sender, Avalonia.Controls.ApplicationLifetimes.ActivatedEventArgs e)
     {
-        if (e.Kind == Avalonia.Controls.ApplicationLifetimes.ActivationKind.Background) _ = CheckForUpdateAsync();
+        if (e.Kind != Avalonia.Controls.ApplicationLifetimes.ActivationKind.Background) return;
+        _ = CheckForUpdateAsync();
+        RetryOnline(); // back to the app: maybe there's signal again
     }
 
     private Avalonia.Controls.Platform.IInputPane? _inputPane;
@@ -235,6 +303,10 @@ public partial class MainView : ContentPage
         if (_activatable is not null) _activatable.Activated -= OnAppActivated;
         _activatable = null;
         _topLevel = null;
+        _offline.Changed -= OnOfflineChanged;
+        _offline.Reconnected -= OnReconnected;
+        _offline.Notice -= OnOfflineNotice;
+        _offlineRetry.Stop();
         Controls.OverlayDialog.CloseOpen(); // e.g. signed out with a window open
         if (Controls.OverlayDialog.Host == DialogLayer) Controls.OverlayDialog.Host = null;
         base.OnDetachedFromVisualTree(e);

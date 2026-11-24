@@ -143,6 +143,17 @@
                     Height="44" CornerRadius="22" Padding="14,0" VerticalContentAlignment="Center" Background="Transparent" />
         </Grid>
     </Border>
+    <!-- «Χωρίς σύνδεση»: the saved copies are on screen (OfflineState); also a queued answer the server refused -->
+    <Border x:Name="OfflineBanner" IsVisible="False" Background="{DynamicResource NoticeBrush}"
+            BorderBrush="{DynamicResource NoticeBorderBrush}" BorderThickness="0,0,0,1" Padding="16,8">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+            <PathIcon Data="{StaticResource CloudOffIcon}" Width="20" Height="20" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="OfflineTitle" Text="Χωρίς σύνδεση" FontWeight="SemiBold" />
+                <TextBlock x:Name="OfflineText" FontSize="13" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </Border>
     </StackPanel>
 
     <ContentPage Name="ContentPage" Grid.Row="1" AutomaticallyApplySafeAreaPadding="False">
@@ -605,6 +616,8 @@
                                             </StackPanel>
                                         </WrapPanel>
                                         <TextBlock Text="{Binding NextHint}" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="Η απάντηση θα σταλεί μόλις συνδεθείς" IsVisible="{Binding Next.Program.IsPendingSync}"
+                                                   FontSize="13" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
                                         <controls:WorkoutPreview Text="{Binding Next.Content}" Title="{Binding NextDayText, StringFormat='Ασκησιολόγιο · {0}'}" />
                                         <WrapPanel Margin="0,4,0,0" IsVisible="{Binding Next.CanAccept}">
                                             <Button Classes="primary answer" Margin="0,0,8,6"
@@ -700,6 +713,12 @@
                                                                         </Border>
                                                                     </Grid>
                                                                     <controls:WorkoutPreview Text="{Binding Content}" Title="{Binding DayText, StringFormat='Ασκησιολόγιο · {0}'}" />
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Program.IsPendingSync}">
+                                                                        <PathIcon Data="{StaticResource CloudOffIcon}" Width="14" Height="14"
+                                                                                  Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                                        <TextBlock Text="Η απάντηση θα σταλεί μόλις συνδεθείς" FontSize="12" TextWrapping="Wrap"
+                                                                                   Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                                    </StackPanel>
                                                                     <TextBlock Text="{Binding ReasonText}" IsVisible="{Binding HasReason}" FontSize="13"
                                                                                TextWrapping="Wrap" Foreground="{DynamicResource PillDeclinedTextBrush}" />
                                                                     <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding ShowReminderSent}">
